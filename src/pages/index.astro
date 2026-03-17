@@ -1,0 +1,25 @@
+---
+import Footer from "../components/Footer.astro";
+import Header from "../components/Header.astro";
+import PostCard from "../components/PostCard.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { getPublishedPosts } from "../lib/blog";
+
+const posts = await getPublishedPosts();
+---
+
+<BaseLayout title="Matrix log stream" description="매트릭스 배경과 Codex 같은 다크 패널 위에서 기록을 쌓는 somiri.dev 블로그입니다.">
+  <Header />
+
+  <main class="shell app-shell">
+    {posts.length > 0 && (
+      <section class="app-panel">
+        <div class="post-stack">
+          {posts.map((post, index) => <PostCard post={post} featured={index === 0} />)}
+        </div>
+      </section>
+    )}
+  </main>
+
+  <Footer />
+</BaseLayout>

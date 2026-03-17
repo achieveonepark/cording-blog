@@ -1,0 +1,200 @@
+---
+import { site } from "../config/site";
+import "../styles/global.css";
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = site.title,
+  description = site.description
+} = Astro.props;
+
+const pageTitle = title === site.title ? title : `${title} | ${site.title}`;
+const canonicalUrl = new URL(Astro.url.pathname, site.url);
+---
+
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#05080c" />
+    <link rel="canonical" href={canonicalUrl} />
+    <link rel="alternate" type="application/rss+xml" title={`${site.title} RSS`} href="/rss.xml" />
+    <title>{pageTitle}</title>
+  </head>
+  <body class="matrix-theme">
+    <canvas class="matrix-canvas" data-matrix-canvas aria-hidden="true"></canvas>
+    <div class="page-shell">
+      <slot />
+    </div>
+
+    <script is:inline>
+      const canvas = document.querySelector("[data-matrix-canvas]");
+
+      if (canvas instanceof HTMLCanvasElement) {
+        const context = canvas.getContext("2d");
+
+        if (context) {
+          const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
+          const glyphs = ["0", "1"];
+          const monoStack = '"SFMono-Regular", Consolas, "Liberation Mono", monospace';
+
+          let width = 0;
+          let height = 0;
+          let cellSize = 18;
+          let animationFrame = 0;
+          let lastTimestamp = 0;
+          let columns = [];
+
+          const randomGlyph = () => glyphs[Math.floor(Math.random() * glyphs.length)];
+
+          const createColumn = (index) => ({
+            x: index * cellSize + Math.random() * cellSize * 0.35,
+            y: height + Math.random() * height * 1.35,
+            speed: 54 + Math.random() * 132,
+            length: 8 + Math.floor(Math.random() * 18),
+            brightness: 0.35 + Math.random() * 0.65
+          });
+
+          const resetColumn = (column, index) => {
+            column.x = index * cellSize + Math.random() * cellSize * 0.35;
+            column.y = height + Math.random() * height * 0.75;
+            column.speed = 54 + Math.random() * 132;
+            column.length = 8 + Math.floor(Math.random() * 18);
+            column.brightness = 0.35 + Math.random() * 0.65;
+          };
+
+          const paintBackdrop = () => {
+            context.clearRect(0, 0, width, height);
+            context.fillStyle = "#05080c";
+            context.fillRect(0, 0, width, height);
+          };
+
+          const resizeCanvas = () => {
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+            width = window.innerWidth;
+            height = window.innerHeight;
+            cellSize = width < 540 ? 14 : width < 900 ? 16 : 18;
+
+            canvas.width = Math.floor(width * dpr);
+            canvas.height = Math.floor(height * dpr);
+            canvas.style.width = `${width}px`;
+            canvas.style.height = `${height}px`;
+
+            context.setTransform(dpr, 0, 0, dpr, 0, 0);
+            context.font = `${cellSize}px ${monoStack}`;
+            context.textBaseline = "top";
+
+            const columnCount = Math.ceil(width / cellSize);
+            columns = Array.from({ length: columnCount }, (_, index) => createColumn(index));
+            if (motionPreference.matches) {
+              drawStaticFrame();
+            } else {
+              paintBackdrop();
+            }
+          };
+
+          const drawStaticFrame = () => {
+            paintBackdrop();
+
+            const count = Math.max(36, Math.floor((width * height) / 18000));
+
+            for (let index = 0; index < count; index += 1) {
+              const x = Math.random() * width;
+              const y = Math.random() * height;
+              const alpha = 0.18 + Math.random() * 0.28;
+
+              context.fillStyle = `rgba(124, 255, 122, ${alpha})`;
+              context.fillText(randomGlyph(), x, y);
+            }
+          };
+
+          const stopAnimation = () => {
+            if (animationFrame) {
+              window.cancelAnimationFrame(animationFrame);
+              animationFrame = 0;
+            }
+          };
+
+          const frame = (timestamp) => {
+            if (document.hidden) {
+              stopAnimation();
+              return;
+            }
+
+            const delta = lastTimestamp
+              ? Math.min((timestamp - lastTimestamp) / 1000, 0.05)
+              : 0.016;
+
+            lastTimestamp = timestamp;
+
+            context.fillStyle = "rgba(5, 8, 12, 0.22)";
+            context.fillRect(0, 0, width, height);
+
+            columns.forEach((column, index) => {
+              column.y -= column.speed * delta;
+
+              if (column.y + column.length * cellSize < -cellSize) {
+                resetColumn(column, index);
+              }
+
+              for (let step = 0; step < column.length; step += 1) {
+                const y = column.y + step * cellSize;
+
+                if (y < -cellSize || y > height + cellSize) {
+                  continue;
+                }
+
+                const isHead = step === 0;
+                const opacity = isHead
+                  ? Math.min(1, column.brightness * 0.95 + 0.15)
+                  : (1 - step / column.length) * column.brightness * 0.78;
+
+                context.fillStyle = isHead
+                  ? `rgba(214, 255, 214, ${opacity})`
+                  : `rgba(124, 255, 122, ${opacity})`;
+
+                context.fillText(randomGlyph(), column.x, y);
+              }
+            });
+
+            animationFrame = window.requestAnimationFrame(frame);
+          };
+
+          const startAnimation = () => {
+            stopAnimation();
+            lastTimestamp = 0;
+
+            if (motionPreference.matches) {
+              drawStaticFrame();
+              return;
+            }
+
+            paintBackdrop();
+            animationFrame = window.requestAnimationFrame(frame);
+          };
+
+          resizeCanvas();
+          startAnimation();
+
+          window.addEventListener("resize", resizeCanvas, { passive: true });
+          document.addEventListener("visibilitychange", () => {
+            if (document.hidden) {
+              stopAnimation();
+            } else {
+              startAnimation();
+            }
+          });
+
+          motionPreference.addEventListener("change", startAnimation);
+        }
+      }
+    </script>
+  </body>
+</html>

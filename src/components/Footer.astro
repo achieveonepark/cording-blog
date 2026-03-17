@@ -1,0 +1,11 @@
+---
+import { site } from "../config/site";
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer shell">
+  <p>
+    {year} {site.author}. Built with Astro for <a href={site.url}>{new URL(site.url).hostname}</a>.
+  </p>
+  <p>Dark panel UI above a live matrix canvas background.</p>
+</footer>
