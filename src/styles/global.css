@@ -161,13 +161,33 @@ select {
 .site-nav {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.45rem;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.8rem;
   font-family: var(--font-ui);
+}
+
+.site-nav__group {
+  display: flex;
+  align-items: center;
+}
+
+.site-nav__group--primary {
+  gap: 0.65rem;
+}
+
+.site-nav__group--apps {
+  gap: 0.45rem;
+}
+
+.site-nav__group--rss {
+  gap: 0;
 }
 
 .site-nav a {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   min-height: 2.35rem;
   padding: 0.5rem 0.85rem;
   border-radius: var(--radius-sm);
@@ -190,6 +210,17 @@ select {
   border-color: rgba(124, 255, 122, 0.22);
   background: rgba(27, 34, 41, 0.9);
   transform: translateY(-1px);
+}
+
+.site-nav__icon-link {
+  width: 2.35rem;
+  padding: 0;
+}
+
+.nav-icon {
+  width: 1.05rem;
+  height: 1.05rem;
+  flex: none;
 }
 
 .app-panel,
@@ -537,7 +568,18 @@ select {
   }
 
   .site-nav {
-    order: 3;
+    width: 100%;
+    justify-content: space-between;
+    gap: 0.65rem;
+  }
+
+  .site-nav__group--primary {
+    flex-wrap: wrap;
+  }
+
+  .site-nav__group--apps,
+  .site-nav__group--rss {
+    flex: 0 0 auto;
   }
 
   .info-grid {
@@ -552,6 +594,37 @@ select {
 
   .app-shell {
     padding-top: 0.8rem;
+  }
+
+  .site-header__inner {
+    gap: 0.7rem;
+    min-height: auto;
+    padding: 0.8rem 0;
+  }
+
+  .site-nav {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: start;
+    gap: 0.6rem;
+  }
+
+  .site-nav__group--primary {
+    gap: 0.55rem;
+  }
+
+  .site-nav__group--apps {
+    gap: 0.35rem;
+  }
+
+  .site-nav a {
+    min-height: 2.15rem;
+    padding: 0.45rem 0.75rem;
+  }
+
+  .site-nav__icon-link {
+    width: 2.15rem;
+    padding: 0;
   }
 
   .hero-panel,
