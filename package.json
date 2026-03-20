@@ -17,7 +17,7 @@
     "@astrojs/rss": "latest",
     "@astrojs/sitemap": "latest",
     "astro": "latest",
-    "marked": "^15.0.0"
+    "@toast-ui/editor": "^3.2.2"
   },
   "devDependencies": {
     "@astrojs/check": "latest",
