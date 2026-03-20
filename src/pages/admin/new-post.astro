@@ -2,7 +2,7 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 ---
 
-<BaseLayout title="새 글 쓰기">
+<BaseLayout title="글쓰기">
   <div class="editor-shell" id="editor-shell" style="display:none">
     <form class="post-form" id="post-form">
       <div class="form-row">
@@ -29,6 +29,8 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
         <span id="submit-status"></span>
         <button type="submit" id="submit-btn">커밋 & 발행</button>
       </div>
+
+      <input type="hidden" id="edit-slug" value="" />
     </form>
   </div>
 
@@ -106,6 +108,35 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     }
   }
 
+  async function loadEditContent(slug: string, token: string) {
+    const path = `src/content/blog/${slug}.md`;
+    const res = await fetch(
+      `https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}?ref=${BRANCH}`,
+      { headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json" } }
+    );
+    if (!res.ok) return;
+    const data = await res.json();
+    const raw = decodeURIComponent(escape(atob(data.content.replace(/\n/g, ""))));
+
+    // frontmatter 파싱
+    const fmMatch = raw.match(/^---\n([\s\S]*?)\n---\n\n?([\s\S]*)$/);
+    if (!fmMatch) return;
+    const fm = fmMatch[1];
+    const body = fmMatch[2];
+
+    const titleMatch = fm.match(/^title:\s*"?(.+?)"?\s*$/m);
+    const descMatch = fm.match(/^description:\s*"?(.+?)"?\s*$/m);
+    const tagsMatch = [...fm.matchAll(/^\s*-\s*(.+)\s*$/gm)].map((m) => m[1]);
+
+    (document.getElementById("post-title") as HTMLInputElement).value = titleMatch?.[1] ?? "";
+    (document.getElementById("post-description") as HTMLInputElement).value = descMatch?.[1] ?? "";
+    (document.getElementById("post-tags") as HTMLInputElement).value = tagsMatch.join(", ");
+    (document.getElementById("post-content") as HTMLTextAreaElement).value = body;
+    (document.getElementById("edit-slug") as HTMLInputElement).value = slug;
+    (document.getElementById("submit-btn") as HTMLButtonElement).textContent = "수정 & 발행";
+    document.title = "글 수정";
+  }
+
   (async () => {
     const token = localStorage.getItem("gh_token");
     if (!token) {
@@ -125,6 +156,10 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     }
 
     editorShell.style.display = "";
+
+    // 수정 모드
+    const editSlug = new URLSearchParams(window.location.search).get("edit");
+    if (editSlug) await loadEditContent(editSlug, token);
   })();
 
   form.addEventListener("submit", async (e) => {
@@ -138,7 +173,8 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     const body = (document.getElementById("post-content") as HTMLTextAreaElement).value;
 
     const tags = tagsRaw ? tagsRaw.split(",").map((t) => t.trim()).filter(Boolean) : [];
-    const slug = toSlug(title);
+    const editSlug = (document.getElementById("edit-slug") as HTMLInputElement).value;
+    const slug = editSlug || toSlug(title);
     const filename = `${slug}.md`;
     const fileContent = buildFrontmatter(title, description, tags) + body;
 
@@ -147,7 +183,9 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 
     try {
       await commitPost(token, filename, fileContent);
-      submitStatus.textContent = "발행 완료! GitHub Actions 가 배포 중입니다.";
+      submitStatus.textContent = editSlug
+        ? "수정 완료! GitHub Actions 가 배포 중입니다."
+        : "발행 완료! GitHub Actions 가 배포 중입니다.";
       submitBtn.disabled = false;
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
