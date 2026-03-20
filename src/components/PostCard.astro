@@ -10,10 +10,11 @@ interface Props {
 const { post, featured = false } = Astro.props;
 ---
 
-<article class:list={["post-card", { "post-card--featured": featured }]}>
+<article class:list={["post-card", { "post-card--featured": featured }]} data-category={post.data.category ?? ""}>
   <div class="post-card__meta">
     <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
     <span>{getReadingTime(post)}</span>
+    {post.data.category && <span class="post-category">{post.data.category}</span>}
   </div>
 
   <h2>
@@ -28,3 +29,19 @@ const { post, featured = false } = Astro.props;
     </ul>
   )}
 </article>
+
+<style>
+  .post-category {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.15rem 0.55rem;
+    border-radius: 999px;
+    background: rgba(124, 255, 122, 0.1);
+    border: 1px solid rgba(124, 255, 122, 0.2);
+    color: #7cff7a;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+</style>

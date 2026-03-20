@@ -35,46 +35,61 @@ const canonicalUrl = new URL(Astro.url.pathname, site.url);
     </div>
 
     <!-- 관리자 플로팅 버튼 -->
-    <a id="fab-new-post" href="/admin/new-post" aria-label="새 글 쓰기" title="새 글 쓰기" style="display:none">
-      <svg viewBox="0 0 24 24" aria-hidden="true" width="18" height="18">
-        <line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
-        <line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
-      </svg>
-      <span>글쓰기</span>
-    </a>
+    <div id="fab-group" style="display:none">
+      <a id="fab-settings" href="/admin/settings" aria-label="설정" title="설정">
+        <svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16">
+          <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" fill="none" stroke="currentColor" stroke-width="1.8"/>
+        </svg>
+        <span>설정</span>
+      </a>
+      <a id="fab-new-post" href="/admin/new-post" aria-label="새 글 쓰기" title="새 글 쓰기">
+        <svg viewBox="0 0 24 24" aria-hidden="true" width="18" height="18">
+          <line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+          <line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+        </svg>
+        <span>글쓰기</span>
+      </a>
+    </div>
 
     <script>
       const OWNER = "achieveonepark";
-      const fab = document.getElementById("fab-new-post");
+      const fabGroup = document.getElementById("fab-group");
       const token = localStorage.getItem("gh_token");
-      if (token && fab) {
+      if (token && fabGroup) {
         fetch("https://api.github.com/user", {
           headers: { Authorization: `Bearer ${token}` },
         })
           .then((r) => r.json())
           .then((u) => {
-            if (u.login === OWNER) fab.style.display = "flex";
+            if (u.login === OWNER) fabGroup.style.display = "flex";
           })
           .catch(() => {});
       }
     </script>
 
     <style>
-      #fab-new-post {
+      #fab-group {
         position: fixed;
         bottom: 2rem;
         right: 2rem;
         z-index: 100;
-        display: none;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0.6rem;
+      }
+
+      #fab-group a {
+        display: flex;
         align-items: center;
         gap: 0.5rem;
-        padding: 0.65rem 1.1rem;
+        padding: 0.6rem 1.1rem;
         border-radius: 999px;
-        border: 1px solid rgba(124, 255, 122, 0.35);
+        border: 1px solid rgba(124, 255, 122, 0.3);
         background: rgba(10, 15, 19, 0.88);
         backdrop-filter: blur(12px);
         color: #7cff7a;
-        font-size: 0.85rem;
+        font-size: 0.82rem;
         font-weight: 600;
         letter-spacing: 0.04em;
         text-decoration: none;
@@ -82,9 +97,16 @@ const canonicalUrl = new URL(Astro.url.pathname, site.url);
         transition: background 180ms ease, border-color 180ms ease, transform 180ms ease;
       }
 
-      #fab-new-post:hover {
-        background: rgba(124, 255, 122, 0.12);
-        border-color: rgba(124, 255, 122, 0.6);
+      #fab-settings {
+        color: rgba(124, 255, 122, 0.55) !important;
+        border-color: rgba(124, 255, 122, 0.15) !important;
+        font-size: 0.76rem !important;
+      }
+
+      #fab-group a:hover {
+        background: rgba(124, 255, 122, 0.1);
+        border-color: rgba(124, 255, 122, 0.55);
+        color: #7cff7a !important;
         transform: translateY(-2px);
       }
     </style>

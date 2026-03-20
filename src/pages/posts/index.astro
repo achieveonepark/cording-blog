@@ -4,6 +4,7 @@ import Header from "../../components/Header.astro";
 import PostCard from "../../components/PostCard.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { getPublishedPosts } from "../../lib/blog";
+import categories from "../../data/categories.json";
 
 const posts = await getPublishedPosts();
 ---
@@ -19,7 +20,14 @@ const posts = await getPublishedPosts();
         <p>저장된 글을 시간순으로 훑을 수 있는 전체 스트림입니다.</p>
       </div>
 
-      <div class="post-stack">
+      <div class="category-filter" role="group" aria-label="카테고리 필터">
+        <button class="cat-btn cat-btn--active" data-cat="">전체</button>
+        {categories.map((cat) => (
+          <button class="cat-btn" data-cat={cat}>{cat}</button>
+        ))}
+      </div>
+
+      <div class="post-stack" id="post-stack">
         {posts.map((post) => <PostCard post={post} />)}
       </div>
     </section>
@@ -27,3 +35,54 @@ const posts = await getPublishedPosts();
 
   <Footer />
 </BaseLayout>
+
+<script>
+  const btns = document.querySelectorAll<HTMLButtonElement>(".cat-btn");
+  const cards = document.querySelectorAll<HTMLElement>(".post-card");
+
+  btns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      btns.forEach((b) => b.classList.remove("cat-btn--active"));
+      btn.classList.add("cat-btn--active");
+
+      const cat = btn.dataset.cat ?? "";
+      cards.forEach((card) => {
+        const match = !cat || card.dataset.category === cat;
+        card.style.display = match ? "" : "none";
+      });
+    });
+  });
+</script>
+
+<style>
+  .category-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .cat-btn {
+    padding: 0.3rem 0.85rem;
+    border-radius: 999px;
+    border: 1px solid rgba(124, 255, 122, 0.15);
+    background: transparent;
+    color: var(--muted);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: border-color 150ms, background 150ms, color 150ms;
+  }
+
+  .cat-btn:hover {
+    border-color: rgba(124, 255, 122, 0.35);
+    color: var(--text);
+  }
+
+  .cat-btn--active {
+    border-color: rgba(124, 255, 122, 0.45);
+    background: rgba(124, 255, 122, 0.1);
+    color: #7cff7a;
+  }
+</style>
