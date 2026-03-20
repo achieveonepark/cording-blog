@@ -51,8 +51,102 @@ const { Content } = await render(post);
       <div class="prose article__body">
         <Content />
       </div>
+
+      <div id="post-admin-bar" style="display:none">
+        <a href={`/admin/new-post?edit=${post.id}`} class="post-admin-btn">수정</a>
+        <button id="post-delete-btn" class="post-admin-btn post-admin-btn--danger">삭제</button>
+      </div>
     </article>
   </main>
 
   <Footer />
 </BaseLayout>
+
+<script define:vars={{ postId: post.id }}>
+  const OWNER = "achieveonepark";
+  const REPO = "cording-blog";
+  const BRANCH = "main";
+  const token = localStorage.getItem("gh_token");
+  const adminBar = document.getElementById("post-admin-bar");
+  const deleteBtn = document.getElementById("post-delete-btn");
+
+  if (token && adminBar) {
+    fetch("https://api.github.com/user", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => r.json())
+      .then((u) => {
+        if (u.login === OWNER) adminBar.style.display = "flex";
+      })
+      .catch(() => {});
+  }
+
+  deleteBtn?.addEventListener("click", async () => {
+    if (!confirm(`"${postId}" 포스트를 삭제할까요? 되돌릴 수 없어요.`)) return;
+
+    const path = `src/content/blog/${postId}.md`;
+    const fileRes = await fetch(
+      `https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}?ref=${BRANCH}`,
+      { headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json" } }
+    );
+    const file = await fileRes.json();
+
+    await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/vnd.github+json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        message: `chore: delete post - ${postId}`,
+        sha: file.sha,
+        branch: BRANCH,
+      }),
+    });
+
+    window.location.href = "/posts";
+  });
+</script>
+
+<style>
+  #post-admin-bar {
+    display: none;
+    gap: 0.75rem;
+    margin-top: 2rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid rgba(124, 255, 122, 0.1);
+  }
+
+  .post-admin-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.4rem 1rem;
+    border-radius: 999px;
+    border: 1px solid rgba(124, 255, 122, 0.25);
+    background: transparent;
+    color: rgba(124, 255, 122, 0.7);
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: border-color 180ms ease, background 180ms ease, color 180ms ease;
+  }
+
+  .post-admin-btn:hover {
+    border-color: rgba(124, 255, 122, 0.5);
+    background: rgba(124, 255, 122, 0.08);
+    color: #7cff7a;
+  }
+
+  .post-admin-btn--danger {
+    border-color: rgba(255, 80, 80, 0.25);
+    color: rgba(255, 120, 120, 0.7);
+  }
+
+  .post-admin-btn--danger:hover {
+    border-color: rgba(255, 80, 80, 0.5);
+    background: rgba(255, 80, 80, 0.08);
+    color: #ff7070;
+  }
+</style>

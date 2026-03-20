@@ -34,6 +34,61 @@ const canonicalUrl = new URL(Astro.url.pathname, site.url);
       <slot />
     </div>
 
+    <!-- 관리자 플로팅 버튼 -->
+    <a id="fab-new-post" href="/admin/new-post" aria-label="새 글 쓰기" title="새 글 쓰기" style="display:none">
+      <svg viewBox="0 0 24 24" aria-hidden="true" width="18" height="18">
+        <line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+        <line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+      </svg>
+      <span>글쓰기</span>
+    </a>
+
+    <script>
+      const OWNER = "achieveonepark";
+      const fab = document.getElementById("fab-new-post");
+      const token = localStorage.getItem("gh_token");
+      if (token && fab) {
+        fetch("https://api.github.com/user", {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+          .then((r) => r.json())
+          .then((u) => {
+            if (u.login === OWNER) fab.style.display = "flex";
+          })
+          .catch(() => {});
+      }
+    </script>
+
+    <style>
+      #fab-new-post {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        z-index: 100;
+        display: none;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.65rem 1.1rem;
+        border-radius: 999px;
+        border: 1px solid rgba(124, 255, 122, 0.35);
+        background: rgba(10, 15, 19, 0.88);
+        backdrop-filter: blur(12px);
+        color: #7cff7a;
+        font-size: 0.85rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-decoration: none;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+        transition: background 180ms ease, border-color 180ms ease, transform 180ms ease;
+      }
+
+      #fab-new-post:hover {
+        background: rgba(124, 255, 122, 0.12);
+        border-color: rgba(124, 255, 122, 0.6);
+        transform: translateY(-2px);
+      }
+    </style>
+
     <script is:inline>
       const canvas = document.querySelector("[data-matrix-canvas]");
 
