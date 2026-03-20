@@ -110,7 +110,7 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
 
 <script define:vars={{ clientId }}>
   const OWNER = "achieveonepark";
-  const CALLBACK = "https://blog.somiri.dev/admin/callback";
+  const CALLBACK = `${window.location.origin}/admin/callback`;
 
   const newPostBtn = document.getElementById("nav-new-post");
   const loginBtn = document.getElementById("nav-login-btn");
