@@ -1,60 +1,174 @@
 ---
-import BaseLayout from "../../layouts/BaseLayout.astro";
-
 const workerUrl = import.meta.env.PUBLIC_OAUTH_WORKER_URL;
 ---
 
-<BaseLayout title="로그인 중...">
-  <div class="auth-callback">
-    <p id="status-msg">GitHub 인증 처리 중...</p>
-  </div>
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GitHub 인증</title>
+  </head>
+  <body>
+    <canvas id="c"></canvas>
 
-  <script define:vars={{ workerUrl }}>
-    (async () => {
-      const msg = document.getElementById("status-msg");
-      const params = new URLSearchParams(window.location.search);
-      const code = params.get("code");
+    <div class="box">
+      <div class="logo">
+        <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true">
+          <path fill="currentColor" d="M12 2C6.48 2 2 6.59 2 12.25c0 4.52 2.87 8.35 6.84 9.7.5.1.68-.22.68-.5 0-.24-.01-1.04-.01-1.88-2.78.62-3.37-1.21-3.37-1.21-.45-1.2-1.11-1.52-1.11-1.52-.91-.64.07-.63.07-.63 1 .08 1.53 1.05 1.53 1.05.9 1.57 2.35 1.12 2.92.86.09-.67.35-1.12.63-1.38-2.22-.26-4.55-1.15-4.55-5.1 0-1.13.39-2.05 1.03-2.77-.1-.26-.45-1.31.1-2.74 0 0 .84-.28 2.75 1.06A9.3 9.3 0 0 1 12 7.1c.85 0 1.71.12 2.51.36 1.91-1.34 2.75-1.06 2.75-1.06.55 1.43.2 2.48.1 2.74.64.72 1.03 1.64 1.03 2.77 0 3.96-2.34 4.84-4.57 5.09.36.32.68.95.68 1.91 0 1.38-.01 2.49-.01 2.83 0 .28.18.61.69.5A10.23 10.23 0 0 0 22 12.25C22 6.59 17.52 2 12 2Z"/>
+        </svg>
+      </div>
+      <p id="msg" class="msg">인증 처리 중<span class="dots"></span></p>
+      <div id="bar-wrap" class="bar-wrap"><div id="bar" class="bar"></div></div>
+    </div>
 
-      if (!code) {
-        msg.textContent = "인증 코드가 없습니다. 홈으로 이동합니다...";
-        setTimeout(() => { window.location.href = "/"; }, 1500);
-        return;
-      }
-
-      try {
-        const res = await fetch(workerUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ code }),
-        });
-
-        const data = await res.json();
-
-        if (data.access_token) {
-          localStorage.setItem("gh_token", data.access_token);
-          msg.textContent = "로그인 성공! 글쓰기 페이지로 이동합니다...";
-          window.location.href = "/admin/new-post";
-        } else {
-          msg.textContent = "인증에 실패했습니다. 홈으로 이동합니다...";
-          setTimeout(() => { window.location.href = "/"; }, 1500);
+    <script define:vars={{ workerUrl }}>
+      // 매트릭스 배경
+      (function () {
+        const canvas = document.getElementById("c");
+        const ctx = canvas.getContext("2d");
+        let w, h, cols, drops;
+        function init() {
+          w = canvas.width = window.innerWidth;
+          h = canvas.height = window.innerHeight;
+          const size = 14;
+          cols = Math.ceil(w / size);
+          drops = Array.from({ length: cols }, () => Math.random() * -50);
         }
-      } catch (err) {
-        console.error(err);
-        msg.textContent = "오류가 발생했습니다. 홈으로 이동합니다...";
-        setTimeout(() => { window.location.href = "/"; }, 1500);
-      }
-    })();
-  </script>
-</BaseLayout>
+        function draw() {
+          ctx.fillStyle = "rgba(3,6,10,0.18)";
+          ctx.fillRect(0, 0, w, h);
+          ctx.fillStyle = "rgba(124,255,122,0.55)";
+          ctx.font = "14px monospace";
+          drops.forEach((y, i) => {
+            ctx.fillText(Math.random() > 0.5 ? "1" : "0", i * 14, y * 14);
+            drops[i] = y > h / 14 + 10 ? Math.random() * -20 : y + 1;
+          });
+        }
+        init();
+        window.addEventListener("resize", init);
+        setInterval(draw, 50);
+      })();
 
-<style>
-  .auth-callback {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 60vh;
-    font-family: var(--font-mono, monospace);
-    color: var(--color-matrix, #7cff7a);
-    font-size: 1rem;
-  }
-</style>
+      // 점 애니메이션
+      (function () {
+        const dots = document.querySelector(".dots");
+        let n = 0;
+        setInterval(() => { dots.textContent = ".".repeat((n++ % 3) + 1); }, 400);
+      })();
+
+      // 진행 바
+      const bar = document.getElementById("bar");
+      bar.style.width = "30%";
+
+      // OAuth 처리
+      (async () => {
+        const msg = document.getElementById("msg");
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get("code");
+
+        if (!code) {
+          msg.innerHTML = "인증 코드 없음";
+          setTimeout(() => window.close(), 1200);
+          return;
+        }
+
+        bar.style.width = "60%";
+
+        try {
+          const res = await fetch(workerUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ code }),
+          });
+          const data = await res.json();
+
+          bar.style.width = "100%";
+
+          if (data.access_token) {
+            msg.innerHTML = `<span class="success">인증 완료</span>`;
+            if (window.opener) {
+              window.opener.postMessage({ type: "oauth-success", token: data.access_token }, window.location.origin);
+              setTimeout(() => window.close(), 800);
+            } else {
+              localStorage.setItem("gh_token", data.access_token);
+              setTimeout(() => { window.location.href = "/"; }, 800);
+            }
+          } else {
+            msg.textContent = "인증 실패";
+            setTimeout(() => window.close(), 1500);
+          }
+        } catch {
+          msg.textContent = "오류 발생";
+          setTimeout(() => window.close(), 1500);
+        }
+      })();
+    </script>
+
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; }
+
+      body {
+        background: #03060a;
+        color: #7cff7a;
+        font-family: "SFMono-Regular", Consolas, monospace;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      #c {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        opacity: 0.6;
+      }
+
+      .box {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1.4rem;
+        padding: 2.5rem 3rem;
+        border: 1px solid rgba(124, 255, 122, 0.2);
+        border-radius: 16px;
+        background: rgba(3, 8, 12, 0.82);
+        backdrop-filter: blur(12px);
+        box-shadow: 0 0 60px rgba(124, 255, 122, 0.06);
+        min-width: 280px;
+        text-align: center;
+      }
+
+      .logo { color: rgba(124, 255, 122, 0.8); }
+
+      .msg {
+        font-size: 0.95rem;
+        letter-spacing: 0.06em;
+        color: rgba(124, 255, 122, 0.75);
+      }
+
+      .success { color: #7cff7a; }
+
+      .bar-wrap {
+        width: 100%;
+        height: 2px;
+        background: rgba(124, 255, 122, 0.1);
+        border-radius: 2px;
+        overflow: hidden;
+      }
+
+      .bar {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #3aff38, #7cff7a);
+        border-radius: 2px;
+        transition: width 0.5s ease;
+        box-shadow: 0 0 8px rgba(124, 255, 122, 0.6);
+      }
+    </style>
+  </body>
+</html>
