@@ -1,0 +1,60 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+const workerUrl = import.meta.env.PUBLIC_OAUTH_WORKER_URL;
+---
+
+<BaseLayout title="로그인 중...">
+  <div class="auth-callback">
+    <p id="status-msg">GitHub 인증 처리 중...</p>
+  </div>
+
+  <script define:vars={{ workerUrl }}>
+    (async () => {
+      const msg = document.getElementById("status-msg");
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get("code");
+
+      if (!code) {
+        msg.textContent = "인증 코드가 없습니다. 홈으로 이동합니다...";
+        setTimeout(() => { window.location.href = "/"; }, 1500);
+        return;
+      }
+
+      try {
+        const res = await fetch(workerUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code }),
+        });
+
+        const data = await res.json();
+
+        if (data.access_token) {
+          localStorage.setItem("gh_token", data.access_token);
+          msg.textContent = "로그인 성공! 글쓰기 페이지로 이동합니다...";
+          window.location.href = "/admin/new-post";
+        } else {
+          msg.textContent = "인증에 실패했습니다. 홈으로 이동합니다...";
+          setTimeout(() => { window.location.href = "/"; }, 1500);
+        }
+      } catch (err) {
+        console.error(err);
+        msg.textContent = "오류가 발생했습니다. 홈으로 이동합니다...";
+        setTimeout(() => { window.location.href = "/"; }, 1500);
+      }
+    })();
+  </script>
+</BaseLayout>
+
+<style>
+  .auth-callback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    font-family: var(--font-mono, monospace);
+    color: var(--color-matrix, #7cff7a);
+    font-size: 1rem;
+  }
+</style>

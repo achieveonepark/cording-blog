@@ -1,0 +1,253 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="새 글 쓰기">
+  <div class="editor-shell" id="editor-shell" style="display:none">
+    <form class="post-form" id="post-form">
+      <div class="form-row">
+        <label for="post-title">제목</label>
+        <input type="text" id="post-title" name="title" required placeholder="포스트 제목" />
+      </div>
+
+      <div class="form-row">
+        <label for="post-description">설명</label>
+        <input type="text" id="post-description" name="description" required placeholder="한 줄 설명" />
+      </div>
+
+      <div class="form-row">
+        <label for="post-tags">태그</label>
+        <input type="text" id="post-tags" name="tags" placeholder="쉼표로 구분 (예: iOS, Swift, Tips)" />
+      </div>
+
+      <div class="form-row form-row--full">
+        <label for="post-content">내용 (Markdown)</label>
+        <textarea id="post-content" name="content" rows="28" placeholder="마크다운으로 작성하세요..."></textarea>
+      </div>
+
+      <div class="form-actions">
+        <span id="submit-status"></span>
+        <button type="submit" id="submit-btn">커밋 & 발행</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="auth-guard" id="auth-guard" style="display:none">
+    <p>접근 권한이 없습니다.</p>
+    <a href="/">홈으로</a>
+  </div>
+</BaseLayout>
+
+<script>
+  const OWNER = "achieveonepark";
+  const REPO = "cording-blog";
+  const BRANCH = "main";
+
+  const editorShell = document.getElementById("editor-shell") as HTMLElement;
+  const authGuard = document.getElementById("auth-guard") as HTMLElement;
+  const form = document.getElementById("post-form") as HTMLFormElement;
+  const submitBtn = document.getElementById("submit-btn") as HTMLButtonElement;
+  const submitStatus = document.getElementById("submit-status") as HTMLElement;
+
+  function toSlug(title: string): string {
+    return title
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9가-힣\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-");
+  }
+
+  function buildFrontmatter(title: string, description: string, tags: string[]): string {
+    const today = new Date().toISOString().split("T")[0];
+    const tagLines = tags.length > 0
+      ? "tags:\n" + tags.map((t) => `  - ${t.trim()}`).join("\n")
+      : "tags: []";
+    return `---\ntitle: "${title}"\ndescription: "${description}"\npubDate: ${today}\n${tagLines}\n---\n\n`;
+  }
+
+  async function getExistingSha(path: string, token: string): Promise<string | null> {
+    const res = await fetch(
+      `https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}?ref=${BRANCH}`,
+      { headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json" } }
+    );
+    if (res.status === 404) return null;
+    const data = await res.json();
+    return data.sha ?? null;
+  }
+
+  async function commitPost(token: string, filename: string, content: string): Promise<void> {
+    const path = `src/content/blog/${filename}`;
+    const sha = await getExistingSha(path, token);
+
+    const body: Record<string, unknown> = {
+      message: `feat: add post - ${filename.replace(".md", "")}`,
+      content: btoa(unescape(encodeURIComponent(content))),
+      branch: BRANCH,
+    };
+    if (sha) body.sha = sha;
+
+    const res = await fetch(
+      `https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}`,
+      {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/vnd.github+json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      }
+    );
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.message ?? "GitHub API 오류");
+    }
+  }
+
+  (async () => {
+    const token = localStorage.getItem("gh_token");
+    if (!token) {
+      authGuard.style.display = "";
+      return;
+    }
+
+    const userRes = await fetch("https://api.github.com/user", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const user = await userRes.json();
+
+    if (user.login !== OWNER) {
+      localStorage.removeItem("gh_token");
+      authGuard.style.display = "";
+      return;
+    }
+
+    editorShell.style.display = "";
+  })();
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem("gh_token");
+    if (!token) return;
+
+    const title = (document.getElementById("post-title") as HTMLInputElement).value.trim();
+    const description = (document.getElementById("post-description") as HTMLInputElement).value.trim();
+    const tagsRaw = (document.getElementById("post-tags") as HTMLInputElement).value;
+    const body = (document.getElementById("post-content") as HTMLTextAreaElement).value;
+
+    const tags = tagsRaw ? tagsRaw.split(",").map((t) => t.trim()).filter(Boolean) : [];
+    const slug = toSlug(title);
+    const filename = `${slug}.md`;
+    const fileContent = buildFrontmatter(title, description, tags) + body;
+
+    submitBtn.disabled = true;
+    submitStatus.textContent = "커밋 중...";
+
+    try {
+      await commitPost(token, filename, fileContent);
+      submitStatus.textContent = "발행 완료! GitHub Actions 가 배포 중입니다.";
+      submitBtn.disabled = false;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      submitStatus.textContent = `오류: ${message}`;
+      submitBtn.disabled = false;
+    }
+  });
+</script>
+
+<style>
+  .editor-shell,
+  .auth-guard {
+    max-width: 780px;
+    margin: 2.5rem auto;
+    padding: 0 1rem;
+  }
+
+  .post-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .form-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .form-row--full textarea {
+    width: 100%;
+    resize: vertical;
+    font-family: var(--font-mono, monospace);
+    font-size: 0.875rem;
+    background: rgba(0, 0, 0, 0.55);
+    color: #d6ffd6;
+    border: 1px solid rgba(124, 255, 122, 0.25);
+    border-radius: 4px;
+    padding: 0.75rem;
+    line-height: 1.6;
+  }
+
+  label {
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    color: rgba(124, 255, 122, 0.6);
+    text-transform: uppercase;
+  }
+
+  input[type="text"] {
+    background: rgba(0, 0, 0, 0.55);
+    color: #d6ffd6;
+    border: 1px solid rgba(124, 255, 122, 0.25);
+    border-radius: 4px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.95rem;
+    width: 100%;
+  }
+
+  input[type="text"]:focus,
+  textarea:focus {
+    outline: none;
+    border-color: rgba(124, 255, 122, 0.6);
+  }
+
+  .form-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    justify-content: flex-end;
+  }
+
+  #submit-status {
+    font-size: 0.85rem;
+    color: rgba(124, 255, 122, 0.7);
+  }
+
+  button[type="submit"] {
+    background: rgba(124, 255, 122, 0.15);
+    color: #7cff7a;
+    border: 1px solid rgba(124, 255, 122, 0.4);
+    border-radius: 4px;
+    padding: 0.5rem 1.25rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  button[type="submit"]:hover:not(:disabled) {
+    background: rgba(124, 255, 122, 0.28);
+  }
+
+  button[type="submit"]:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .auth-guard {
+    text-align: center;
+    color: rgba(124, 255, 122, 0.6);
+    padding-top: 6rem;
+  }
+</style>
