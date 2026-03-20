@@ -37,6 +37,9 @@ jobs:
 
       - name: Build site
         run: npm run build
+        env:
+          PUBLIC_GITHUB_CLIENT_ID: ${{ secrets.PUBLIC_GITHUB_CLIENT_ID }}
+          PUBLIC_OAUTH_WORKER_URL: ${{ secrets.PUBLIC_OAUTH_WORKER_URL }}
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

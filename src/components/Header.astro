@@ -158,9 +158,6 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
   });
 
   (async () => {
-    // PUBLIC_GITHUB_CLIENT_ID 가 없으면 버튼 자체를 숨김
-    if (!clientId) return;
-
     const token = localStorage.getItem("gh_token");
     if (!token) {
       showLogin();
