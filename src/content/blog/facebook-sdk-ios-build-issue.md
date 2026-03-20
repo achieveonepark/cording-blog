@@ -6,6 +6,7 @@ tags:
   - iOS
   - Facebook SDK
   - Troubleshooting
+category: Troubleshooting
 ---
 
 `Xcode 15.3 미만` 버전에서 `Facebook SDK 17.0.1`을 설치했을 때 빌드는 동작하지만 crash 이슈가 발생합니다.

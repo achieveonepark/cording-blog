@@ -16,6 +16,13 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       </div>
 
       <div class="form-row">
+        <label for="post-category">카테고리</label>
+        <select id="post-category" name="category">
+          <option value="">없음</option>
+        </select>
+      </div>
+
+      <div class="form-row">
         <label for="post-tags">태그</label>
         <input type="text" id="post-tags" name="tags" placeholder="쉼표로 구분 (예: iOS, Swift, Tips)" />
       </div>
@@ -75,12 +82,13 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       .replace(/-+/g, "-");
   }
 
-  function buildFrontmatter(title: string, description: string, tags: string[]): string {
+  function buildFrontmatter(title: string, description: string, tags: string[], category: string): string {
     const today = new Date().toISOString().split("T")[0];
     const tagLines = tags.length > 0
       ? "tags:\n" + tags.map((t) => `  - ${t.trim()}`).join("\n")
       : "tags: []";
-    return `---\ntitle: "${title}"\ndescription: "${description}"\npubDate: ${today}\n${tagLines}\n---\n\n`;
+    const catLine = category ? `\ncategory: ${category}` : "";
+    return `---\ntitle: "${title}"\ndescription: "${description}"\npubDate: ${today}\n${tagLines}${catLine}\n---\n\n`;
   }
 
   async function getExistingSha(path: string, token: string): Promise<string | null> {
@@ -230,6 +238,25 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     });
   }
 
+  async function loadCategories(token: string) {
+    const select = document.getElementById("post-category") as HTMLSelectElement;
+    try {
+      const res = await fetch(
+        `https://api.github.com/repos/${OWNER}/${REPO}/contents/src/data/categories.json?ref=${BRANCH}`,
+        { headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json" } }
+      );
+      if (!res.ok) return;
+      const data = await res.json();
+      const cats: string[] = JSON.parse(atob(data.content.replace(/\n/g, "")));
+      cats.forEach((cat) => {
+        const opt = document.createElement("option");
+        opt.value = cat;
+        opt.textContent = cat;
+        select.appendChild(opt);
+      });
+    } catch {}
+  }
+
   async function loadEditContent(slug: string, token: string) {
     const path = `src/content/blog/${slug}.md`;
     const res = await fetch(
@@ -248,12 +275,24 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 
     const titleMatch = fm.match(/^title:\s*"?(.+?)"?\s*$/m);
     const descMatch = fm.match(/^description:\s*"?(.+?)"?\s*$/m);
+    const categoryMatch = fm.match(/^category:\s*(.+)\s*$/m);
     const tagsMatch = [...fm.matchAll(/^\s*-\s*(.+)\s*$/gm)].map((m) => m[1]);
 
     (document.getElementById("post-title") as HTMLInputElement).value = titleMatch?.[1] ?? "";
     (document.getElementById("post-description") as HTMLInputElement).value = descMatch?.[1] ?? "";
     (document.getElementById("post-tags") as HTMLInputElement).value = tagsMatch.join(", ");
     (document.getElementById("post-content") as HTMLTextAreaElement).value = body;
+    const catVal = categoryMatch?.[1]?.trim() ?? "";
+    const select = document.getElementById("post-category") as HTMLSelectElement;
+    if (catVal) {
+      // 옵션이 아직 없을 수 있으니 없으면 추가
+      if (![...select.options].some((o) => o.value === catVal)) {
+        const opt = document.createElement("option");
+        opt.value = catVal; opt.textContent = catVal;
+        select.appendChild(opt);
+      }
+      select.value = catVal;
+    }
     (document.getElementById("edit-slug") as HTMLInputElement).value = slug;
     (document.getElementById("submit-btn") as HTMLButtonElement).textContent = "수정 & 발행";
     document.title = "글 수정";
@@ -279,6 +318,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 
     editorShell.style.display = "";
     setupImageUpload();
+    await loadCategories(token);
 
     // 수정 모드
     const editSlug = new URLSearchParams(window.location.search).get("edit");
@@ -296,10 +336,11 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     const body = (document.getElementById("post-content") as HTMLTextAreaElement).value;
 
     const tags = tagsRaw ? tagsRaw.split(",").map((t) => t.trim()).filter(Boolean) : [];
+    const category = (document.getElementById("post-category") as HTMLSelectElement).value;
     const editSlug = (document.getElementById("edit-slug") as HTMLInputElement).value;
     const slug = editSlug || toSlug(title);
     const filename = `${slug}.md`;
-    const fileContent = buildFrontmatter(title, description, tags) + body;
+    const fileContent = buildFrontmatter(title, description, tags, category) + body;
 
     submitBtn.disabled = true;
     submitStatus.textContent = "커밋 중...";
@@ -423,6 +464,26 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     letter-spacing: 0.08em;
     color: rgba(124, 255, 122, 0.6);
     text-transform: uppercase;
+  }
+
+  select {
+    background: rgba(0, 0, 0, 0.55);
+    color: #d6ffd6;
+    border: 1px solid rgba(124, 255, 122, 0.25);
+    border-radius: 4px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.95rem;
+    width: 100%;
+    cursor: pointer;
+  }
+
+  select:focus {
+    outline: none;
+    border-color: rgba(124, 255, 122, 0.6);
+  }
+
+  select option {
+    background: #0a0f14;
   }
 
   input[type="text"] {

@@ -138,18 +138,16 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
     const top = Math.round(window.screenY + (window.outerHeight - h) / 2);
     window.open(url, "github-oauth", `width=${w},height=${h},left=${left},top=${top},toolbar=0,scrollbars=1,status=0`);
 
-    window.addEventListener("message", async (e) => {
+    window.addEventListener("message", (e) => {
       if (e.origin !== window.location.origin || e.data?.type !== "oauth-success") return;
       localStorage.setItem("gh_token", e.data.token);
-      showOwner();
-      const fab = document.getElementById("fab-new-post");
-      if (fab) fab.style.display = "flex";
+      window.location.reload();
     }, { once: true });
   });
 
   logoutBtn.addEventListener("click", () => {
     localStorage.removeItem("gh_token");
-    showLogin();
+    window.location.reload();
   });
 
   (async () => {

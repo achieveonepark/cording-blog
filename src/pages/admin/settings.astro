@@ -1,0 +1,279 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="설정">
+  <div class="settings-shell" id="settings-shell" style="display:none">
+    <h1 class="settings-title">설정</h1>
+
+    <section class="settings-section">
+      <h2 class="settings-section__title">카테고리 관리</h2>
+      <p class="settings-section__desc">카테고리를 추가하거나 제거할 수 있어요. 삭제해도 기존 포스트의 카테고리 값은 유지됩니다.</p>
+
+      <ul class="cat-list" id="cat-list"></ul>
+
+      <form class="cat-add-form" id="cat-add-form">
+        <input type="text" id="cat-input" placeholder="새 카테고리 이름" autocomplete="off" />
+        <button type="submit" id="cat-add-btn">추가</button>
+      </form>
+
+      <p class="settings-status" id="settings-status"></p>
+    </section>
+  </div>
+
+  <div class="auth-guard" id="auth-guard" style="display:none">
+    <p>접근 권한이 없습니다.</p>
+    <a href="/">홈으로</a>
+  </div>
+</BaseLayout>
+
+<script>
+  const OWNER = "achieveonepark";
+  const REPO = "cording-blog";
+  const BRANCH = "main";
+  const FILE_PATH = "src/data/categories.json";
+
+  const settingsShell = document.getElementById("settings-shell") as HTMLElement;
+  const authGuard = document.getElementById("auth-guard") as HTMLElement;
+  const catList = document.getElementById("cat-list") as HTMLUListElement;
+  const catInput = document.getElementById("cat-input") as HTMLInputElement;
+  const catAddForm = document.getElementById("cat-add-form") as HTMLFormElement;
+  const settingsStatus = document.getElementById("settings-status") as HTMLElement;
+
+  let currentCategories: string[] = [];
+  let currentSha = "";
+  const token = localStorage.getItem("gh_token") ?? "";
+
+  async function loadCategories() {
+    const res = await fetch(
+      `https://api.github.com/repos/${OWNER}/${REPO}/contents/${FILE_PATH}?ref=${BRANCH}`,
+      { headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json" } }
+    );
+    const data = await res.json();
+    currentSha = data.sha;
+    currentCategories = JSON.parse(atob(data.content.replace(/\n/g, "")));
+    renderList();
+  }
+
+  async function saveCategories(cats: string[], message: string) {
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(cats, null, 2) + "\n")));
+    const res = await fetch(
+      `https://api.github.com/repos/${OWNER}/${REPO}/contents/${FILE_PATH}`,
+      {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/vnd.github+json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ message, content, sha: currentSha, branch: BRANCH }),
+      }
+    );
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.message ?? "저장 실패");
+    }
+    const updated = await res.json();
+    currentSha = updated.content.sha;
+  }
+
+  function renderList() {
+    catList.innerHTML = "";
+    if (currentCategories.length === 0) {
+      catList.innerHTML = '<li class="cat-empty">카테고리가 없습니다.</li>';
+      return;
+    }
+    currentCategories.forEach((cat) => {
+      const li = document.createElement("li");
+      li.className = "cat-item";
+      li.innerHTML = `<span>${cat}</span><button type="button" class="cat-del-btn" data-cat="${cat}" aria-label="${cat} 삭제">삭제</button>`;
+      catList.appendChild(li);
+    });
+
+    catList.querySelectorAll<HTMLButtonElement>(".cat-del-btn").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const cat = btn.dataset.cat!;
+        if (!confirm(`"${cat}" 카테고리를 삭제할까요?`)) return;
+        currentCategories = currentCategories.filter((c) => c !== cat);
+        setStatus("저장 중...");
+        try {
+          await saveCategories(currentCategories, `chore: remove category - ${cat}`);
+          setStatus("삭제 완료!");
+          renderList();
+        } catch (e) {
+          currentCategories.push(cat);
+          setStatus(`오류: ${e instanceof Error ? e.message : e}`);
+          renderList();
+        }
+      });
+    });
+  }
+
+  catAddForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const name = catInput.value.trim();
+    if (!name) return;
+    if (currentCategories.includes(name)) {
+      setStatus("이미 존재하는 카테고리예요.");
+      return;
+    }
+    currentCategories = [...currentCategories, name];
+    catInput.value = "";
+    setStatus("저장 중...");
+    try {
+      await saveCategories(currentCategories, `chore: add category - ${name}`);
+      setStatus("추가 완료!");
+      renderList();
+    } catch (e) {
+      currentCategories = currentCategories.filter((c) => c !== name);
+      setStatus(`오류: ${e instanceof Error ? e.message : e}`);
+      renderList();
+    }
+  });
+
+  function setStatus(msg: string) {
+    settingsStatus.textContent = msg;
+    if (msg && !msg.includes("중")) setTimeout(() => { settingsStatus.textContent = ""; }, 2500);
+  }
+
+  (async () => {
+    if (!token) { authGuard.style.display = ""; return; }
+    const userRes = await fetch("https://api.github.com/user", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const user = await userRes.json();
+    if (user.login !== OWNER) { localStorage.removeItem("gh_token"); authGuard.style.display = ""; return; }
+    settingsShell.style.display = "";
+    await loadCategories();
+  })();
+</script>
+
+<style>
+  .settings-shell,
+  .auth-guard {
+    max-width: 600px;
+    margin: 2.5rem auto;
+    padding: 0 1rem;
+  }
+
+  .settings-title {
+    font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin: 0 0 2rem;
+  }
+
+  .settings-section {
+    border: 1px solid rgba(124, 255, 122, 0.1);
+    border-radius: 16px;
+    background: rgba(18, 23, 29, 0.88);
+    padding: 1.5rem;
+  }
+
+  .settings-section__title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    margin: 0 0 0.35rem;
+    color: rgba(124, 255, 122, 0.85);
+  }
+
+  .settings-section__desc {
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin: 0 0 1.25rem;
+  }
+
+  .cat-list {
+    list-style: none;
+    margin: 0 0 1rem;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .cat-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.55rem 0.85rem;
+    border-radius: 8px;
+    border: 1px solid rgba(124, 255, 122, 0.1);
+    background: rgba(10, 14, 18, 0.6);
+    font-size: 0.9rem;
+  }
+
+  .cat-empty {
+    font-size: 0.85rem;
+    color: var(--muted);
+    padding: 0.5rem 0;
+  }
+
+  .cat-del-btn {
+    background: transparent;
+    border: 1px solid rgba(255, 80, 80, 0.2);
+    color: rgba(255, 120, 120, 0.6);
+    border-radius: 999px;
+    padding: 0.2rem 0.7rem;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: border-color 150ms, background 150ms, color 150ms;
+  }
+
+  .cat-del-btn:hover {
+    border-color: rgba(255, 80, 80, 0.5);
+    background: rgba(255, 80, 80, 0.08);
+    color: #ff7070;
+  }
+
+  .cat-add-form {
+    display: flex;
+    gap: 0.6rem;
+  }
+
+  .cat-add-form input {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.5);
+    color: #d6ffd6;
+    border: 1px solid rgba(124, 255, 122, 0.2);
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+  }
+
+  .cat-add-form input:focus {
+    outline: none;
+    border-color: rgba(124, 255, 122, 0.5);
+  }
+
+  .cat-add-form button {
+    background: rgba(124, 255, 122, 0.12);
+    color: #7cff7a;
+    border: 1px solid rgba(124, 255, 122, 0.3);
+    border-radius: 8px;
+    padding: 0.5rem 1.1rem;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 150ms;
+    white-space: nowrap;
+  }
+
+  .cat-add-form button:hover {
+    background: rgba(124, 255, 122, 0.22);
+  }
+
+  .settings-status {
+    margin-top: 0.75rem;
+    font-size: 0.82rem;
+    color: rgba(124, 255, 122, 0.65);
+    min-height: 1.2em;
+  }
+
+  .auth-guard {
+    text-align: center;
+    color: rgba(124, 255, 122, 0.6);
+    padding-top: 6rem;
+  }
+</style>
