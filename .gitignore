@@ -11,3 +11,6 @@ dist/
 # TinaCMS
 tina/__generated__
 public/tina-admin/
+
+# Tauri desktop app
+desktop-app/
