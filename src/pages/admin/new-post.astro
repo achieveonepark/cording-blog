@@ -32,36 +32,8 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       </div>
 
       <div class="form-row form-row--full">
-        <div class="content-toolbar">
-          <div class="toolbar-left">
-            <button type="button" id="img-upload-btn" class="toolbar-btn" title="이미지 업로드">
-              <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
-                <rect x="3" y="3" width="18" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/>
-                <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/>
-                <path d="M21 15l-5-5L5 21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
-              </svg>
-              이미지
-            </button>
-            <input type="file" id="img-file-input" accept="image/*" style="display:none" />
-            <span id="img-status" class="img-status"></span>
-          </div>
-          <div class="view-tabs">
-            <button type="button" class="view-tab view-tab--active" data-tab="write">편집</button>
-            <button type="button" class="view-tab" data-tab="preview">미리보기</button>
-          </div>
-        </div>
-
-        <div class="content-area">
-          <div id="write-pane" class="write-pane">
-            <div class="textarea-wrap" id="textarea-wrap">
-              <textarea id="post-content" name="content" rows="30" placeholder="마크다운으로 작성하세요... 이미지는 드래그&드롭도 가능해요."></textarea>
-              <div class="drop-overlay" id="drop-overlay">이미지를 여기에 놓으세요</div>
-            </div>
-          </div>
-          <div id="preview-pane" class="preview-pane" style="display:none">
-            <div id="preview-body"></div>
-          </div>
-        </div>
+        <label>내용</label>
+        <div id="toast-editor"></div>
       </div>
 
       <div class="form-actions">
@@ -80,7 +52,9 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 </BaseLayout>
 
 <script>
-  import { marked } from "marked";
+  import Editor from "@toast-ui/editor";
+  import "@toast-ui/editor/dist/toastui-editor.css";
+  import "@toast-ui/editor/dist/theme/toastui-editor-dark.css";
 
   const OWNER = "achieveonepark";
   const REPO = "cording-blog";
@@ -91,98 +65,27 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
   const form = document.getElementById("post-form") as HTMLFormElement;
   const submitBtn = document.getElementById("submit-btn") as HTMLButtonElement;
   const submitStatus = document.getElementById("submit-status") as HTMLElement;
-  const textarea = document.getElementById("post-content") as HTMLTextAreaElement;
-  const previewBody = document.getElementById("preview-body") as HTMLElement;
-  const writePane = document.getElementById("write-pane") as HTMLElement;
-  const previewPane = document.getElementById("preview-pane") as HTMLElement;
 
-  // 탭 전환
-  document.querySelectorAll<HTMLButtonElement>(".view-tab").forEach((tab) => {
-    tab.addEventListener("click", () => {
-      document.querySelectorAll(".view-tab").forEach((t) => t.classList.remove("view-tab--active"));
-      tab.classList.add("view-tab--active");
-
-      if (tab.dataset.tab === "preview") {
-        previewBody.innerHTML = marked.parse(textarea.value || "_내용 없음_") as string;
-        writePane.style.display = "none";
-        previewPane.style.display = "";
-      } else {
-        writePane.style.display = "";
-        previewPane.style.display = "none";
-      }
-    });
-  });
-
-  // --- 유틸 ---
-  function toSlug(title: string): string {
-    return title
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9가-힣\s-]/g, "")
-      .replace(/\s+/g, "-")
-      .replace(/-+/g, "-");
-  }
-
-  function buildFrontmatter(title: string, description: string, tags: string[], category: string): string {
-    const today = new Date().toISOString().split("T")[0];
-    const tagLines = tags.length > 0
-      ? "tags:\n" + tags.map((t) => `  - ${t.trim()}`).join("\n")
-      : "tags: []";
-    const catLine = category ? `\ncategory: ${category}` : "";
-    return `---\ntitle: "${title}"\ndescription: "${description}"\npubDate: ${today}\n${tagLines}${catLine}\n---\n\n`;
-  }
-
+  // --- GitHub API ---
   async function getExistingSha(path: string, token: string): Promise<string | null> {
     const res = await fetch(
       `https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}?ref=${BRANCH}`,
       { headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json" } }
     );
     if (res.status === 404) return null;
-    const data = await res.json();
-    return data.sha ?? null;
+    return (await res.json()).sha ?? null;
   }
 
-  async function commitPost(token: string, filename: string, content: string): Promise<void> {
-    const path = `src/content/blog/${filename}`;
-    const sha = await getExistingSha(path, token);
-
-    const body: Record<string, unknown> = {
-      message: `feat: add post - ${filename.replace(".md", "")}`,
-      content: btoa(unescape(encodeURIComponent(content))),
-      branch: BRANCH,
-    };
-    if (sha) body.sha = sha;
-
-    const res = await fetch(
-      `https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}`,
-      {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/vnd.github+json",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(body),
-      }
-    );
-
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.message ?? "GitHub API 오류");
-    }
-  }
-
-  async function uploadImage(file: File, token: string): Promise<string> {
-    const ext = file.name.split(".").pop()?.toLowerCase() ?? "png";
-    const safeName = file.name.replace(/\.[^.]+$/, "").replace(/[^a-z0-9가-힣-]/gi, "-").toLowerCase();
-    const filename = `${Date.now()}-${safeName}.${ext}`;
+  async function uploadImage(blob: Blob, token: string): Promise<string> {
+    const ext = blob.type.split("/")[1] ?? "png";
+    const filename = `${Date.now()}.${ext}`;
     const path = `public/images/${filename}`;
 
     const base64 = await new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve((reader.result as string).split(",")[1]);
       reader.onerror = reject;
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(blob);
     });
 
     const sha = await getExistingSha(path, token);
@@ -205,60 +108,50 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
         body: JSON.stringify(body),
       }
     );
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.message ?? "이미지 업로드 실패");
-    }
+    if (!res.ok) throw new Error((await res.json()).message ?? "이미지 업로드 실패");
     return `/images/${filename}`;
   }
 
-  function insertAtCursor(el: HTMLTextAreaElement, text: string) {
-    const s = el.selectionStart;
-    const e = el.selectionEnd;
-    el.value = el.value.slice(0, s) + text + el.value.slice(e);
-    el.selectionStart = el.selectionEnd = s + text.length;
-    el.focus();
+  async function commitPost(token: string, filename: string, content: string): Promise<void> {
+    const path = `src/content/blog/${filename}`;
+    const sha = await getExistingSha(path, token);
+    const body: Record<string, unknown> = {
+      message: `feat: add post - ${filename.replace(".md", "")}`,
+      content: btoa(unescape(encodeURIComponent(content))),
+      branch: BRANCH,
+    };
+    if (sha) body.sha = sha;
+
+    const res = await fetch(
+      `https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}`,
+      {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/vnd.github+json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      }
+    );
+    if (!res.ok) throw new Error((await res.json()).message ?? "GitHub API 오류");
   }
 
-  function setupImageUpload() {
-    const token = localStorage.getItem("gh_token");
-    const fileInput = document.getElementById("img-file-input") as HTMLInputElement;
-    const uploadBtn = document.getElementById("img-upload-btn") as HTMLButtonElement;
-    const imgStatus = document.getElementById("img-status") as HTMLElement;
-    const dropOverlay = document.getElementById("drop-overlay") as HTMLElement;
-    const textareaWrap = document.getElementById("textarea-wrap") as HTMLElement;
+  // --- 유틸 ---
+  function toSlug(title: string): string {
+    return title.toLowerCase().trim()
+      .replace(/[^a-z0-9가-힣\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-");
+  }
 
-    async function handleFile(file: File) {
-      if (!token) return;
-      if (!file.type.startsWith("image/")) { imgStatus.textContent = "이미지 파일만 가능합니다."; return; }
-      uploadBtn.disabled = true;
-      imgStatus.textContent = "업로드 중...";
-      try {
-        const url = await uploadImage(file, token);
-        insertAtCursor(textarea, `![${file.name.replace(/\.[^.]+$/, "")}](${url})`);
-        imgStatus.textContent = "업로드 완료!";
-        setTimeout(() => { imgStatus.textContent = ""; }, 2000);
-      } catch (err) {
-        imgStatus.textContent = `오류: ${err instanceof Error ? err.message : String(err)}`;
-      } finally {
-        uploadBtn.disabled = false;
-        fileInput.value = "";
-      }
-    }
-
-    uploadBtn.addEventListener("click", () => fileInput.click());
-    fileInput.addEventListener("change", () => { if (fileInput.files?.[0]) handleFile(fileInput.files[0]); });
-
-    textareaWrap.addEventListener("dragover", (e) => { e.preventDefault(); dropOverlay.classList.add("visible"); });
-    textareaWrap.addEventListener("dragleave", (e) => {
-      if (!textareaWrap.contains(e.relatedTarget as Node)) dropOverlay.classList.remove("visible");
-    });
-    textareaWrap.addEventListener("drop", (e) => {
-      e.preventDefault();
-      dropOverlay.classList.remove("visible");
-      const file = e.dataTransfer?.files[0];
-      if (file) handleFile(file);
-    });
+  function buildFrontmatter(title: string, description: string, tags: string[], category: string): string {
+    const today = new Date().toISOString().split("T")[0];
+    const tagLines = tags.length > 0
+      ? "tags:\n" + tags.map((t) => `  - ${t.trim()}`).join("\n")
+      : "tags: []";
+    const catLine = category ? `\ncategory: ${category}` : "";
+    return `---\ntitle: "${title}"\ndescription: "${description}"\npubDate: ${today}\n${tagLines}${catLine}\n---\n\n`;
   }
 
   async function loadCategories(token: string) {
@@ -279,7 +172,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     } catch {}
   }
 
-  async function loadEditContent(slug: string, token: string) {
+  async function loadEditContent(slug: string, token: string, editor: Editor) {
     const path = `src/content/blog/${slug}.md`;
     const res = await fetch(
       `https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}?ref=${BRANCH}`,
@@ -302,7 +195,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     (document.getElementById("post-title") as HTMLInputElement).value = titleMatch?.[1] ?? "";
     (document.getElementById("post-description") as HTMLInputElement).value = descMatch?.[1] ?? "";
     (document.getElementById("post-tags") as HTMLInputElement).value = tagsMatch.join(", ");
-    textarea.value = body;
+    editor.setMarkdown(body);
 
     const catVal = categoryMatch?.[1]?.trim() ?? "";
     const select = document.getElementById("post-category") as HTMLSelectElement;
@@ -319,6 +212,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     document.title = "글 수정";
   }
 
+  // --- 진입점 ---
   (async () => {
     const token = localStorage.getItem("gh_token");
     if (!token) { authGuard.style.display = ""; return; }
@@ -327,7 +221,6 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       headers: { Authorization: `Bearer ${token}` },
     });
     const user = await userRes.json();
-
     if (user.login !== OWNER) {
       localStorage.removeItem("gh_token");
       authGuard.style.display = "";
@@ -335,115 +228,148 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     }
 
     editorShell.style.display = "";
-    setupImageUpload();
+
+    // Toast UI Editor 초기화
+    const editor = new Editor({
+      el: document.getElementById("toast-editor") as HTMLElement,
+      height: "600px",
+      initialEditType: "wysiwyg",
+      previewStyle: "vertical",
+      theme: "dark",
+      placeholder: "내용을 입력하세요...",
+      hooks: {
+        addImageBlobHook: async (blob, callback) => {
+          try {
+            const url = await uploadImage(blob, token);
+            callback(url, "image");
+          } catch (err) {
+            alert(`이미지 업로드 실패: ${err instanceof Error ? err.message : String(err)}`);
+          }
+        },
+      },
+    });
+
     await loadCategories(token);
 
     const editSlug = new URLSearchParams(window.location.search).get("edit");
-    if (editSlug) await loadEditContent(editSlug, token);
+    if (editSlug) await loadEditContent(editSlug, token, editor);
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const title = (document.getElementById("post-title") as HTMLInputElement).value.trim();
+      const description = (document.getElementById("post-description") as HTMLInputElement).value.trim();
+      const tagsRaw = (document.getElementById("post-tags") as HTMLInputElement).value;
+      const tags = tagsRaw ? tagsRaw.split(",").map((t) => t.trim()).filter(Boolean) : [];
+      const category = (document.getElementById("post-category") as HTMLSelectElement).value;
+      const editSlug = (document.getElementById("edit-slug") as HTMLInputElement).value;
+      const slug = editSlug || toSlug(title);
+      const markdown = editor.getMarkdown();
+      const fileContent = buildFrontmatter(title, description, tags, category) + markdown;
+
+      submitBtn.disabled = true;
+      submitStatus.textContent = "커밋 중...";
+
+      try {
+        await commitPost(token, `${slug}.md`, fileContent);
+        submitStatus.textContent = editSlug ? "수정 완료! 배포 중..." : "발행 완료! 배포 중...";
+        submitBtn.disabled = false;
+      } catch (err) {
+        submitStatus.textContent = `오류: ${err instanceof Error ? err.message : String(err)}`;
+        submitBtn.disabled = false;
+      }
+    });
   })();
-
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const token = localStorage.getItem("gh_token");
-    if (!token) return;
-
-    const title = (document.getElementById("post-title") as HTMLInputElement).value.trim();
-    const description = (document.getElementById("post-description") as HTMLInputElement).value.trim();
-    const tagsRaw = (document.getElementById("post-tags") as HTMLInputElement).value;
-    const body = textarea.value;
-    const tags = tagsRaw ? tagsRaw.split(",").map((t) => t.trim()).filter(Boolean) : [];
-    const category = (document.getElementById("post-category") as HTMLSelectElement).value;
-    const editSlug = (document.getElementById("edit-slug") as HTMLInputElement).value;
-    const slug = editSlug || toSlug(title);
-    const fileContent = buildFrontmatter(title, description, tags, category) + body;
-
-    submitBtn.disabled = true;
-    submitStatus.textContent = "커밋 중...";
-
-    try {
-      await commitPost(token, `${slug}.md`, fileContent);
-      submitStatus.textContent = editSlug ? "수정 완료! 배포 중..." : "발행 완료! 배포 중...";
-      submitBtn.disabled = false;
-    } catch (err) {
-      submitStatus.textContent = `오류: ${err instanceof Error ? err.message : String(err)}`;
-      submitBtn.disabled = false;
-    }
-  });
 </script>
 
-<!-- 미리보기 prose 스타일 (동적 innerHTML에 적용되므로 is:global 필요) -->
+<!-- Toast UI Editor 다크 테마 커스터마이징 -->
 <style is:global>
-  #preview-body {
-    color: var(--text, #c8d8c8);
-    font-size: 1rem;
-    line-height: 1.78;
+  .toastui-editor-defaultUI {
+    border: 1px solid rgba(124, 255, 122, 0.2) !important;
+    border-radius: 6px !important;
+    background: rgba(0, 0, 0, 0.5) !important;
   }
 
-  #preview-body h1,
-  #preview-body h2,
-  #preview-body h3,
-  #preview-body h4 {
+  .toastui-editor-toolbar {
+    background: rgba(10, 15, 20, 0.95) !important;
+    border-bottom: 1px solid rgba(124, 255, 122, 0.15) !important;
+  }
+
+  .toastui-editor-toolbar-icons {
+    border: none !important;
+  }
+
+  .toastui-editor-toolbar-icons:hover,
+  .toastui-editor-toolbar-icons.active {
+    background: rgba(124, 255, 122, 0.12) !important;
+  }
+
+  .toastui-editor-ww-container,
+  .toastui-editor-md-container {
+    background: transparent !important;
+  }
+
+  .ProseMirror,
+  .toastui-editor-contents,
+  .toastui-editor-md-container .toastui-editor {
+    color: #c8d8c8 !important;
+    caret-color: #7cff7a !important;
+  }
+
+  .toastui-editor-contents p,
+  .toastui-editor-contents li {
+    color: #c8d8c8;
+  }
+
+  .toastui-editor-contents h1,
+  .toastui-editor-contents h2,
+  .toastui-editor-contents h3,
+  .toastui-editor-contents h4 {
     color: #e8f8e8;
-    font-weight: 700;
-    line-height: 1.3;
-    margin: 1.5em 0 0.5em;
+    border-color: rgba(124, 255, 122, 0.2);
   }
 
-  #preview-body h1 { font-size: 1.75rem; }
-  #preview-body h2 { font-size: 1.35rem; border-bottom: 1px solid rgba(124,255,122,0.15); padding-bottom: 0.3em; }
-  #preview-body h3 { font-size: 1.1rem; }
-  #preview-body h4 { font-size: 0.95rem; }
+  .toastui-editor-contents a { color: #7cff7a; }
 
-  #preview-body p { margin: 0.85em 0; }
-
-  #preview-body a { color: #7cff7a; text-decoration: underline; text-decoration-color: rgba(124,255,122,0.35); }
-  #preview-body strong { color: #e8f8e8; font-weight: 700; }
-  #preview-body em { color: #c0e8c0; font-style: italic; }
-
-  #preview-body code {
-    font-family: monospace;
-    font-size: 0.85em;
-    background: rgba(124, 255, 122, 0.08);
-    border: 1px solid rgba(124, 255, 122, 0.18);
-    border-radius: 3px;
-    padding: 0.15em 0.4em;
-    color: #a8f0a8;
+  .toastui-editor-contents code {
+    background: rgba(124, 255, 122, 0.08) !important;
+    color: #a8f0a8 !important;
   }
 
-  #preview-body pre {
-    background: rgba(0, 0, 0, 0.6);
-    border: 1px solid rgba(124, 255, 122, 0.18);
-    border-radius: 6px;
-    padding: 1rem;
-    overflow-x: auto;
-    margin: 1em 0;
+  .toastui-editor-contents pre {
+    background: rgba(0, 0, 0, 0.6) !important;
+    border: 1px solid rgba(124, 255, 122, 0.15) !important;
   }
 
-  #preview-body pre code {
-    background: none;
-    border: none;
-    padding: 0;
-    font-size: 0.875rem;
-    color: #c8f0c8;
+  .toastui-editor-contents blockquote {
+    border-left-color: rgba(124, 255, 122, 0.4) !important;
+    color: rgba(200, 240, 200, 0.7) !important;
   }
 
-  #preview-body blockquote {
-    border-left: 3px solid rgba(124, 255, 122, 0.4);
-    padding-left: 1em;
-    margin: 1em 0;
-    color: rgba(200, 240, 200, 0.7);
-    font-style: italic;
+  .toastui-editor-mode-switch {
+    background: rgba(10, 15, 20, 0.95) !important;
+    border-top: 1px solid rgba(124, 255, 122, 0.15) !important;
   }
 
-  #preview-body ul, #preview-body ol { padding-left: 1.5em; margin: 0.75em 0; }
-  #preview-body li { margin: 0.3em 0; }
+  .toastui-editor-mode-switch .tab-item {
+    color: rgba(124, 255, 122, 0.5) !important;
+  }
 
-  #preview-body hr { border: none; border-top: 1px solid rgba(124, 255, 122, 0.18); margin: 1.5em 0; }
-  #preview-body img { max-width: 100%; border-radius: 6px; margin: 0.75em 0; }
+  .toastui-editor-mode-switch .tab-item.active {
+    color: #7cff7a !important;
+    background: rgba(124, 255, 122, 0.1) !important;
+  }
 
-  #preview-body table { width: 100%; border-collapse: collapse; margin: 1em 0; font-size: 0.9em; }
-  #preview-body th, #preview-body td { border: 1px solid rgba(124, 255, 122, 0.2); padding: 0.5em 0.75em; text-align: left; }
-  #preview-body th { background: rgba(124, 255, 122, 0.07); color: #e8f8e8; }
+  .toastui-editor-popup {
+    background: #0a0f14 !important;
+    border: 1px solid rgba(124, 255, 122, 0.25) !important;
+  }
+
+  .toastui-editor-popup input {
+    background: rgba(0, 0, 0, 0.6) !important;
+    color: #d6ffd6 !important;
+    border: 1px solid rgba(124, 255, 122, 0.25) !important;
+  }
 </style>
 
 <style>
@@ -477,132 +403,6 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     flex-direction: column;
     gap: 0.3rem;
   }
-
-  .content-toolbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 0.5rem;
-    gap: 0.75rem;
-  }
-
-  .toolbar-left {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  .view-tabs {
-    display: flex;
-    border: 1px solid rgba(124, 255, 122, 0.2);
-    border-radius: 6px;
-    overflow: hidden;
-  }
-
-  .view-tab {
-    padding: 0.3rem 0.85rem;
-    background: transparent;
-    border: none;
-    color: rgba(124, 255, 122, 0.45);
-    font-size: 0.78rem;
-    font-weight: 600;
-    letter-spacing: 0.05em;
-    cursor: pointer;
-    transition: background 150ms, color 150ms;
-  }
-
-  .view-tab + .view-tab {
-    border-left: 1px solid rgba(124, 255, 122, 0.2);
-  }
-
-  .view-tab--active {
-    background: rgba(124, 255, 122, 0.12);
-    color: #7cff7a;
-  }
-
-  .content-area {
-    width: 100%;
-  }
-
-  .write-pane {
-    width: 100%;
-  }
-
-  .textarea-wrap {
-    position: relative;
-  }
-
-  .write-pane textarea {
-    width: 100%;
-    resize: vertical;
-    font-family: var(--font-mono, monospace);
-    font-size: 0.875rem;
-    background: rgba(0, 0, 0, 0.55);
-    color: #d6ffd6;
-    border: 1px solid rgba(124, 255, 122, 0.25);
-    border-radius: 6px;
-    padding: 0.75rem;
-    line-height: 1.6;
-  }
-
-  .write-pane textarea:focus {
-    outline: none;
-    border-color: rgba(124, 255, 122, 0.6);
-  }
-
-  .drop-overlay {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 6px;
-    border: 2px dashed rgba(124, 255, 122, 0.5);
-    background: rgba(5, 10, 14, 0.88);
-    color: #7cff7a;
-    font-size: 0.95rem;
-    letter-spacing: 0.04em;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 150ms;
-  }
-
-  .drop-overlay.visible {
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  .preview-pane {
-    min-height: 400px;
-    border: 1px solid rgba(124, 255, 122, 0.18);
-    border-radius: 6px;
-    background: rgba(0, 0, 0, 0.3);
-    padding: 1.25rem 1.5rem;
-  }
-
-  .toolbar-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    padding: 0.25rem 0.65rem;
-    border-radius: 999px;
-    border: 1px solid rgba(124, 255, 122, 0.2);
-    background: transparent;
-    color: rgba(124, 255, 122, 0.6);
-    font-size: 0.75rem;
-    cursor: pointer;
-    transition: border-color 150ms, background 150ms, color 150ms;
-  }
-
-  .toolbar-btn:hover:not(:disabled) {
-    border-color: rgba(124, 255, 122, 0.45);
-    background: rgba(124, 255, 122, 0.07);
-    color: #7cff7a;
-  }
-
-  .toolbar-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-  .img-status { font-size: 0.78rem; color: rgba(124, 255, 122, 0.6); }
 
   label {
     font-size: 0.75rem;
@@ -656,6 +456,5 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 
   @media (max-width: 640px) {
     .meta-cols { grid-template-columns: 1fr; }
-    .content-toolbar { flex-wrap: wrap; }
   }
 </style>
