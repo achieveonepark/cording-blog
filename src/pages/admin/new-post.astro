@@ -21,8 +21,23 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       </div>
 
       <div class="form-row form-row--full">
-        <label for="post-content">내용 (Markdown)</label>
-        <textarea id="post-content" name="content" rows="28" placeholder="마크다운으로 작성하세요..."></textarea>
+        <div class="content-label-row">
+          <label for="post-content">내용 (Markdown)</label>
+          <button type="button" id="img-upload-btn" class="toolbar-btn" title="이미지 업로드">
+            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+              <rect x="3" y="3" width="18" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/>
+              <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/>
+              <path d="M21 15l-5-5L5 21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+            </svg>
+            이미지
+          </button>
+          <input type="file" id="img-file-input" accept="image/*" style="display:none" />
+          <span id="img-status" class="img-status"></span>
+        </div>
+        <div class="textarea-wrap" id="textarea-wrap">
+          <textarea id="post-content" name="content" rows="28" placeholder="마크다운으로 작성하세요... 이미지는 드래그&드롭도 가능해요."></textarea>
+          <div class="drop-overlay" id="drop-overlay">이미지를 여기에 놓으세요</div>
+        </div>
       </div>
 
       <div class="form-actions">
@@ -108,6 +123,113 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     }
   }
 
+  // 이미지 업로드
+  async function uploadImage(file: File, token: string): Promise<string> {
+    const ext = file.name.split(".").pop()?.toLowerCase() ?? "png";
+    const safeName = file.name.replace(/\.[^.]+$/, "").replace(/[^a-z0-9가-힣-]/gi, "-").toLowerCase();
+    const filename = `${Date.now()}-${safeName}.${ext}`;
+    const path = `public/images/${filename}`;
+
+    const base64 = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        resolve(result.split(",")[1]);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+    const sha = await getExistingSha(path, token);
+    const body: Record<string, unknown> = {
+      message: `chore: upload image - ${filename}`,
+      content: base64,
+      branch: BRANCH,
+    };
+    if (sha) body.sha = sha;
+
+    const res = await fetch(
+      `https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}`,
+      {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/vnd.github+json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      }
+    );
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.message ?? "이미지 업로드 실패");
+    }
+    return `/images/${filename}`;
+  }
+
+  function insertAtCursor(textarea: HTMLTextAreaElement, text: string) {
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    textarea.value = textarea.value.slice(0, start) + text + textarea.value.slice(end);
+    textarea.selectionStart = textarea.selectionEnd = start + text.length;
+    textarea.focus();
+  }
+
+  function setupImageUpload() {
+    const token = localStorage.getItem("gh_token");
+    const textarea = document.getElementById("post-content") as HTMLTextAreaElement;
+    const fileInput = document.getElementById("img-file-input") as HTMLInputElement;
+    const uploadBtn = document.getElementById("img-upload-btn") as HTMLButtonElement;
+    const imgStatus = document.getElementById("img-status") as HTMLElement;
+    const dropOverlay = document.getElementById("drop-overlay") as HTMLElement;
+    const textareaWrap = document.getElementById("textarea-wrap") as HTMLElement;
+
+    async function handleFile(file: File) {
+      if (!token) return;
+      if (!file.type.startsWith("image/")) {
+        imgStatus.textContent = "이미지 파일만 가능합니다.";
+        return;
+      }
+      uploadBtn.disabled = true;
+      imgStatus.textContent = "업로드 중...";
+      try {
+        const url = await uploadImage(file, token);
+        const alt = file.name.replace(/\.[^.]+$/, "");
+        insertAtCursor(textarea, `![${alt}](${url})`);
+        imgStatus.textContent = "업로드 완료!";
+        setTimeout(() => { imgStatus.textContent = ""; }, 2000);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        imgStatus.textContent = `오류: ${msg}`;
+      } finally {
+        uploadBtn.disabled = false;
+        fileInput.value = "";
+      }
+    }
+
+    uploadBtn.addEventListener("click", () => fileInput.click());
+    fileInput.addEventListener("change", () => {
+      if (fileInput.files?.[0]) handleFile(fileInput.files[0]);
+    });
+
+    // 드래그&드롭
+    textareaWrap.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      dropOverlay.classList.add("visible");
+    });
+    textareaWrap.addEventListener("dragleave", (e) => {
+      if (!textareaWrap.contains(e.relatedTarget as Node)) {
+        dropOverlay.classList.remove("visible");
+      }
+    });
+    textareaWrap.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropOverlay.classList.remove("visible");
+      const file = e.dataTransfer?.files[0];
+      if (file) handleFile(file);
+    });
+  }
+
   async function loadEditContent(slug: string, token: string) {
     const path = `src/content/blog/${slug}.md`;
     const res = await fetch(
@@ -156,6 +278,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     }
 
     editorShell.style.display = "";
+    setupImageUpload();
 
     // 수정 모드
     const editSlug = new URLSearchParams(window.location.search).get("edit");
@@ -213,6 +336,73 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     display: flex;
     flex-direction: column;
     gap: 0.35rem;
+  }
+
+  .content-label-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.35rem;
+  }
+
+  .content-label-row label {
+    margin-bottom: 0;
+  }
+
+  .toolbar-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.65rem;
+    border-radius: 999px;
+    border: 1px solid rgba(124, 255, 122, 0.2);
+    background: transparent;
+    color: rgba(124, 255, 122, 0.6);
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: border-color 150ms, background 150ms, color 150ms;
+  }
+
+  .toolbar-btn:hover:not(:disabled) {
+    border-color: rgba(124, 255, 122, 0.45);
+    background: rgba(124, 255, 122, 0.07);
+    color: #7cff7a;
+  }
+
+  .toolbar-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .img-status {
+    font-size: 0.78rem;
+    color: rgba(124, 255, 122, 0.6);
+  }
+
+  .textarea-wrap {
+    position: relative;
+  }
+
+  .drop-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    border: 2px dashed rgba(124, 255, 122, 0.5);
+    background: rgba(5, 10, 14, 0.88);
+    color: #7cff7a;
+    font-size: 0.95rem;
+    letter-spacing: 0.04em;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 150ms;
+  }
+
+  .drop-overlay.visible {
+    opacity: 1;
+    pointer-events: auto;
   }
 
   .form-row--full textarea {
