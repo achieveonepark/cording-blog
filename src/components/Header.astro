@@ -2,6 +2,7 @@
 import { externalLinks, navigation, site } from "../config/site";
 
 const pathname = Astro.url.pathname;
+const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
 ---
 
 <header class="site-header">
@@ -72,6 +73,142 @@ const pathname = Astro.url.pathname;
           </svg>
         </a>
       </div>
+
+      <div class="site-nav__group site-nav__group--admin">
+        <!-- 새 글 쓰기 버튼 (인증된 owner 에게만 표시) -->
+        <a
+          id="nav-new-post"
+          class="site-nav__icon-link"
+          href="/admin/new-post"
+          aria-label="새 글 쓰기"
+          title="새 글 쓰기"
+          style="display:none"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true" class="nav-icon">
+            <path d="M4 20h4l11-11-4-4L4 16v4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
+            <path d="M13.5 6.5l4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+          </svg>
+        </a>
+
+        <!-- 로그인 버튼 -->
+        <button
+          id="nav-login-btn"
+          class="site-nav__icon-link"
+          aria-label="GitHub 로그인"
+          title="GitHub 로그인"
+          style="display:none"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true" class="nav-icon">
+            <circle cx="12" cy="8" r="3.5" fill="none" stroke="currentColor" stroke-width="1.8" />
+            <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+          </svg>
+        </button>
+
+        <!-- 로그아웃 버튼 -->
+        <button
+          id="nav-logout-btn"
+          class="site-nav__icon-link"
+          aria-label="로그아웃"
+          title="로그아웃"
+          style="display:none"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true" class="nav-icon">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+            <polyline points="16 17 21 12 16 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+            <line x1="21" y1="12" x2="9" y2="12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+          </svg>
+        </button>
+      </div>
     </nav>
   </div>
 </header>
+
+<script define:vars={{ clientId }}>
+  const OWNER = "achieveonepark";
+  const CALLBACK = "https://blog.somiri.dev/admin/callback";
+
+  const newPostBtn = document.getElementById("nav-new-post");
+  const loginBtn = document.getElementById("nav-login-btn");
+  const logoutBtn = document.getElementById("nav-logout-btn");
+
+  function showLogin() {
+    loginBtn.style.display = "";
+    newPostBtn.style.display = "none";
+    logoutBtn.style.display = "none";
+  }
+
+  function showOwner() {
+    loginBtn.style.display = "none";
+    newPostBtn.style.display = "";
+    logoutBtn.style.display = "";
+  }
+
+  loginBtn.addEventListener("click", () => {
+    const url =
+      `https://github.com/login/oauth/authorize` +
+      `?client_id=${clientId}` +
+      `&scope=public_repo` +
+      `&redirect_uri=${encodeURIComponent(CALLBACK)}`;
+    window.location.href = url;
+  });
+
+  logoutBtn.addEventListener("click", () => {
+    localStorage.removeItem("gh_token");
+    showLogin();
+  });
+
+  (async () => {
+    // PUBLIC_GITHUB_CLIENT_ID 가 없으면 버튼 자체를 숨김
+    if (!clientId) return;
+
+    const token = localStorage.getItem("gh_token");
+    if (!token) {
+      showLogin();
+      return;
+    }
+
+    try {
+      const res = await fetch("https://api.github.com/user", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const user = await res.json();
+
+      if (user.login === OWNER) {
+        showOwner();
+      } else {
+        localStorage.removeItem("gh_token");
+        showLogin();
+      }
+    } catch {
+      showLogin();
+    }
+  })();
+</script>
+
+<style>
+  .site-nav button.site-nav__icon-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.35rem;
+    min-height: 2.35rem;
+    padding: 0;
+    border-radius: 999px;
+    border: 1px solid rgba(124, 255, 122, 0.08);
+    background: rgba(20, 24, 31, 0.72);
+    color: var(--muted);
+    cursor: pointer;
+    transition:
+      border-color 180ms ease,
+      background 180ms ease,
+      color 180ms ease,
+      transform 180ms ease;
+  }
+
+  .site-nav button.site-nav__icon-link:hover {
+    color: var(--text);
+    border-color: rgba(124, 255, 122, 0.22);
+    background: rgba(27, 34, 41, 0.9);
+    transform: translateY(-1px);
+  }
+</style>
