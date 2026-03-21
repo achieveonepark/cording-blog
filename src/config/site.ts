@@ -13,7 +13,7 @@ export const navigation = [
 
 export const externalLinks = [
   {
-    href: "https://github.com/achieveonepark/cording-blog",
+    href: "https://github.com/achieveonepark",
     label: "GitHub",
     kind: "github"
   },
