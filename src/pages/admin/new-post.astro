@@ -29,6 +29,11 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
             <input type="text" id="post-tags" name="tags" placeholder="쉼표로 구분 (예: iOS, Swift, Tips)" />
           </div>
         </div>
+
+        <div class="form-row">
+          <label for="post-thumbnail">썸네일 URL</label>
+          <input type="text" id="post-thumbnail" name="thumbnail" placeholder="https://... (에디터에서 이미지 업로드 후 URL 복사)" />
+        </div>
       </div>
 
       <div class="form-row form-row--full">
@@ -145,13 +150,14 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       .replace(/-+/g, "-");
   }
 
-  function buildFrontmatter(title: string, description: string, tags: string[], category: string): string {
+  function buildFrontmatter(title: string, description: string, tags: string[], category: string, thumbnail: string): string {
     const today = new Date().toISOString().split("T")[0];
     const tagLines = tags.length > 0
       ? "tags:\n" + tags.map((t) => `  - ${t.trim()}`).join("\n")
       : "tags: []";
     const catLine = category ? `\ncategory: ${category}` : "";
-    return `---\ntitle: "${title}"\ndescription: "${description}"\npubDate: ${today}\n${tagLines}${catLine}\n---\n\n`;
+    const thumbLine = thumbnail ? `\nthumbnail: ${thumbnail}` : "";
+    return `---\ntitle: "${title}"\ndescription: "${description}"\npubDate: ${today}\n${tagLines}${catLine}${thumbLine}\n---\n\n`;
   }
 
   async function loadCategories(token: string) {
@@ -190,11 +196,13 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     const titleMatch = fm.match(/^title:\s*"?(.+?)"?\s*$/m);
     const descMatch = fm.match(/^description:\s*"?(.+?)"?\s*$/m);
     const categoryMatch = fm.match(/^category:\s*(.+)\s*$/m);
+    const thumbMatch = fm.match(/^thumbnail:\s*(.+)\s*$/m);
     const tagsMatch = [...fm.matchAll(/^\s*-\s*(.+)\s*$/gm)].map((m) => m[1]);
 
     (document.getElementById("post-title") as HTMLInputElement).value = titleMatch?.[1] ?? "";
     (document.getElementById("post-description") as HTMLInputElement).value = descMatch?.[1] ?? "";
     (document.getElementById("post-tags") as HTMLInputElement).value = tagsMatch.join(", ");
+    (document.getElementById("post-thumbnail") as HTMLInputElement).value = thumbMatch?.[1]?.trim() ?? "";
     editor.setMarkdown(body);
 
     const catVal = categoryMatch?.[1]?.trim() ?? "";
@@ -262,10 +270,11 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       const tagsRaw = (document.getElementById("post-tags") as HTMLInputElement).value;
       const tags = tagsRaw ? tagsRaw.split(",").map((t) => t.trim()).filter(Boolean) : [];
       const category = (document.getElementById("post-category") as HTMLSelectElement).value;
+      const thumbnail = (document.getElementById("post-thumbnail") as HTMLInputElement).value.trim();
       const editSlug = (document.getElementById("edit-slug") as HTMLInputElement).value;
       const slug = editSlug || toSlug(title);
       const markdown = editor.getMarkdown();
-      const fileContent = buildFrontmatter(title, description, tags, category) + markdown;
+      const fileContent = buildFrontmatter(title, description, tags, category, thumbnail) + markdown;
 
       submitBtn.disabled = true;
       submitStatus.textContent = "커밋 중...";

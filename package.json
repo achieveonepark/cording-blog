@@ -16,8 +16,9 @@
   "dependencies": {
     "@astrojs/rss": "latest",
     "@astrojs/sitemap": "latest",
+    "@toast-ui/editor": "^3.2.2",
     "astro": "latest",
-    "@toast-ui/editor": "^3.2.2"
+    "astro-pagefind": "^1.8.5"
   },
   "devDependencies": {
     "@astrojs/check": "latest",

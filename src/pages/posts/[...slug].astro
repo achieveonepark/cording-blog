@@ -3,6 +3,10 @@ import { render, type CollectionEntry } from "astro:content";
 import Footer from "../../components/Footer.astro";
 import Header from "../../components/Header.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import TOC from "../../components/TOC.astro";
+import ShareButtons from "../../components/ShareButtons.astro";
+import RelatedPosts from "../../components/RelatedPosts.astro";
+import Giscus from "../../components/Giscus.astro";
 import { formatDate, getPublishedPosts, getReadingTime } from "../../lib/blog";
 
 export async function getStaticPaths() {
@@ -10,64 +14,122 @@ export async function getStaticPaths() {
 
   return posts.map((post) => ({
     params: { slug: post.id },
-    props: { post }
+    props: { post, allPosts: posts }
   }));
 }
 
 interface Props {
   post: CollectionEntry<"blog">;
+  allPosts: CollectionEntry<"blog">[];
 }
 
-const { post } = Astro.props;
-const { Content } = await render(post);
+const { post, allPosts } = Astro.props;
+const { Content, headings } = await render(post);
+
+const workerBase = import.meta.env.PUBLIC_OAUTH_WORKER_URL?.replace(/\/$/, "") ?? "";
+const postUrl = `${Astro.site?.toString().replace(/\/$/, "") ?? "https://blog.somiri.dev"}/posts/${post.id}/`;
 ---
 
 <BaseLayout title={post.data.title} description={post.data.description}>
   <Header />
 
-  <main class="shell app-shell">
-    <article class="app-panel article">
-      <a class="back-link" href="/posts">모든 글로 돌아가기</a>
+  <main class="shell">
+    <div class="post-wrap">
 
-      <header class="article__header">
-        <div class="panel-heading">
-          <p class="eyebrow">Post</p>
-        </div>
-        <h1>{post.data.title}</h1>
-        <p>{post.data.description}</p>
+      <!-- 사이드바: 목차 -->
+      {headings.length > 0 && (
+        <aside class="toc-col">
+          <div class="toc-sticky">
+            <TOC headings={headings} />
+          </div>
+        </aside>
+      )}
 
-        <div class="article__meta">
-          <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
-          <span>{getReadingTime(post)}</span>
-          {post.data.category && <span class="article-category">{post.data.category}</span>}
-        </div>
+      <!-- 본문 -->
+      <article class="app-panel article" data-pagefind-body data-pagefind-meta={`title:${post.data.title}`}>
+        <a class="back-link" href="/posts">모든 글로 돌아가기</a>
 
-        {post.data.tags.length > 0 && (
-          <ul class="tag-list" aria-label="Post tags">
-            {post.data.tags.map((tag) => <li>{tag}</li>)}
-          </ul>
+        <header class="article__header">
+          <div class="panel-heading">
+            <p class="eyebrow">Post</p>
+          </div>
+          <h1>{post.data.title}</h1>
+          <p>{post.data.description}</p>
+
+          <div class="article__meta">
+            <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
+            <span>{getReadingTime(post)}</span>
+            {post.data.category && <span class="article-category">{post.data.category}</span>}
+            {workerBase && (
+              <span class="visit-count" id="visit-count" title="조회수" aria-label="조회수">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                <span id="visit-num">–</span>
+              </span>
+            )}
+          </div>
+
+          {post.data.tags.length > 0 && (
+            <ul class="tag-list" aria-label="Post tags">
+              {post.data.tags.map((tag) => <li>{tag}</li>)}
+            </ul>
+          )}
+
+          {post.data.thumbnail && (
+            <img class="article__thumb" src={post.data.thumbnail} alt="" loading="lazy" />
+          )}
+        </header>
+
+        <!-- 모바일용 목차 (인라인) -->
+        {headings.length > 0 && (
+          <details class="toc-mobile">
+            <summary>목차</summary>
+            <TOC headings={headings} />
+          </details>
         )}
-      </header>
 
-      <div class="prose article__body">
-        <Content />
-      </div>
+        <div class="prose article__body">
+          <Content />
+        </div>
 
-      <div id="post-admin-bar" style="display:none">
-        <a href={`/admin/new-post?edit=${post.id}`} class="post-admin-btn">수정</a>
-        <button id="post-delete-btn" class="post-admin-btn post-admin-btn--danger">삭제</button>
-      </div>
-    </article>
+        <!-- 공유 버튼 -->
+        <ShareButtons title={post.data.title} url={postUrl} />
+
+        <!-- 좋아요 버튼 -->
+        {workerBase && (
+          <div class="like-wrap">
+            <button class="like-btn" id="like-btn" aria-label="좋아요">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              <span id="like-num">–</span>
+            </button>
+          </div>
+        )}
+
+        <!-- 관련 글 -->
+        <RelatedPosts currentPost={post} allPosts={allPosts} />
+
+        <!-- 댓글 -->
+        <Giscus />
+
+        <!-- 어드민 바 -->
+        <div id="post-admin-bar" style="display:none">
+          <a href={`/admin/new-post?edit=${post.id}`} class="post-admin-btn">수정</a>
+          <button id="post-delete-btn" class="post-admin-btn post-admin-btn--danger">삭제</button>
+        </div>
+      </article>
+
+    </div>
   </main>
 
   <Footer />
 </BaseLayout>
 
-<script define:vars={{ postId: post.id }}>
+<script define:vars={{ postId: post.id, workerBase, postSlug: post.id }}>
   const OWNER = "achieveonepark";
   const REPO = "cording-blog";
   const BRANCH = "main";
   const token = localStorage.getItem("gh_token");
+
+  // --- 어드민 바 ---
   const adminBar = document.getElementById("post-admin-bar");
   const deleteBtn = document.getElementById("post-delete-btn");
 
@@ -108,9 +170,188 @@ const { Content } = await render(post);
 
     window.location.href = "/posts";
   });
+
+  // --- 방문자 수 + 좋아요 ---
+  if (workerBase) {
+    const visitNumEl = document.getElementById("visit-num");
+    const likeNumEl = document.getElementById("like-num");
+    const likeBtn = document.getElementById("like-btn");
+    const LIKED_KEY = `liked:${postSlug}`;
+
+    // 통계 로드
+    fetch(`${workerBase}/stats?post=${encodeURIComponent(postSlug)}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (visitNumEl) visitNumEl.textContent = String(data.visits ?? 0);
+        if (likeNumEl) likeNumEl.textContent = String(data.likes ?? 0);
+        if (likeBtn && localStorage.getItem(LIKED_KEY)) {
+          likeBtn.classList.add("like-btn--liked");
+        }
+      })
+      .catch(() => {
+        if (visitNumEl) visitNumEl.textContent = "–";
+        if (likeNumEl) likeNumEl.textContent = "–";
+      });
+
+    // 방문 기록 (세션당 1회)
+    const VISIT_KEY = `visited:${postSlug}`;
+    if (!sessionStorage.getItem(VISIT_KEY)) {
+      sessionStorage.setItem(VISIT_KEY, "1");
+      fetch(`${workerBase}/visit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ post: postSlug }),
+      }).catch(() => {});
+    }
+
+    // 좋아요
+    likeBtn?.addEventListener("click", () => {
+      if (localStorage.getItem(LIKED_KEY)) return;
+      localStorage.setItem(LIKED_KEY, "1");
+      likeBtn.classList.add("like-btn--liked");
+
+      fetch(`${workerBase}/like`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ post: postSlug }),
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          if (likeNumEl) likeNumEl.textContent = String(data.likes ?? "–");
+        })
+        .catch(() => {});
+    });
+  }
 </script>
 
 <style>
+  /* ── 레이아웃 ─────────────────────────────── */
+  .post-wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    display: grid;
+    grid-template-columns: 1fr 240px;
+    grid-template-areas: "article toc";
+    gap: 2rem;
+    align-items: start;
+  }
+
+  .article { grid-area: article; }
+  .toc-col { grid-area: toc; }
+
+  .toc-sticky {
+    position: sticky;
+    top: 2rem;
+  }
+
+  /* ── 모바일 목차 (인라인) ─────────────────── */
+  .toc-mobile {
+    margin: 0 0 1.5rem;
+    border: 1px solid rgba(124, 255, 122, 0.12);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .toc-mobile summary {
+    padding: 0.6rem 1rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(124, 255, 122, 0.6);
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+  }
+
+  .toc-mobile summary::-webkit-details-marker { display: none; }
+  .toc-mobile summary::before { content: "▸ "; }
+  .toc-mobile[open] summary::before { content: "▾ "; }
+
+  .toc-mobile :global(.toc) {
+    border: none;
+    border-radius: 0;
+    border-top: 1px solid rgba(124, 255, 122, 0.08);
+  }
+
+  /* 데스크탑에선 인라인 목차 숨김 */
+  @media (min-width: 921px) {
+    .toc-mobile { display: none; }
+  }
+
+  /* 모바일에선 사이드바 목차 숨김 */
+  @media (max-width: 920px) {
+    .post-wrap {
+      grid-template-columns: 1fr;
+      grid-template-areas: "article";
+      padding: 1rem;
+    }
+    .toc-col { display: none; }
+  }
+
+  /* ── 썸네일 ─────────────────────────────── */
+  .article__thumb {
+    width: 100%;
+    max-height: 400px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-top: 1rem;
+    border: 1px solid rgba(124, 255, 122, 0.1);
+  }
+
+  /* ── 방문자 수 ────────────────────────────── */
+  .visit-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    color: rgba(150, 180, 150, 0.5);
+    font-size: 0.8rem;
+  }
+
+  /* ── 좋아요 버튼 ─────────────────────────── */
+  .like-wrap {
+    display: flex;
+    justify-content: center;
+    margin: 2rem 0;
+  }
+
+  .like-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.4rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 120, 140, 0.25);
+    background: transparent;
+    color: rgba(255, 150, 170, 0.6);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 150ms, background 150ms, color 150ms, transform 100ms;
+    font-family: inherit;
+  }
+
+  .like-btn:hover {
+    border-color: rgba(255, 120, 140, 0.5);
+    background: rgba(255, 120, 140, 0.07);
+    color: rgba(255, 150, 170, 0.9);
+  }
+
+  .like-btn--liked {
+    border-color: rgba(255, 120, 140, 0.6);
+    background: rgba(255, 120, 140, 0.1);
+    color: #ff8ca0;
+  }
+
+  .like-btn--liked svg {
+    fill: #ff8ca0;
+    stroke: #ff8ca0;
+  }
+
+  .like-btn:active { transform: scale(0.95); }
+
+  /* ── 어드민 바 ────────────────────────────── */
   #post-admin-bar {
     display: none;
     gap: 0.75rem;

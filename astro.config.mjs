@@ -1,10 +1,11 @@
 import { defineConfig } from "astro/config";
 import sitemap from "@astrojs/sitemap";
+import pagefind from "astro-pagefind";
 
 export default defineConfig({
   site: "https://blog.somiri.dev",
   output: "static",
-  integrations: [sitemap()],
+  integrations: [sitemap(), pagefind()],
   markdown: {
     syntaxHighlight: "shiki",
     shikiConfig: {
