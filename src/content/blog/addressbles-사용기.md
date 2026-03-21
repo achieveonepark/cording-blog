@@ -9,6 +9,6 @@ tags:
 category: R&D
 ---
 
-\# 사용 버전
-\- Unity 6000\.3\.9f1
-\- Addressables 2\.7\.2
+# 사용 버전
+- Unity 6000.3.9f1
+- Addressables 2.7.2
