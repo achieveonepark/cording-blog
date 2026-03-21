@@ -6,6 +6,7 @@ tags:
   - Unity
   - Addressables
   - Resource
+category: R&D
 ---
 
 \# 사용 버전
