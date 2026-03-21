@@ -17,7 +17,13 @@ const configured = repoId && categoryId;
 <section class="comments">
   <p class="comments__label">댓글</p>
   {configured ? (
-    <div class="giscus-wrap" id="giscus-wrap"></div>
+    <div
+      class="giscus-wrap"
+      id="giscus-wrap"
+      data-repo-id={repoId}
+      data-category={category}
+      data-category-id={categoryId}
+    ></div>
   ) : (
     <p class="comments__notice">
       댓글을 활성화하려면 <code>.env</code>에 Giscus 설정이 필요합니다.<br />
@@ -64,25 +70,24 @@ const configured = repoId && categoryId;
   }
 </style>
 
-<script define:vars={{ repoId, category, categoryId }}>
+<script>
   function loadGiscus() {
-    const wrap = document.getElementById("giscus-wrap");
+    const wrap = document.getElementById("giscus-wrap") as HTMLElement | null;
     if (!wrap) return;
 
-    // 기존 iframe 제거 후 재생성
     wrap.innerHTML = "";
 
     const script = document.createElement("script");
     script.src = "https://giscus.app/client.js";
     script.setAttribute("data-repo", "achieveonepark/cording-blog");
-    script.setAttribute("data-repo-id", repoId);
-    script.setAttribute("data-category", category);
-    script.setAttribute("data-category-id", categoryId);
-    script.setAttribute("data-mapping", "pathname");
-    script.setAttribute("data-strict", "0");
+    script.setAttribute("data-repo-id",    wrap.dataset.repoId    ?? "");
+    script.setAttribute("data-category",   wrap.dataset.category  ?? "Comments");
+    script.setAttribute("data-category-id", wrap.dataset.categoryId ?? "");
+    script.setAttribute("data-mapping",    "pathname");
+    script.setAttribute("data-strict",     "0");
     script.setAttribute("data-reactions-enabled", "0");
-    script.setAttribute("data-emit-metadata", "0");
-    script.setAttribute("data-input-position", "top");
+    script.setAttribute("data-emit-metadata",     "0");
+    script.setAttribute("data-input-position",    "top");
     script.setAttribute("data-theme", "https://blog.somiri.dev/giscus-theme.css");
     script.setAttribute("data-lang", "ko");
     script.setAttribute("crossorigin", "anonymous");
@@ -90,5 +95,5 @@ const configured = repoId && categoryId;
     wrap.appendChild(script);
   }
 
-  document.addEventListener("astro:page-load", loadGiscus, { once: true });
+  document.addEventListener("astro:page-load", loadGiscus);
 </script>
