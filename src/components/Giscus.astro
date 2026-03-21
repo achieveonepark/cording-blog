@@ -1,16 +1,8 @@
 ---
 // Giscus 댓글 위젯
-// 사용 전 설정 필요:
-//   1. https://github.com/achieveonepark/cording-blog/settings → Discussions 활성화
-//   2. https://giscus.app 에서 repo-id, category-id 발급
-//   3. .env 에 추가:
-//      PUBLIC_GISCUS_REPO_ID=...
-//      PUBLIC_GISCUS_CATEGORY=Comments
-//      PUBLIC_GISCUS_CATEGORY_ID=...
-
-const repoId = import.meta.env.PUBLIC_GISCUS_REPO_ID ?? "";
-const category = import.meta.env.PUBLIC_GISCUS_CATEGORY ?? "Comments";
-const categoryId = import.meta.env.PUBLIC_GISCUS_CATEGORY_ID ?? "";
+const repoId     = import.meta.env.PUBLIC_GISCUS_REPO_ID      ?? "";
+const category   = import.meta.env.PUBLIC_GISCUS_CATEGORY     ?? "Comments";
+const categoryId = import.meta.env.PUBLIC_GISCUS_CATEGORY_ID  ?? "";
 const configured = repoId && categoryId;
 ---
 
@@ -31,6 +23,51 @@ const configured = repoId && categoryId;
     </p>
   )}
 </section>
+
+<script>
+  let giscusCreated = false;
+
+  function loadGiscus() {
+    const wrap = document.getElementById("giscus-wrap") as HTMLElement | null;
+
+    // 포스트 페이지가 아니면 초기화 상태 리셋
+    if (!wrap) { giscusCreated = false; return; }
+
+    if (giscusCreated) {
+      // 이미 로드됐으면 postMessage로 현재 경로 전달 (Giscus SPA 업데이트 API)
+      const iframe = document.querySelector("iframe.giscus-frame") as HTMLIFrameElement | null;
+      if (iframe?.contentWindow) {
+        iframe.contentWindow.postMessage(
+          { giscus: { setConfig: { term: window.location.pathname } } },
+          "https://giscus.app"
+        );
+      }
+      return;
+    }
+
+    // 최초 1회: 스크립트 생성
+    giscusCreated = true;
+    const script = document.createElement("script");
+    script.src = "https://giscus.app/client.js";
+    script.setAttribute("data-repo",              "achieveonepark/cording-blog");
+    script.setAttribute("data-repo-id",           wrap.dataset.repoId     ?? "");
+    script.setAttribute("data-category",          wrap.dataset.category   ?? "Comments");
+    script.setAttribute("data-category-id",       wrap.dataset.categoryId ?? "");
+    script.setAttribute("data-mapping",           "pathname");
+    script.setAttribute("data-strict",            "0");
+    script.setAttribute("data-reactions-enabled", "0");
+    script.setAttribute("data-emit-metadata",     "0");
+    script.setAttribute("data-input-position",    "top");
+    script.setAttribute("data-theme",             "https://blog.somiri.dev/giscus-theme.css");
+    script.setAttribute("data-lang",              "ko");
+    script.setAttribute("crossorigin",            "anonymous");
+    script.async = true;
+    wrap.appendChild(script);
+  }
+
+  document.addEventListener("astro:after-swap", loadGiscus);
+  document.addEventListener("astro:page-load",  loadGiscus);
+</script>
 
 <style>
   .comments {
@@ -54,9 +91,7 @@ const configured = repoId && categoryId;
     line-height: 1.6;
   }
 
-  .comments__notice a {
-    color: rgba(124, 255, 122, 0.7);
-  }
+  .comments__notice a { color: rgba(124, 255, 122, 0.7); }
 
   .comments__notice code {
     background: rgba(124, 255, 122, 0.08);
@@ -65,35 +100,5 @@ const configured = repoId && categoryId;
     font-size: 0.9em;
   }
 
-  .giscus-wrap :global(.giscus-frame) {
-    width: 100%;
-  }
+  .giscus-wrap :global(.giscus-frame) { width: 100%; }
 </style>
-
-<script>
-  function loadGiscus() {
-    const wrap = document.getElementById("giscus-wrap") as HTMLElement | null;
-    if (!wrap) return;
-
-    wrap.innerHTML = "";
-
-    const script = document.createElement("script");
-    script.src = "https://giscus.app/client.js";
-    script.setAttribute("data-repo", "achieveonepark/cording-blog");
-    script.setAttribute("data-repo-id",    wrap.dataset.repoId    ?? "");
-    script.setAttribute("data-category",   wrap.dataset.category  ?? "Comments");
-    script.setAttribute("data-category-id", wrap.dataset.categoryId ?? "");
-    script.setAttribute("data-mapping",    "pathname");
-    script.setAttribute("data-strict",     "0");
-    script.setAttribute("data-reactions-enabled", "0");
-    script.setAttribute("data-emit-metadata",     "0");
-    script.setAttribute("data-input-position",    "top");
-    script.setAttribute("data-theme", "https://blog.somiri.dev/giscus-theme.css");
-    script.setAttribute("data-lang", "ko");
-    script.setAttribute("crossorigin", "anonymous");
-    script.async = true;
-    wrap.appendChild(script);
-  }
-
-  document.addEventListener("astro:page-load", loadGiscus);
-</script>
