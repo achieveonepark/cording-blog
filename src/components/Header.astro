@@ -35,10 +35,6 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
           </button>
 
           <div id="search-bar" class="header-search__bar" hidden>
-            <svg viewBox="0 0 24 24" aria-hidden="true" class="header-search__icon">
-              <circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
-              <line x1="16.5" y1="16.5" x2="21" y2="21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-            </svg>
             <input
               id="search-input"
               class="header-search__input"
@@ -262,13 +258,6 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
     border: 1px solid rgba(124, 255, 122, 0.22);
     background: rgba(20, 24, 31, 0.85);
     backdrop-filter: blur(8px);
-  }
-
-  .header-search__icon {
-    width: 1rem;
-    height: 1rem;
-    flex: none;
-    color: rgba(124, 255, 122, 0.5);
   }
 
   .header-search__input {
