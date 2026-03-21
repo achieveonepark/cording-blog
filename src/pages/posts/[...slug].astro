@@ -46,7 +46,7 @@ const postUrl = `${Astro.site?.toString().replace(/\/$/, "") ?? "https://blog.so
       )}
 
       <!-- 본문 -->
-      <article class="app-panel article" data-pagefind-body data-pagefind-meta={`title:${post.data.title}`}>
+      <article class="app-panel article" data-pagefind-body data-pagefind-meta={`title:${post.data.title}`} data-post-slug={post.id} data-worker-base={workerBase}>
         <a class="back-link" href="/posts">모든 글로 돌아가기</a>
 
         <header class="article__header">
@@ -123,12 +123,18 @@ const postUrl = `${Astro.site?.toString().replace(/\/$/, "") ?? "https://blog.so
   <Footer />
 </BaseLayout>
 
-<script define:vars={{ postId: post.id, workerBase, postSlug: post.id }}>
-  document.addEventListener('astro:page-load', () => {
-    const OWNER = "achieveonepark";
-    const REPO = "cording-blog";
-    const BRANCH = "main";
-    const token = localStorage.getItem("gh_token");
+<script>
+  const OWNER = "achieveonepark";
+  const REPO = "cording-blog";
+  const BRANCH = "main";
+
+  function initPost() {
+    const article = document.querySelector("article[data-post-slug]") as HTMLElement | null;
+    if (!article) return;
+
+    const postSlug   = article.dataset.postSlug ?? "";
+    const workerBase = (article.dataset.workerBase ?? "").replace(/\/$/, "");
+    const token      = localStorage.getItem("gh_token");
 
     // --- 어드민 바 ---
     const adminBar = document.getElementById("post-admin-bar");
@@ -139,22 +145,18 @@ const postUrl = `${Astro.site?.toString().replace(/\/$/, "") ?? "https://blog.so
         headers: { Authorization: `Bearer ${token}` },
       })
         .then((r) => r.json())
-        .then((u) => {
-          if (u.login === OWNER) adminBar.style.display = "flex";
-        })
+        .then((u) => { if (u.login === OWNER) adminBar.style.display = "flex"; })
         .catch(() => {});
     }
 
     deleteBtn?.addEventListener("click", async () => {
-      if (!confirm(`"${postId}" 포스트를 삭제할까요? 되돌릴 수 없어요.`)) return;
-
-      const path = `src/content/blog/${postId}.md`;
+      if (!confirm(`"${postSlug}" 포스트를 삭제할까요? 되돌릴 수 없어요.`)) return;
+      const path = `src/content/blog/${postSlug}.md`;
       const fileRes = await fetch(
         `https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}?ref=${BRANCH}`,
         { headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json" } }
       );
       const file = await fileRes.json();
-
       await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}`, {
         method: "DELETE",
         headers: {
@@ -162,65 +164,58 @@ const postUrl = `${Astro.site?.toString().replace(/\/$/, "") ?? "https://blog.so
           Accept: "application/vnd.github+json",
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          message: `chore: delete post - ${postId}`,
-          sha: file.sha,
-          branch: BRANCH,
-        }),
+        body: JSON.stringify({ message: `chore: delete post - ${postSlug}`, sha: file.sha, branch: BRANCH }),
       });
-
       window.location.href = "/posts";
     });
 
     // --- 방문자 수 + 좋아요 ---
-    if (workerBase) {
-      const visitNumEl = document.getElementById("visit-num");
-      const likeNumEl = document.getElementById("like-num");
-      const likeBtn = document.getElementById("like-btn");
-      const LIKED_KEY = `liked:${postSlug}`;
+    if (!workerBase) return;
 
-      fetch(`${workerBase}/stats?post=${encodeURIComponent(postSlug)}`)
-        .then((r) => r.json())
-        .then((data) => {
-          if (visitNumEl) visitNumEl.textContent = String(data.visits ?? 0);
-          if (likeNumEl) likeNumEl.textContent = String(data.likes ?? 0);
-          if (likeBtn && localStorage.getItem(LIKED_KEY)) {
-            likeBtn.classList.add("like-btn--liked");
-          }
-        })
-        .catch(() => {
-          if (visitNumEl) visitNumEl.textContent = "–";
-          if (likeNumEl) likeNumEl.textContent = "–";
-        });
+    const visitNumEl = document.getElementById("visit-num");
+    const likeNumEl  = document.getElementById("like-num");
+    const likeBtn    = document.getElementById("like-btn");
+    const LIKED_KEY  = `liked:${postSlug}`;
 
-      const VISIT_KEY = `visited:${postSlug}`;
-      if (!sessionStorage.getItem(VISIT_KEY)) {
-        sessionStorage.setItem(VISIT_KEY, "1");
-        fetch(`${workerBase}/visit`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ post: postSlug }),
-        }).catch(() => {});
-      }
-
-      likeBtn?.addEventListener("click", () => {
-        if (localStorage.getItem(LIKED_KEY)) return;
-        localStorage.setItem(LIKED_KEY, "1");
-        likeBtn.classList.add("like-btn--liked");
-
-        fetch(`${workerBase}/like`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ post: postSlug }),
-        })
-          .then((r) => r.json())
-          .then((data) => {
-            if (likeNumEl) likeNumEl.textContent = String(data.likes ?? "–");
-          })
-          .catch(() => {});
+    fetch(`${workerBase}/stats?post=${encodeURIComponent(postSlug)}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (visitNumEl) visitNumEl.textContent = String(data.visits ?? 0);
+        if (likeNumEl)  likeNumEl.textContent  = String(data.likes   ?? 0);
+        if (likeBtn && localStorage.getItem(LIKED_KEY)) likeBtn.classList.add("like-btn--liked");
+      })
+      .catch(() => {
+        if (visitNumEl) visitNumEl.textContent = "–";
+        if (likeNumEl)  likeNumEl.textContent  = "–";
       });
+
+    const VISIT_KEY = `visited:${postSlug}`;
+    if (!sessionStorage.getItem(VISIT_KEY)) {
+      sessionStorage.setItem(VISIT_KEY, "1");
+      fetch(`${workerBase}/visit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ post: postSlug }),
+      }).catch(() => {});
     }
-  }, { once: true });
+
+    likeBtn?.addEventListener("click", () => {
+      if (localStorage.getItem(LIKED_KEY)) return;
+      localStorage.setItem(LIKED_KEY, "1");
+      likeBtn.classList.add("like-btn--liked");
+      fetch(`${workerBase}/like`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ post: postSlug }),
+      })
+        .then((r) => r.json())
+        .then((data) => { if (likeNumEl) likeNumEl.textContent = String(data.likes ?? "–"); })
+        .catch(() => {});
+    });
+  }
+
+  // 모듈 스크립트는 최초 1회만 실행 → 이후 모든 페이지 전환은 이벤트로 처리
+  document.addEventListener("astro:page-load", initPost);
 </script>
 
 <style>
