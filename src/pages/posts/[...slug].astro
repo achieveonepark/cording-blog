@@ -124,20 +124,27 @@ const postUrl = `${Astro.site?.toString().replace(/\/$/, "") ?? "https://blog.so
 </BaseLayout>
 
 <script>
-  const OWNER = "achieveonepark";
-  const REPO = "cording-blog";
+  const OWNER  = "achieveonepark";
+  const REPO   = "cording-blog";
   const BRANCH = "main";
+
+  let lastSlug = "";
 
   function initPost() {
     const article = document.querySelector("article[data-post-slug]") as HTMLElement | null;
-    if (!article) return;
+    if (!article) { lastSlug = ""; return; }
 
-    const postSlug   = article.dataset.postSlug ?? "";
+    const postSlug   = article.dataset.postSlug   ?? "";
     const workerBase = (article.dataset.workerBase ?? "").replace(/\/$/, "");
-    const token      = localStorage.getItem("gh_token");
+
+    // 같은 페이지 중복 실행 방지
+    if (postSlug && postSlug === lastSlug) return;
+    lastSlug = postSlug;
+
+    const token = localStorage.getItem("gh_token");
 
     // --- 어드민 바 ---
-    const adminBar = document.getElementById("post-admin-bar");
+    const adminBar  = document.getElementById("post-admin-bar");
     const deleteBtn = document.getElementById("post-delete-btn");
 
     if (token && adminBar) {
@@ -214,8 +221,8 @@ const postUrl = `${Astro.site?.toString().replace(/\/$/, "") ?? "https://blog.so
     });
   }
 
-  // 모듈 스크립트는 최초 1회만 실행 → 이후 모든 페이지 전환은 이벤트로 처리
-  document.addEventListener("astro:page-load", initPost);
+  document.addEventListener("astro:after-swap", initPost);
+  document.addEventListener("astro:page-load",  initPost);
 </script>
 
 <style>
