@@ -1,8 +1,10 @@
-@import "https://giscus.app/themes/transparent_dark.css";
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css");
+@import url("https://giscus.app/themes/transparent_dark.css");
 
 *,
 input,
 textarea,
-button {
+button,
+select {
   font-family: "Pretendard", -apple-system, system-ui, "Segoe UI", sans-serif !important;
 }
