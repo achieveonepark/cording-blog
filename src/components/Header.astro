@@ -27,14 +27,7 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
 
         <!-- 인라인 검색 -->
         <div class="header-search" id="header-search">
-          <button id="search-trigger" class="site-nav__icon-link" aria-label="검색" title="검색">
-            <svg viewBox="0 0 24 24" aria-hidden="true" class="nav-icon">
-              <circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
-              <line x1="16.5" y1="16.5" x2="21" y2="21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-            </svg>
-          </button>
-
-          <div id="search-bar" class="header-search__bar" hidden>
+          <div id="search-bar" class="header-search__bar">
             <span class="header-search__prompt" aria-hidden="true">&gt;</span>
             <input
               id="search-input"
@@ -158,8 +151,6 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
   })();
 
   // ── 인라인 검색 ──────────────────────────────────────────
-  const trigger    = document.getElementById("search-trigger");
-  const searchBar  = document.getElementById("search-bar");
   const searchInput = document.getElementById("search-input");
   const closeBtn   = document.getElementById("search-close");
   const dropdown   = document.getElementById("search-dropdown");
@@ -173,16 +164,7 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
     dropdown.style.top = `${rect.bottom}px`;
   }
 
-  function openSearch() {
-    trigger.hidden = true;
-    searchBar.removeAttribute("hidden");
-    positionDropdown();
-    searchInput.focus();
-  }
-
   function closeSearch() {
-    trigger.hidden = false;
-    searchBar.setAttribute("hidden", "");
     dropdown.setAttribute("hidden", "");
     dropdown.innerHTML = "";
     searchInput.value = "";
@@ -220,11 +202,11 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
     }
   }
 
-  trigger.addEventListener("click", openSearch);
   closeBtn.addEventListener("click", closeSearch);
 
   searchInput.addEventListener("input", () => {
     clearTimeout(debounceTimer);
+    positionDropdown();
     debounceTimer = setTimeout(() => doSearch(searchInput.value), 220);
   });
 
@@ -239,7 +221,7 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
     }
   });
 
-  window.addEventListener("resize", () => { if (!searchBar.hidden) positionDropdown(); });
+  window.addEventListener("resize", () => { if (!dropdown.hidden) positionDropdown(); });
 </script>
 
 <style>
