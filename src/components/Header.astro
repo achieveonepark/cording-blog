@@ -24,6 +24,9 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
             </a>
           );
         })}
+        <button id="search-open-btn" class="site-nav__text-btn" aria-label="검색">
+          Search
+        </button>
       </div>
 
       <div class="site-nav__group site-nav__group--apps">
@@ -72,19 +75,6 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
             <path d="M4.7 5a14.3 14.3 0 0 1 14.3 14.3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
           </svg>
         </a>
-
-        <!-- 검색 버튼 -->
-        <button
-          id="search-open-btn"
-          class="site-nav__icon-link"
-          aria-label="검색"
-          title="검색"
-        >
-          <svg viewBox="0 0 24 24" aria-hidden="true" class="nav-icon">
-            <circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8" />
-            <line x1="16.5" y1="16.5" x2="21" y2="21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
-          </svg>
-        </button>
       </div>
 
       <div class="site-nav__group site-nav__group--admin">
@@ -254,6 +244,34 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
 </script>
 
 <style>
+  .site-nav__text-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.35rem;
+    padding: 0.5rem 0.85rem;
+    border-radius: var(--radius-sm, 6px);
+    border: 1px solid rgba(124, 255, 122, 0.08);
+    background: rgba(20, 24, 31, 0.72);
+    color: var(--muted);
+    font-size: 0.76rem;
+    letter-spacing: 0.06em;
+    font-family: var(--font-ui);
+    cursor: pointer;
+    transition:
+      border-color 180ms ease,
+      background 180ms ease,
+      color 180ms ease,
+      transform 180ms ease;
+  }
+
+  .site-nav__text-btn:hover {
+    color: var(--text);
+    border-color: rgba(124, 255, 122, 0.22);
+    background: rgba(27, 34, 41, 0.9);
+    transform: translateY(-1px);
+  }
+
   .site-nav button.site-nav__icon-link {
     display: inline-flex;
     align-items: center;
@@ -365,10 +383,16 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
     --pagefind-ui-font: var(--font-ui);
   }
 
+  .pagefind-ui,
+  .pagefind-ui * {
+    font-family: var(--font-ui) !important;
+  }
+
   .pagefind-ui .pagefind-ui__search-input {
     background: rgba(0, 0, 0, 0.55) !important;
     color: #d6ffd6 !important;
     border: 1px solid rgba(124, 255, 122, 0.25) !important;
+    font-family: var(--font-ui) !important;
   }
 
   .pagefind-ui .pagefind-ui__search-input:focus {
