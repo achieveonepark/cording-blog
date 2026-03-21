@@ -47,21 +47,28 @@ const categoryCounts = categories.reduce<Record<string, number>>((acc, cat) => {
 </BaseLayout>
 
 <script>
-  const btns = document.querySelectorAll<HTMLButtonElement>(".cat-btn");
-  const cards = document.querySelectorAll<HTMLElement>(".post-card");
+  function initFilter() {
+    const btns = document.querySelectorAll<HTMLButtonElement>(".cat-btn");
+    const cards = document.querySelectorAll<HTMLElement>(".post-card");
 
-  btns.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      btns.forEach((b) => b.classList.remove("cat-btn--active"));
-      btn.classList.add("cat-btn--active");
+    if (!btns.length) return;
 
-      const cat = btn.dataset.cat ?? "";
-      cards.forEach((card) => {
-        const match = !cat || card.dataset.category === cat;
-        card.style.display = match ? "" : "none";
+    btns.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        btns.forEach((b) => b.classList.remove("cat-btn--active"));
+        btn.classList.add("cat-btn--active");
+
+        const cat = btn.dataset.cat ?? "";
+        cards.forEach((card) => {
+          const match = !cat || card.dataset.category === cat;
+          card.style.display = match ? "" : "none";
+        });
       });
     });
-  });
+  }
+
+  document.addEventListener("astro:after-swap", initFilter);
+  document.addEventListener("astro:page-load", initFilter);
 </script>
 
 <style>
