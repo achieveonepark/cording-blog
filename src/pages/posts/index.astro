@@ -7,6 +7,11 @@ import { getPublishedPosts } from "../../lib/blog";
 import categories from "../../data/categories.json";
 
 const posts = await getPublishedPosts();
+
+const categoryCounts = categories.reduce<Record<string, number>>((acc, cat) => {
+  acc[cat] = posts.filter((p) => p.data.category === cat).length;
+  return acc;
+}, {});
 ---
 
 <BaseLayout title="모든 글" description="Somiri 블로그의 전체 글 목록입니다.">
@@ -21,9 +26,14 @@ const posts = await getPublishedPosts();
       </div>
 
       <div class="category-filter" role="group" aria-label="카테고리 필터">
-        <button class="cat-btn cat-btn--active" data-cat="">전체</button>
+        <button class="cat-btn cat-btn--active" data-cat="">
+          전체 <span class="cat-count">{posts.length}</span>
+        </button>
         {categories.map((cat) => (
-          <button class="cat-btn" data-cat={cat}>{cat}</button>
+          <button class="cat-btn" data-cat={cat}>
+            {cat}
+            {categoryCounts[cat] > 0 && <span class="cat-count">{categoryCounts[cat]}</span>}
+          </button>
         ))}
       </div>
 
@@ -63,6 +73,9 @@ const posts = await getPublishedPosts();
   }
 
   .cat-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
     padding: 0.3rem 0.85rem;
     border-radius: 999px;
     border: 1px solid rgba(124, 255, 122, 0.15);
@@ -83,6 +96,25 @@ const posts = await getPublishedPosts();
   .cat-btn--active {
     border-color: rgba(124, 255, 122, 0.45);
     background: rgba(124, 255, 122, 0.1);
+    color: #7cff7a;
+  }
+
+  .cat-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.2rem;
+    height: 1.2rem;
+    padding: 0 0.3rem;
+    border-radius: 999px;
+    background: rgba(124, 255, 122, 0.12);
+    color: rgba(124, 255, 122, 0.7);
+    font-size: 0.68rem;
+    font-weight: 700;
+  }
+
+  .cat-btn--active .cat-count {
+    background: rgba(124, 255, 122, 0.2);
     color: #7cff7a;
   }
 </style>

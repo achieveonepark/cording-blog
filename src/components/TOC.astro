@@ -1,0 +1,105 @@
+---
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  headings: Heading[];
+}
+
+const { headings } = Astro.props;
+const toc = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
+---
+
+{toc.length > 0 && (
+  <nav class="toc" aria-label="목차">
+    <p class="toc__label">목차</p>
+    <ol class="toc__list">
+      {toc.map((h) => (
+        <li class:list={["toc__item", { "toc__item--h3": h.depth === 3 }]}>
+          <a href={`#${h.slug}`} class="toc__link">{h.text}</a>
+        </li>
+      ))}
+    </ol>
+  </nav>
+)}
+
+<style>
+  .toc {
+    padding: 1rem 1.1rem;
+    border: 1px solid rgba(124, 255, 122, 0.12);
+    border-radius: 8px;
+    background: rgba(124, 255, 122, 0.03);
+  }
+
+  .toc__label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(124, 255, 122, 0.5);
+    margin: 0 0 0.75rem;
+  }
+
+  .toc__list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+  }
+
+  .toc__item {
+    line-height: 1.4;
+  }
+
+  .toc__item--h3 {
+    padding-left: 0.9rem;
+  }
+
+  .toc__link {
+    display: block;
+    padding: 0.25rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.82rem;
+    color: rgba(200, 230, 200, 0.65);
+    text-decoration: none;
+    transition: color 150ms, background 150ms;
+    border-left: 2px solid transparent;
+  }
+
+  .toc__item--h3 .toc__link {
+    font-size: 0.78rem;
+    color: rgba(180, 210, 180, 0.5);
+  }
+
+  .toc__link:hover,
+  .toc__link.active {
+    color: #7cff7a;
+    background: rgba(124, 255, 122, 0.06);
+    border-left-color: rgba(124, 255, 122, 0.4);
+  }
+</style>
+
+<script>
+  const links = document.querySelectorAll<HTMLAnchorElement>(".toc__link");
+  if (links.length > 0) {
+    const headingEls = [...links].map((a) => document.querySelector(a.getAttribute("href")!)).filter(Boolean) as Element[];
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const id = entry.target.getAttribute("id");
+          const link = document.querySelector<HTMLAnchorElement>(`.toc__link[href="#${id}"]`);
+          if (link) link.classList.toggle("active", entry.isIntersecting);
+        });
+      },
+      { rootMargin: "0px 0px -70% 0px" }
+    );
+
+    headingEls.forEach((el) => observer.observe(el));
+  }
+</script>

@@ -1,0 +1,103 @@
+---
+interface Props {
+  title: string;
+  url: string;
+}
+
+const { title, url } = Astro.props;
+const encoded = encodeURIComponent(url);
+const encodedTitle = encodeURIComponent(title);
+---
+
+<div class="share">
+  <p class="share__label">공유하기</p>
+  <div class="share__btns">
+    <a
+      class="share-btn share-btn--x"
+      href={`https://twitter.com/intent/tweet?text=${encodedTitle}&url=${encoded}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="X(Twitter)에 공유"
+    >
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622 5.91-5.622Zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+      </svg>
+      X
+    </a>
+
+    <button class="share-btn share-btn--copy" id="copy-link-btn" aria-label="링크 복사">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <rect x="9" y="9" width="13" height="13" rx="2"/>
+        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+      </svg>
+      <span id="copy-label">링크 복사</span>
+    </button>
+  </div>
+</div>
+
+<script define:vars={{ url }}>
+  const copyBtn = document.getElementById("copy-link-btn");
+  const copyLabel = document.getElementById("copy-label");
+
+  copyBtn?.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(url);
+      if (copyLabel) {
+        copyLabel.textContent = "복사됨!";
+        setTimeout(() => { copyLabel.textContent = "링크 복사"; }, 2000);
+      }
+    } catch {
+      prompt("URL을 복사하세요:", url);
+    }
+  });
+</script>
+
+<style>
+  .share {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    padding: 1rem 0;
+    border-top: 1px solid rgba(124, 255, 122, 0.08);
+    border-bottom: 1px solid rgba(124, 255, 122, 0.08);
+  }
+
+  .share__label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(124, 255, 122, 0.45);
+    margin: 0;
+  }
+
+  .share__btns {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .share-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.85rem;
+    border-radius: 999px;
+    border: 1px solid rgba(124, 255, 122, 0.18);
+    background: transparent;
+    color: rgba(200, 230, 200, 0.7);
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: border-color 150ms, background 150ms, color 150ms;
+    font-family: inherit;
+  }
+
+  .share-btn:hover {
+    border-color: rgba(124, 255, 122, 0.4);
+    background: rgba(124, 255, 122, 0.07);
+    color: #7cff7a;
+  }
+</style>

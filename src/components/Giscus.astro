@@ -1,0 +1,83 @@
+---
+// Giscus 댓글 위젯
+// 사용 전 설정 필요:
+//   1. https://github.com/achieveonepark/cording-blog/settings → Discussions 활성화
+//   2. https://giscus.app 에서 repo-id, category-id 발급
+//   3. .env 에 추가:
+//      PUBLIC_GISCUS_REPO_ID=...
+//      PUBLIC_GISCUS_CATEGORY=Comments
+//      PUBLIC_GISCUS_CATEGORY_ID=...
+
+const repoId = import.meta.env.PUBLIC_GISCUS_REPO_ID ?? "";
+const category = import.meta.env.PUBLIC_GISCUS_CATEGORY ?? "Comments";
+const categoryId = import.meta.env.PUBLIC_GISCUS_CATEGORY_ID ?? "";
+const configured = repoId && categoryId;
+---
+
+<section class="comments">
+  <p class="comments__label">댓글</p>
+  {configured ? (
+    <div class="giscus-wrap">
+      <script
+        is:inline
+        src="https://giscus.app/client.js"
+        data-repo="achieveonepark/cording-blog"
+        data-repo-id={repoId}
+        data-category={category}
+        data-category-id={categoryId}
+        data-mapping="pathname"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="transparent_dark"
+        data-lang="ko"
+        crossorigin="anonymous"
+        async
+      ></script>
+    </div>
+  ) : (
+    <p class="comments__notice">
+      댓글을 활성화하려면 <code>.env</code>에 Giscus 설정이 필요합니다.<br />
+      <a href="https://giscus.app" target="_blank" rel="noopener">giscus.app</a>에서 repo-id와 category-id를 발급받으세요.
+    </p>
+  )}
+</section>
+
+<style>
+  .comments {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(124, 255, 122, 0.08);
+  }
+
+  .comments__label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(124, 255, 122, 0.5);
+    margin: 0 0 1rem;
+  }
+
+  .comments__notice {
+    font-size: 0.83rem;
+    color: rgba(150, 180, 150, 0.6);
+    line-height: 1.6;
+  }
+
+  .comments__notice a {
+    color: rgba(124, 255, 122, 0.7);
+  }
+
+  .comments__notice code {
+    background: rgba(124, 255, 122, 0.08);
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+
+  .giscus-wrap :global(.giscus-frame) {
+    width: 100%;
+  }
+</style>
