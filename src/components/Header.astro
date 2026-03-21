@@ -35,6 +35,7 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
           </button>
 
           <div id="search-bar" class="header-search__bar" hidden>
+            <span class="header-search__prompt" aria-hidden="true">&gt;</span>
             <input
               id="search-input"
               class="header-search__input"
@@ -258,6 +259,14 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
     border: 1px solid rgba(124, 255, 122, 0.22);
     background: rgba(20, 24, 31, 0.85);
     backdrop-filter: blur(8px);
+  }
+
+  .header-search__prompt {
+    font-size: 0.82rem;
+    font-family: var(--font-code);
+    color: #7cff7a;
+    user-select: none;
+    flex: none;
   }
 
   .header-search__input {
