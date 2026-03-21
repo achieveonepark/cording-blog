@@ -17,25 +17,7 @@ const configured = repoId && categoryId;
 <section class="comments">
   <p class="comments__label">댓글</p>
   {configured ? (
-    <div class="giscus-wrap">
-      <script
-        is:inline
-        src="https://giscus.app/client.js"
-        data-repo="achieveonepark/cording-blog"
-        data-repo-id={repoId}
-        data-category={category}
-        data-category-id={categoryId}
-        data-mapping="pathname"
-        data-strict="0"
-        data-reactions-enabled="0"
-        data-emit-metadata="0"
-        data-input-position="top"
-        data-theme="https://blog.somiri.dev/giscus-theme.css"
-        data-lang="ko"
-        crossorigin="anonymous"
-        async
-      ></script>
-    </div>
+    <div class="giscus-wrap" id="giscus-wrap"></div>
   ) : (
     <p class="comments__notice">
       댓글을 활성화하려면 <code>.env</code>에 Giscus 설정이 필요합니다.<br />
@@ -81,3 +63,32 @@ const configured = repoId && categoryId;
     width: 100%;
   }
 </style>
+
+<script define:vars={{ repoId, category, categoryId }}>
+  function loadGiscus() {
+    const wrap = document.getElementById("giscus-wrap");
+    if (!wrap) return;
+
+    // 기존 iframe 제거 후 재생성
+    wrap.innerHTML = "";
+
+    const script = document.createElement("script");
+    script.src = "https://giscus.app/client.js";
+    script.setAttribute("data-repo", "achieveonepark/cording-blog");
+    script.setAttribute("data-repo-id", repoId);
+    script.setAttribute("data-category", category);
+    script.setAttribute("data-category-id", categoryId);
+    script.setAttribute("data-mapping", "pathname");
+    script.setAttribute("data-strict", "0");
+    script.setAttribute("data-reactions-enabled", "0");
+    script.setAttribute("data-emit-metadata", "0");
+    script.setAttribute("data-input-position", "top");
+    script.setAttribute("data-theme", "https://blog.somiri.dev/giscus-theme.css");
+    script.setAttribute("data-lang", "ko");
+    script.setAttribute("crossorigin", "anonymous");
+    script.async = true;
+    wrap.appendChild(script);
+  }
+
+  document.addEventListener("astro:page-load", loadGiscus, { once: true });
+</script>
