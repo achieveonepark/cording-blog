@@ -40,6 +40,9 @@ jobs:
         env:
           PUBLIC_GITHUB_CLIENT_ID: ${{ secrets.PUBLIC_GITHUB_CLIENT_ID }}
           PUBLIC_OAUTH_WORKER_URL: ${{ secrets.PUBLIC_OAUTH_WORKER_URL }}
+          PUBLIC_GISCUS_REPO_ID: ${{ secrets.PUBLIC_GISCUS_REPO_ID }}
+          PUBLIC_GISCUS_CATEGORY: ${{ secrets.PUBLIC_GISCUS_CATEGORY }}
+          PUBLIC_GISCUS_CATEGORY_ID: ${{ secrets.PUBLIC_GISCUS_CATEGORY_ID }}
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
