@@ -9,7 +9,6 @@ export const site = {
 export const navigation = [
   { href: "/", label: "Home" },
   { href: "/posts", label: "Post" },
-  { href: "/search", label: "Search" }
 ] as const;
 
 export const externalLinks = [

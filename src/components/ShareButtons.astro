@@ -2,28 +2,24 @@
 interface Props {
   title: string;
   url: string;
+  image?: string;
 }
 
-const { title, url } = Astro.props;
-const encoded = encodeURIComponent(url);
-const encodedTitle = encodeURIComponent(title);
+const { title, url, image = "" } = Astro.props;
+const kakaoKey = import.meta.env.PUBLIC_KAKAO_APP_KEY ?? "";
 ---
 
 <div class="share">
   <p class="share__label">공유하기</p>
   <div class="share__btns">
-    <a
-      class="share-btn share-btn--x"
-      href={`https://twitter.com/intent/tweet?text=${encodedTitle}&url=${encoded}`}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label="X(Twitter)에 공유"
-    >
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622 5.91-5.622Zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-      </svg>
-      X
-    </a>
+    {kakaoKey && (
+      <button class="share-btn share-btn--kakao" id="kakao-share-btn" aria-label="카카오톡으로 공유">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M12 3C6.477 3 2 6.477 2 10.5c0 2.617 1.586 4.916 4 6.285V21l3.714-2.214C10.447 18.927 11.21 19 12 19c5.523 0 10-3.477 10-7.5S17.523 3 12 3z"/>
+        </svg>
+        카카오톡
+      </button>
+    )}
 
     <button class="share-btn share-btn--copy" id="copy-link-btn" aria-label="링크 복사">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -35,7 +31,28 @@ const encodedTitle = encodeURIComponent(title);
   </div>
 </div>
 
-<script define:vars={{ url }}>
+<script define:vars={{ url, title, image, kakaoKey }}>
+  // ── KakaoTalk ────────────────────────────────────────────
+  if (kakaoKey) {
+    const script = document.createElement("script");
+    script.src = "https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js";
+    script.onload = () => {
+      if (!window.Kakao.isInitialized()) window.Kakao.init(kakaoKey);
+    };
+    document.head.appendChild(script);
+
+    document.getElementById("kakao-share-btn")?.addEventListener("click", () => {
+      if (!window.Kakao?.Share) return;
+      const content = {
+        title,
+        link: { mobileWebUrl: url, webUrl: url },
+      };
+      if (image) content.imageUrl = image;
+      window.Kakao.Share.sendDefault({ objectType: "feed", content });
+    });
+  }
+
+  // ── 링크 복사 ─────────────────────────────────────────────
   const copyBtn = document.getElementById("copy-link-btn");
   const copyLabel = document.getElementById("copy-label");
 
@@ -99,5 +116,16 @@ const encodedTitle = encodeURIComponent(title);
     border-color: rgba(124, 255, 122, 0.4);
     background: rgba(124, 255, 122, 0.07);
     color: #7cff7a;
+  }
+
+  .share-btn--kakao {
+    border-color: rgba(254, 229, 0, 0.3);
+    color: rgba(254, 229, 0, 0.75);
+  }
+
+  .share-btn--kakao:hover {
+    border-color: rgba(254, 229, 0, 0.6);
+    background: rgba(254, 229, 0, 0.07);
+    color: #fee500;
   }
 </style>

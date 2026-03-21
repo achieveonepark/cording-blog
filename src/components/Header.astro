@@ -72,6 +72,19 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
             <path d="M4.7 5a14.3 14.3 0 0 1 14.3 14.3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
           </svg>
         </a>
+
+        <!-- 검색 버튼 -->
+        <button
+          id="search-open-btn"
+          class="site-nav__icon-link"
+          aria-label="검색"
+          title="검색"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true" class="nav-icon">
+            <circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8" />
+            <line x1="16.5" y1="16.5" x2="21" y2="21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+          </svg>
+        </button>
       </div>
 
       <div class="site-nav__group site-nav__group--admin">
@@ -108,11 +121,26 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
   </div>
 </header>
 
+<!-- 검색 모달 -->
+<div id="search-modal" role="dialog" aria-modal="true" aria-label="검색" hidden>
+  <div class="search-modal__backdrop" id="search-modal-backdrop"></div>
+  <div class="search-modal__panel">
+    <div class="search-modal__header">
+      <span class="search-modal__title">Search</span>
+      <button class="search-modal__close" id="search-modal-close" aria-label="닫기">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div id="search-modal-ui"></div>
+  </div>
+</div>
+
 <script define:vars={{ clientId }}>
   const OWNER = "achieveonepark";
   const CALLBACK = `${window.location.origin}/admin/callback`;
 
-  const newPostBtn = document.getElementById("nav-new-post");
   const loginBtn = document.getElementById("nav-login-btn");
   const logoutBtn = document.getElementById("nav-logout-btn");
 
@@ -152,27 +180,77 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
 
   (async () => {
     const token = localStorage.getItem("gh_token");
-    if (!token) {
-      showLogin();
-      return;
-    }
+    if (!token) { showLogin(); return; }
 
     try {
       const res = await fetch("https://api.github.com/user", {
         headers: { Authorization: `Bearer ${token}` },
       });
       const user = await res.json();
-
-      if (user.login === OWNER) {
-        showOwner();
-      } else {
-        localStorage.removeItem("gh_token");
-        showLogin();
-      }
+      if (user.login === OWNER) showOwner();
+      else { localStorage.removeItem("gh_token"); showLogin(); }
     } catch {
       showLogin();
     }
   })();
+
+  // ── 검색 모달 ─────────────────────────────────────────────
+  const modal = document.getElementById("search-modal");
+  let pagefindReady = false;
+
+  function openSearch() {
+    modal.removeAttribute("hidden");
+    document.body.style.overflow = "hidden";
+
+    if (!pagefindReady) {
+      pagefindReady = true;
+
+      const css = document.createElement("link");
+      css.rel = "stylesheet";
+      css.href = "/pagefind/pagefind-ui.css";
+      document.head.appendChild(css);
+
+      const script = document.createElement("script");
+      script.src = "/pagefind/pagefind-ui.js";
+      script.onload = () => {
+        if (typeof PagefindUI !== "undefined") {
+          new PagefindUI({
+            element: "#search-modal-ui",
+            showImages: false,
+            showEmptyFilters: false,
+            resetStyles: false,
+            translations: {
+              placeholder: "검색어를 입력하세요...",
+              zero_results: "검색 결과가 없어요.",
+            },
+          });
+        } else {
+          document.getElementById("search-modal-ui").innerHTML =
+            '<p style="color:rgba(150,180,150,0.6);font-size:0.85rem;padding:1rem 0">검색은 빌드 후 사용할 수 있어요. (<code>npm run build</code>)</p>';
+        }
+        setTimeout(() => {
+          document.querySelector(".pagefind-ui__search-input")?.focus();
+        }, 80);
+      };
+      document.head.appendChild(script);
+    } else {
+      setTimeout(() => {
+        document.querySelector(".pagefind-ui__search-input")?.focus();
+      }, 50);
+    }
+  }
+
+  function closeSearch() {
+    modal.setAttribute("hidden", "");
+    document.body.style.overflow = "";
+  }
+
+  document.getElementById("search-open-btn")?.addEventListener("click", openSearch);
+  document.getElementById("search-modal-close")?.addEventListener("click", closeSearch);
+  document.getElementById("search-modal-backdrop")?.addEventListener("click", closeSearch);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !modal.hasAttribute("hidden")) closeSearch();
+  });
 </script>
 
 <style>
@@ -200,5 +278,151 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
     border-color: rgba(124, 255, 122, 0.22);
     background: rgba(27, 34, 41, 0.9);
     transform: translateY(-1px);
+  }
+
+  /* ── 검색 모달 ───────────────────────────────────────────── */
+  #search-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 500;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 6rem;
+  }
+
+  #search-modal[hidden] {
+    display: none;
+  }
+
+  .search-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(5, 8, 12, 0.82);
+    backdrop-filter: blur(4px);
+  }
+
+  .search-modal__panel {
+    position: relative;
+    z-index: 1;
+    width: min(680px, calc(100vw - 2rem));
+    max-height: calc(100vh - 8rem);
+    overflow-y: auto;
+    background: rgba(10, 14, 19, 0.97);
+    border: 1px solid rgba(124, 255, 122, 0.18);
+    border-radius: 10px;
+    padding: 1.25rem 1.5rem 1.5rem;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.7);
+  }
+
+  .search-modal__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+
+  .search-modal__title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(124, 255, 122, 0.45);
+  }
+
+  .search-modal__close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    border: 1px solid rgba(124, 255, 122, 0.12);
+    background: transparent;
+    color: rgba(180, 210, 180, 0.6);
+    cursor: pointer;
+    transition: border-color 150ms, color 150ms, background 150ms;
+  }
+
+  .search-modal__close:hover {
+    border-color: rgba(124, 255, 122, 0.35);
+    color: #7cff7a;
+    background: rgba(124, 255, 122, 0.06);
+  }
+</style>
+
+<!-- Pagefind 전역 스타일 (모달 내부용) -->
+<style is:global>
+  :root {
+    --pagefind-ui-scale: 0.9;
+    --pagefind-ui-primary: #7cff7a;
+    --pagefind-ui-text: #d0e8d0;
+    --pagefind-ui-background: rgba(0, 0, 0, 0.5);
+    --pagefind-ui-border: rgba(124, 255, 122, 0.2);
+    --pagefind-ui-tag: rgba(124, 255, 122, 0.1);
+    --pagefind-ui-border-width: 1px;
+    --pagefind-ui-border-radius: 6px;
+    --pagefind-ui-font: "SFMono-Regular", Consolas, monospace;
+  }
+
+  .pagefind-ui .pagefind-ui__search-input {
+    background: rgba(0, 0, 0, 0.55) !important;
+    color: #d6ffd6 !important;
+    border: 1px solid rgba(124, 255, 122, 0.25) !important;
+  }
+
+  .pagefind-ui .pagefind-ui__search-input:focus {
+    outline: none !important;
+    border-color: rgba(124, 255, 122, 0.6) !important;
+  }
+
+  .pagefind-ui .pagefind-ui__result {
+    border-color: rgba(124, 255, 122, 0.12) !important;
+    border-radius: 6px !important;
+    padding: 1rem !important;
+    background: rgba(124, 255, 122, 0.02) !important;
+  }
+
+  .pagefind-ui .pagefind-ui__result:hover {
+    border-color: rgba(124, 255, 122, 0.3) !important;
+    background: rgba(124, 255, 122, 0.05) !important;
+  }
+
+  .pagefind-ui .pagefind-ui__result-title a {
+    color: #c8e8c8 !important;
+    text-decoration: none !important;
+  }
+
+  .pagefind-ui .pagefind-ui__result-title a:hover {
+    color: #7cff7a !important;
+  }
+
+  .pagefind-ui .pagefind-ui__result-excerpt {
+    color: rgba(160, 200, 160, 0.7) !important;
+    font-size: 0.85rem !important;
+  }
+
+  .pagefind-ui mark {
+    background: rgba(124, 255, 122, 0.2) !important;
+    color: #7cff7a !important;
+    border-radius: 2px !important;
+  }
+
+  .pagefind-ui .pagefind-ui__button {
+    background: rgba(124, 255, 122, 0.1) !important;
+    border: 1px solid rgba(124, 255, 122, 0.25) !important;
+    color: rgba(124, 255, 122, 0.8) !important;
+    border-radius: 6px !important;
+    cursor: pointer !important;
+  }
+
+  .pagefind-ui .pagefind-ui__button:hover {
+    background: rgba(124, 255, 122, 0.18) !important;
+    color: #7cff7a !important;
+  }
+
+  .pagefind-ui .pagefind-ui__message {
+    color: rgba(150, 180, 150, 0.6) !important;
+    font-size: 0.85rem !important;
   }
 </style>
