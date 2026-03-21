@@ -92,7 +92,7 @@ const postUrl = `${Astro.site?.toString().replace(/\/$/, "") ?? "https://blog.so
         </div>
 
         <!-- 공유 버튼 -->
-        <ShareButtons title={post.data.title} url={postUrl} />
+        <ShareButtons title={post.data.title} url={postUrl} image={post.data.thumbnail ?? ""} />
 
         <!-- 좋아요 버튼 -->
         {workerBase && (
