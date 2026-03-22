@@ -47,6 +47,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 
       <div class="form-actions">
         <span id="submit-status"></span>
+        <button type="button" id="preview-btn">미리보기</button>
         <button type="submit" id="submit-btn">커밋 & 발행</button>
       </div>
 
@@ -266,6 +267,72 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     const editSlug = new URLSearchParams(window.location.search).get("edit");
     if (editSlug) await loadEditContent(editSlug, token, editor);
 
+    // ── 자동 저장 ──────────────────────────────────────────
+    const DRAFT_KEY = editSlug ? `admin-draft:${editSlug}` : "admin-draft:new";
+
+    function collectDraft() {
+      return {
+        title:       (document.getElementById("post-title") as HTMLInputElement).value,
+        description: (document.getElementById("post-description") as HTMLInputElement).value,
+        tags:        (document.getElementById("post-tags") as HTMLInputElement).value,
+        category:    (document.getElementById("post-category") as HTMLSelectElement).value,
+        thumbnail:   (document.getElementById("post-thumbnail") as HTMLInputElement).value,
+        markdown:    editor.getMarkdown(),
+        savedAt:     new Date().toISOString(),
+      };
+    }
+
+    function restoreDraft(data: ReturnType<typeof collectDraft>) {
+      (document.getElementById("post-title") as HTMLInputElement).value       = data.title       ?? "";
+      (document.getElementById("post-description") as HTMLInputElement).value = data.description ?? "";
+      (document.getElementById("post-tags") as HTMLInputElement).value        = data.tags        ?? "";
+      (document.getElementById("post-thumbnail") as HTMLInputElement).value   = data.thumbnail   ?? "";
+      editor.setMarkdown(data.markdown ?? "");
+      const catSel = document.getElementById("post-category") as HTMLSelectElement;
+      if (data.category) catSel.value = data.category;
+    }
+
+    // 저장된 초안 복원 제안 (새 글 작성 시에만)
+    if (!editSlug) {
+      const saved = localStorage.getItem(DRAFT_KEY);
+      if (saved) {
+        try {
+          const data = JSON.parse(saved) as ReturnType<typeof collectDraft>;
+          const when = new Date(data.savedAt).toLocaleString("ko-KR");
+          if (data.title && confirm(`"${data.title}" 초안이 있습니다 (${when}).\n복원할까요?`)) {
+            restoreDraft(data);
+          } else {
+            localStorage.removeItem(DRAFT_KEY);
+          }
+        } catch { localStorage.removeItem(DRAFT_KEY); }
+      }
+    }
+
+    // 자동 저장 (3초 디바운스)
+    let autoSaveTimer: ReturnType<typeof setTimeout>;
+    const autoSaveIndicator = submitStatus;
+
+    function scheduleSave() {
+      clearTimeout(autoSaveTimer);
+      autoSaveTimer = setTimeout(() => {
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(collectDraft()));
+        const prev = autoSaveIndicator.textContent;
+        autoSaveIndicator.textContent = "자동 저장됨";
+        setTimeout(() => { if (autoSaveIndicator.textContent === "자동 저장됨") autoSaveIndicator.textContent = prev ?? ""; }, 2000);
+      }, 3000);
+    }
+
+    ["post-title","post-description","post-tags","post-thumbnail"].forEach(id => {
+      document.getElementById(id)?.addEventListener("input", scheduleSave);
+    });
+    document.getElementById("post-category")?.addEventListener("change", scheduleSave);
+    editor.on("change", scheduleSave);
+
+    // 발행 성공 시 초안 제거
+    form.addEventListener("submit", () => {
+      localStorage.removeItem(DRAFT_KEY);
+    }, { capture: true });
+
     // ── 대표 사진 선택 ────────────────────────────────────────
     const pickBtn = document.getElementById("pick-thumb-btn") as HTMLButtonElement;
     const thumbPicker = document.getElementById("thumb-picker") as HTMLDivElement;
@@ -301,6 +368,16 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       });
 
       thumbPicker.style.display = "grid";
+    });
+
+    // 미리보기 버튼
+    document.getElementById("preview-btn")?.addEventListener("click", () => {
+      const slug = (document.getElementById("edit-slug") as HTMLInputElement).value;
+      if (slug) {
+        window.open(`/admin/preview?slug=${encodeURIComponent(slug)}`, "_blank");
+      } else {
+        alert("미리보기는 커밋 후 slug가 생긴 글에서만 사용할 수 있습니다.\n한 번 커밋하고 수정 모드로 다시 열어보세요.");
+      }
     });
 
     form.addEventListener("submit", async (e) => {

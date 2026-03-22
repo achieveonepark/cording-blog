@@ -20,6 +20,7 @@ const canonicalUrl = new URL(Astro.url.pathname, site.url);
 const ogImage = image
   ? (image.startsWith("http") ? image : new URL(image, site.url).toString())
   : `${site.url}/og-default.png`;
+const gaId = import.meta.env.PUBLIC_GA_MEASUREMENT_ID ?? "";
 ---
 
 <!doctype html>
@@ -58,6 +59,19 @@ const ogImage = image
         document.documentElement.dataset.theme = stored || preferred;
       })();
     </script>
+
+    <!-- Google Analytics GA4 -->
+    {gaId && (
+      <>
+        <script is:inline define:vars={{ gaId }} async src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}></script>
+        <script is:inline define:vars={{ gaId }}>
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', gaId, { send_page_view: false });
+        </script>
+      </>
+    )}
 
     <ClientRouter />
   </head>
@@ -144,9 +158,35 @@ const ogImage = image
         applyTheme(current === "dark" ? "light" : "dark");
       });
 
+      // 스크롤 위치 저장/복원
+      const SCROLL_NS = "scroll:";
+
+      document.addEventListener("astro:before-swap", () => {
+        sessionStorage.setItem(SCROLL_NS + location.pathname, String(window.scrollY));
+      });
+
+      document.addEventListener("astro:page-load", () => {
+        // 브라우저 뒤로가기/앞으로가기일 때만 복원
+        const nav = (performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined);
+        const isBackForward = nav?.type === "back_forward";
+        const saved = sessionStorage.getItem(SCROLL_NS + location.pathname);
+
+        if (isBackForward && saved) {
+          requestAnimationFrame(() => window.scrollTo({ top: parseInt(saved, 10), behavior: "instant" }));
+        }
+      });
+
       // Astro 페이지 전환 후에도 아이콘 동기화
       document.addEventListener("astro:page-load", () => {
         syncThemeIcons(document.documentElement.dataset.theme ?? "dark");
+
+        // GA4 SPA 페이지뷰
+        if (typeof window.gtag === "function") {
+          window.gtag("event", "page_view", {
+            page_path: window.location.pathname,
+            page_title: document.title,
+          });
+        }
       });
     </script>
 

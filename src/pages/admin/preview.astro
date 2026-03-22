@@ -1,0 +1,204 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="초안 미리보기">
+  <div id="preview-shell" style="display:none">
+    <div id="preview-toolbar">
+      <a href="/admin/new-post" id="back-btn">← 에디터로</a>
+      <span id="preview-title-label"></span>
+      <span id="preview-status"></span>
+    </div>
+    <div class="preview-body shell">
+      <article class="app-panel article">
+        <header class="article__header">
+          <p class="eyebrow">Preview</p>
+          <h1 id="preview-h1"></h1>
+          <p id="preview-desc"></p>
+          <div class="article__meta">
+            <time id="preview-date"></time>
+            <span id="preview-cat" style="display:none" class="article-category"></span>
+          </div>
+          <ul id="preview-tags" class="tag-list" style="display:none"></ul>
+          <img id="preview-thumb" class="article__thumb" src="" alt="" loading="lazy" style="display:none" />
+        </header>
+        <div class="prose article__body" id="preview-content"></div>
+      </article>
+    </div>
+  </div>
+
+  <div id="auth-guard" style="display:none">
+    <p style="text-align:center;padding:4rem;color:var(--muted)">접근 권한이 없습니다. <a href="/">홈으로</a></p>
+  </div>
+</BaseLayout>
+
+<script>
+  const OWNER  = "achieveonepark";
+  const REPO   = "cording-blog";
+  const BRANCH = "main";
+
+  const shell     = document.getElementById("preview-shell") as HTMLElement;
+  const authGuard = document.getElementById("auth-guard") as HTMLElement;
+  const status    = document.getElementById("preview-status") as HTMLElement;
+
+  function parseFrontmatter(raw: string) {
+    const m = raw.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
+    if (!m) return { fm: {}, body: raw };
+    const fmStr = m[1];
+    const body  = m[2].trimStart();
+    const fm: Record<string, string | string[]> = {};
+
+    // title / description / pubDate / category / thumbnail
+    for (const key of ["title","description","pubDate","category","thumbnail","series"]) {
+      const match = fmStr.match(new RegExp(`^${key}:\\s*"?(.+?)"?\\s*$`, "m"));
+      if (match) fm[key] = match[1];
+    }
+
+    // tags
+    const tagMatches = [...fmStr.matchAll(/^\s*-\s*(.+)\s*$/gm)].map(m => m[1].trim());
+    if (tagMatches.length) fm.tags = tagMatches;
+
+    return { fm, body };
+  }
+
+  function mdToHtml(md: string): string {
+    return md
+      // fenced code blocks
+      .replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) =>
+        `<pre><code class="language-${lang}">${code.replace(/</g,"&lt;").replace(/>/g,"&gt;")}</code></pre>`)
+      // inline code
+      .replace(/`([^`]+)`/g, "<code>$1</code>")
+      // headings
+      .replace(/^### (.+)$/gm, "<h3>$1</h3>")
+      .replace(/^## (.+)$/gm, "<h2>$1</h2>")
+      .replace(/^# (.+)$/gm, "<h1>$1</h1>")
+      // bold / italic
+      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+      .replace(/\*(.+?)\*/g, "<em>$1</em>")
+      // images
+      .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" loading="lazy" />')
+      // links
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noreferrer">$1</a>')
+      // blockquote
+      .replace(/^> (.+)$/gm, "<blockquote>$1</blockquote>")
+      // horizontal rule
+      .replace(/^---$/gm, "<hr/>")
+      // unordered list (simple)
+      .replace(/^[-*] (.+)$/gm, "<li>$1</li>")
+      // ordered list
+      .replace(/^\d+\. (.+)$/gm, "<li>$1</li>")
+      // paragraphs (double newline)
+      .replace(/\n\n([^<])/g, "\n\n<p>$1")
+      .replace(/([^>])\n\n/g, "$1</p>\n\n");
+  }
+
+  (async () => {
+    const token = localStorage.getItem("gh_token");
+    if (!token) { authGuard.style.display = ""; return; }
+
+    const userRes = await fetch("https://api.github.com/user", {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const user = await userRes.json();
+    if (user.login !== OWNER) { authGuard.style.display = ""; return; }
+
+    shell.style.display = "";
+
+    const slug = new URLSearchParams(window.location.search).get("slug");
+    if (!slug) {
+      status.textContent = "slug 파라미터가 없습니다. ?slug=파일명 형태로 접근하세요.";
+      return;
+    }
+
+    status.textContent = "불러오는 중...";
+
+    try {
+      const res = await fetch(
+        `https://api.github.com/repos/${OWNER}/${REPO}/contents/src/content/blog/${slug}.md?ref=${BRANCH}`,
+        { headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json" } }
+      );
+      if (!res.ok) throw new Error("파일을 찾을 수 없습니다.");
+
+      const data = await res.json();
+      const raw  = decodeURIComponent(escape(atob(data.content.replace(/\n/g,""))));
+      const { fm, body } = parseFrontmatter(raw);
+
+      // 헤더 채우기
+      (document.getElementById("preview-h1") as HTMLElement).textContent = String(fm.title ?? slug);
+      (document.getElementById("preview-desc") as HTMLElement).textContent = String(fm.desc ?? fm.description ?? "");
+      (document.getElementById("preview-title-label") as HTMLElement).textContent = String(fm.title ?? slug);
+
+      const dateEl = document.getElementById("preview-date") as HTMLElement;
+      dateEl.textContent = fm.pubDate ? new Intl.DateTimeFormat("ko-KR", {year:"numeric",month:"short",day:"numeric"}).format(new Date(String(fm.pubDate))) : "";
+
+      if (fm.category) {
+        const catEl = document.getElementById("preview-cat") as HTMLElement;
+        catEl.textContent = String(fm.category);
+        catEl.style.display = "";
+      }
+
+      if (Array.isArray(fm.tags) && fm.tags.length) {
+        const tagsEl = document.getElementById("preview-tags") as HTMLElement;
+        tagsEl.innerHTML = fm.tags.map(t => `<li>${t}</li>`).join("");
+        tagsEl.style.display = "";
+      }
+
+      if (fm.thumbnail) {
+        const thumb = document.getElementById("preview-thumb") as HTMLImageElement;
+        thumb.src = String(fm.thumbnail);
+        thumb.style.display = "";
+      }
+
+      // 본문 렌더
+      (document.getElementById("preview-content") as HTMLElement).innerHTML = mdToHtml(body);
+
+      status.textContent = fm.draft === "true" ? "📄 초안" : "✓ 발행됨";
+    } catch (err) {
+      status.textContent = `오류: ${err instanceof Error ? err.message : String(err)}`;
+    }
+  })();
+</script>
+
+<style>
+  #preview-toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.65rem 1.25rem;
+    background: var(--header-bg);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(12px);
+    font-size: 0.8rem;
+  }
+
+  #back-btn {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  #back-btn:hover { text-decoration: underline; }
+
+  #preview-title-label {
+    color: var(--text);
+    font-weight: 600;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  #preview-status {
+    color: var(--muted);
+    flex-shrink: 0;
+    font-size: 0.76rem;
+  }
+
+  .preview-body {
+    padding: 2rem 1rem;
+  }
+</style>
