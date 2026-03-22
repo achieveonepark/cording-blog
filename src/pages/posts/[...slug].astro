@@ -8,6 +8,7 @@ import ShareButtons from "../../components/ShareButtons.astro";
 import RelatedPosts from "../../components/RelatedPosts.astro";
 import SeriesNav from "../../components/SeriesNav.astro";
 import Giscus from "../../components/Giscus.astro";
+import ReadingProgress from "../../components/ReadingProgress.astro";
 import { formatDate, getPublishedPosts, getReadingTime } from "../../lib/blog";
 
 export async function getStaticPaths() {
@@ -32,6 +33,7 @@ const postUrl = `${Astro.site?.toString().replace(/\/$/, "") ?? "https://blog.so
 ---
 
 <BaseLayout title={post.data.title} description={post.data.description} image={post.data.thumbnail}>
+  <ReadingProgress />
   <Header />
 
   <main class="shell">
