@@ -1,0 +1,105 @@
+---
+import Footer from "../../components/Footer.astro";
+import Header from "../../components/Header.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getPublishedPosts } from "../../lib/blog";
+
+const posts = await getPublishedPosts();
+
+// 태그별 카운트 집계
+const tagMap = new Map<string, number>();
+for (const post of posts) {
+  for (const tag of post.data.tags) {
+    tagMap.set(tag, (tagMap.get(tag) ?? 0) + 1);
+  }
+}
+
+const tags = [...tagMap.entries()].sort((a, b) => b[1] - a[1]);
+const maxCount = Math.max(...tags.map(([, c]) => c), 1);
+---
+
+<BaseLayout title="태그" description="모든 태그 목록입니다.">
+  <Header />
+
+  <main class="shell app-shell">
+    <section class="app-panel">
+      <div class="section-heading">
+        <p class="eyebrow">Tags</p>
+        <h1>태그 목록</h1>
+        <p>총 {tags.length}개의 태그, {posts.length}개의 글</p>
+      </div>
+
+      {tags.length === 0 ? (
+        <p class="empty">아직 태그가 없습니다.</p>
+      ) : (
+        <ul class="tag-cloud" aria-label="태그 클라우드">
+          {tags.map(([tag, count]) => {
+            const size = 0.8 + (count / maxCount) * 0.8;
+            return (
+              <li>
+                <a href={`/tags/${encodeURIComponent(tag)}/`} style={`font-size: ${size}rem`}>
+                  {tag}
+                  <span class="tag-count">{count}</span>
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
+  </main>
+
+  <Footer />
+</BaseLayout>
+
+<style>
+  .tag-cloud {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 0.9rem;
+    line-height: 1.4;
+  }
+
+  .tag-cloud a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.85rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--accent-soft);
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    transition: border-color 150ms, background 150ms, transform 150ms;
+  }
+
+  .tag-cloud a:hover {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    transform: translateY(-2px);
+  }
+
+  .tag-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.2rem;
+    height: 1.2rem;
+    padding: 0 0.25rem;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--muted);
+    font-size: 0.65rem;
+    font-weight: 700;
+  }
+
+  .empty {
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+</style>

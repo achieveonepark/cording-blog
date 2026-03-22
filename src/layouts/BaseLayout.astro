@@ -6,19 +6,24 @@ import "../styles/global.css";
 interface Props {
   title?: string;
   description?: string;
+  image?: string;
 }
 
 const {
   title = site.title,
-  description = site.description
+  description = site.description,
+  image
 } = Astro.props;
 
 const pageTitle = title === site.title ? title : `${title} | ${site.title}`;
 const canonicalUrl = new URL(Astro.url.pathname, site.url);
+const ogImage = image
+  ? (image.startsWith("http") ? image : new URL(image, site.url).toString())
+  : `${site.url}/og-default.png`;
 ---
 
 <!doctype html>
-<html lang="ko">
+<html lang="ko" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -27,7 +32,33 @@ const canonicalUrl = new URL(Astro.url.pathname, site.url);
     <meta name="theme-color" content="#05080c" />
     <link rel="canonical" href={canonicalUrl} />
     <link rel="alternate" type="application/rss+xml" title={`${site.title} RSS`} href="/rss.xml" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:site_name" content={site.title} />
+    <meta property="og:locale" content={site.locale} />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
     <title>{pageTitle}</title>
+
+    <!-- 테마 초기화 (FOUC 방지) -->
+    <script is:inline>
+      (function() {
+        const stored = localStorage.getItem("theme");
+        const preferred = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+        document.documentElement.dataset.theme = stored || preferred;
+      })();
+    </script>
+
     <ClientRouter />
   </head>
   <body class="matrix-theme">
@@ -36,6 +67,24 @@ const canonicalUrl = new URL(Astro.url.pathname, site.url);
     <div class="page-shell">
       <slot />
     </div>
+
+    <!-- 테마 토글 버튼 -->
+    <button id="theme-toggle" aria-label="테마 전환" title="라이트/다크 모드 전환">
+      <svg id="theme-icon-dark" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+        <circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" stroke-width="1.8"/>
+        <line x1="12" y1="2" x2="12" y2="4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        <line x1="12" y1="20" x2="12" y2="22" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        <line x1="2" y1="12" x2="4" y2="12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        <line x1="20" y1="12" x2="22" y2="12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+      <svg id="theme-icon-light" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="display:none">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
 
     <!-- 관리자 플로팅 버튼 -->
     <div id="fab-group" style="display:none">
@@ -69,9 +118,65 @@ const canonicalUrl = new URL(Astro.url.pathname, site.url);
           })
           .catch(() => {});
       }
+
+      // 테마 토글
+      function syncThemeIcons(theme: string) {
+        const darkIcon  = document.getElementById("theme-icon-dark");
+        const lightIcon = document.getElementById("theme-icon-light");
+        if (!darkIcon || !lightIcon) return;
+        if (theme === "light") {
+          darkIcon.style.display  = "none";
+          lightIcon.style.display = "";
+        } else {
+          darkIcon.style.display  = "";
+          lightIcon.style.display = "none";
+        }
+      }
+
+      function applyTheme(theme: string) {
+        document.documentElement.dataset.theme = theme;
+        localStorage.setItem("theme", theme);
+        syncThemeIcons(theme);
+      }
+
+      document.getElementById("theme-toggle")?.addEventListener("click", () => {
+        const current = document.documentElement.dataset.theme ?? "dark";
+        applyTheme(current === "dark" ? "light" : "dark");
+      });
+
+      // Astro 페이지 전환 후에도 아이콘 동기화
+      document.addEventListener("astro:page-load", () => {
+        syncThemeIcons(document.documentElement.dataset.theme ?? "dark");
+      });
     </script>
 
     <style>
+      #theme-toggle {
+        position: fixed;
+        bottom: 2rem;
+        left: 2rem;
+        z-index: 100;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.4rem;
+        height: 2.4rem;
+        border-radius: 50%;
+        border: 1px solid var(--border);
+        background: var(--panel);
+        color: var(--muted);
+        cursor: pointer;
+        backdrop-filter: blur(12px);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+        transition: border-color 180ms, background 180ms, color 180ms, transform 180ms;
+      }
+
+      #theme-toggle:hover {
+        color: var(--accent);
+        border-color: var(--accent);
+        transform: scale(1.08);
+      }
+
       #fab-group {
         position: fixed;
         bottom: 2rem;
