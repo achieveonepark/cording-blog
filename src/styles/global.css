@@ -1,7 +1,8 @@
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.min.css");
 @import url("https://cdn.jsdelivr.net/gh/MonadABXY/mona-font/web/mona.css");
 
-:root {
+:root,
+[data-theme="dark"] {
   --bg: #05080c;
   --bg-deep: #020407;
   --panel: rgba(27, 32, 39, 0.94);
@@ -14,6 +15,10 @@
   --accent-strong: #c6ffc3;
   --accent-soft: rgba(124, 255, 122, 0.12);
   --shadow-panel: 0 24px 90px rgba(0, 0, 0, 0.45);
+  --header-bg: rgba(5, 8, 12, 0.72);
+  --header-border: rgba(124, 255, 122, 0.08);
+  --nav-btn-bg: rgba(20, 24, 31, 0.72);
+  --nav-btn-border: rgba(124, 255, 122, 0.08);
   --radius-xl: 28px;
   --radius-lg: 22px;
   --radius-md: 16px;
@@ -23,6 +28,50 @@
   --font-ui: "Mona12", "Pretendard", -apple-system, system-ui, "Segoe UI", sans-serif;
   --font-code: "Mona12", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   --transition-base: 180ms ease;
+}
+
+[data-theme="light"] {
+  --bg: #f0f2f5;
+  --bg-deep: #e4e7ec;
+  --panel: rgba(255, 255, 255, 0.96);
+  --panel-strong: rgba(250, 251, 252, 0.99);
+  --panel-soft: rgba(245, 247, 250, 0.92);
+  --text: #111827;
+  --muted: #4b5563;
+  --border: rgba(22, 120, 22, 0.16);
+  --accent: #1a7a1a;
+  --accent-strong: #145214;
+  --accent-soft: rgba(22, 120, 22, 0.1);
+  --shadow-panel: 0 8px 32px rgba(0, 0, 0, 0.1);
+  --header-bg: rgba(240, 242, 245, 0.88);
+  --header-border: rgba(22, 120, 22, 0.12);
+  --nav-btn-bg: rgba(255, 255, 255, 0.8);
+  --nav-btn-border: rgba(22, 120, 22, 0.12);
+}
+
+[data-theme="light"] body {
+  background: var(--bg);
+}
+
+[data-theme="light"] .matrix-canvas {
+  opacity: 0.06;
+  filter: hue-rotate(60deg) saturate(0.3);
+}
+
+[data-theme="light"] .scanlines {
+  display: none;
+}
+
+[data-theme="light"] .page-shell::before {
+  background: none;
+}
+
+[data-theme="light"] ::selection {
+  background: rgba(22, 120, 22, 0.15);
+}
+
+[data-theme="light"] a {
+  text-decoration-color: rgba(22, 120, 22, 0.3);
 }
 
 * {
@@ -123,8 +172,9 @@ select {
   top: 0;
   z-index: 10;
   backdrop-filter: blur(16px);
-  background: rgba(5, 8, 12, 0.72);
-  border-bottom: 1px solid rgba(124, 255, 122, 0.08);
+  background: var(--header-bg);
+  border-bottom: 1px solid var(--header-border);
+  transition: background var(--transition-base), border-color var(--transition-base);
 }
 
 .site-header__inner {
@@ -191,8 +241,8 @@ select {
   min-height: 2.35rem;
   padding: 0.5rem 0.85rem;
   border-radius: var(--radius-sm);
-  border: 1px solid rgba(124, 255, 122, 0.08);
-  background: rgba(20, 24, 31, 0.72);
+  border: 1px solid var(--nav-btn-border);
+  background: var(--nav-btn-bg);
   color: var(--muted);
   text-decoration: none;
   font-size: 0.76rem;
@@ -207,8 +257,8 @@ select {
 .site-nav a:hover,
 .site-nav a[aria-current="page"] {
   color: var(--text);
-  border-color: rgba(124, 255, 122, 0.22);
-  background: rgba(27, 34, 41, 0.9);
+  border-color: var(--border);
+  background: var(--panel-soft);
   transform: translateY(-1px);
 }
 

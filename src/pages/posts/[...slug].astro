@@ -6,6 +6,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 import TOC from "../../components/TOC.astro";
 import ShareButtons from "../../components/ShareButtons.astro";
 import RelatedPosts from "../../components/RelatedPosts.astro";
+import SeriesNav from "../../components/SeriesNav.astro";
 import Giscus from "../../components/Giscus.astro";
 import { formatDate, getPublishedPosts, getReadingTime } from "../../lib/blog";
 
@@ -30,7 +31,7 @@ const workerBase = import.meta.env.PUBLIC_OAUTH_WORKER_URL?.replace(/\/$/, "") ?
 const postUrl = `${Astro.site?.toString().replace(/\/$/, "") ?? "https://blog.somiri.dev"}/posts/${post.id}/`;
 ---
 
-<BaseLayout title={post.data.title} description={post.data.description}>
+<BaseLayout title={post.data.title} description={post.data.description} image={post.data.thumbnail}>
   <Header />
 
   <main class="shell">
@@ -90,6 +91,13 @@ const postUrl = `${Astro.site?.toString().replace(/\/$/, "") ?? "https://blog.so
         <div class="prose article__body">
           <Content />
         </div>
+
+        <!-- 시리즈 네비게이션 -->
+        {post.data.series && (
+          <div data-pagefind-ignore>
+            <SeriesNav currentPost={post} allPosts={allPosts} />
+          </div>
+        )}
 
         <!-- 공유 버튼 -->
         <div data-pagefind-ignore>

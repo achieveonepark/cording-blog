@@ -1,0 +1,199 @@
+---
+import Footer from "../components/Footer.astro";
+import Header from "../components/Header.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { site } from "../config/site";
+import { getPublishedPosts } from "../lib/blog";
+
+const posts = await getPublishedPosts();
+const postCount = posts.length;
+
+const tags = new Set(posts.flatMap((p) => p.data.tags));
+---
+
+<BaseLayout
+  title="About"
+  description={`${site.author}의 블로그 소개 페이지입니다.`}
+>
+  <Header />
+
+  <main class="shell app-shell">
+    <section class="app-panel about-panel">
+      <div class="about-header">
+        <div class="about-avatar" aria-hidden="true">
+          <svg viewBox="0 0 80 80" width="80" height="80">
+            <circle cx="40" cy="40" r="38" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="4 3"/>
+            <circle cx="40" cy="32" r="14" fill="none" stroke="var(--accent)" stroke-width="1.5"/>
+            <path d="M14 68c0-14.36 11.64-26 26-26s26 11.64 26 26" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>
+          <p class="eyebrow">About</p>
+          <h1>{site.author}</h1>
+          <p class="about-tagline">{site.description}</p>
+        </div>
+      </div>
+
+      <div class="about-stats">
+        <div class="stat">
+          <span class="stat__num">{postCount}</span>
+          <span class="stat__label">Posts</span>
+        </div>
+        <div class="stat">
+          <span class="stat__num">{tags.size}</span>
+          <span class="stat__label">Tags</span>
+        </div>
+      </div>
+
+      <div class="about-section">
+        <h2>이 블로그에 대해</h2>
+        <p>
+          작업하면서 겪은 문제 해결 과정, 새로 배운 기술, 개발 중 떠오른 생각들을 기록합니다.
+          매트릭스 배경 위에서 코드와 글이 함께 쌓여가는 공간입니다.
+        </p>
+      </div>
+
+      <div class="about-section">
+        <h2>기술 스택</h2>
+        <ul class="tech-list">
+          <li>Astro (Static Site Generation)</li>
+          <li>TypeScript</li>
+          <li>Cloudflare Pages + Workers</li>
+          <li>GitHub API (콘텐츠 관리)</li>
+          <li>Giscus (댓글)</li>
+        </ul>
+      </div>
+
+      <div class="about-section">
+        <h2>연락처</h2>
+        <ul class="contact-list">
+          <li>
+            <a href="https://github.com/achieveonepark" target="_blank" rel="noreferrer">
+              GitHub @achieveonepark
+            </a>
+          </li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+</BaseLayout>
+
+<style>
+  .about-panel {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  .about-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .about-avatar {
+    flex-shrink: 0;
+    opacity: 0.8;
+  }
+
+  .about-tagline {
+    color: var(--muted);
+    font-size: 0.92rem;
+    margin-top: 0.25rem;
+  }
+
+  .about-stats {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    padding: 1rem 1.25rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    background: var(--panel-soft);
+  }
+
+  .stat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  .stat__num {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
+    font-family: var(--font-code);
+  }
+
+  .stat__label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .about-section {
+    margin-bottom: 1.75rem;
+  }
+
+  .about-section h2 {
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.75rem;
+  }
+
+  .about-section p {
+    color: var(--muted);
+    font-size: 0.92rem;
+    line-height: 1.8;
+    margin: 0;
+  }
+
+  .tech-list,
+  .contact-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .tech-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.88rem;
+    color: var(--muted);
+  }
+
+  .tech-list li::before {
+    content: "▸";
+    color: var(--accent);
+    font-size: 0.7rem;
+  }
+
+  .contact-list a {
+    color: var(--accent);
+    font-size: 0.88rem;
+    text-decoration: none;
+  }
+
+  .contact-list a:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width: 560px) {
+    .about-header {
+      flex-direction: column;
+      gap: 1rem;
+    }
+  }
+</style>

@@ -1,0 +1,230 @@
+---
+import Footer from "../../components/Footer.astro";
+import Header from "../../components/Header.astro";
+import PostCard from "../../components/PostCard.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getPublishedPosts } from "../../lib/blog";
+import categories from "../../data/categories.json";
+
+export async function getStaticPaths({ paginate }: { paginate: Function }) {
+  const posts = await getPublishedPosts();
+  return paginate(posts, { pageSize: 10 });
+}
+
+const { page } = Astro.props as { page: any };
+const posts = page.data;
+const allPosts = await getPublishedPosts();
+
+const categoryCounts = categories.reduce<Record<string, number>>((acc, cat) => {
+  acc[cat] = allPosts.filter((p) => p.data.category === cat).length;
+  return acc;
+}, {});
+---
+
+<BaseLayout title={page.currentPage === 1 ? "모든 글" : `모든 글 — ${page.currentPage}페이지`} description="Somiri 블로그의 전체 글 목록입니다.">
+  <Header />
+
+  <main class="shell app-shell">
+    <section class="app-panel">
+      <div class="section-heading">
+        <p class="eyebrow">Archive</p>
+        <h1>모든 로그</h1>
+        <p>저장된 글을 시간순으로 훑을 수 있는 전체 스트림입니다.</p>
+      </div>
+
+      <div class="category-filter" role="group" aria-label="카테고리 필터">
+        <button class="cat-btn cat-btn--active" data-cat="">
+          전체 <span class="cat-count">{allPosts.length}</span>
+        </button>
+        {categories.map((cat) => (
+          <button class="cat-btn" data-cat={cat}>
+            {cat}
+            {categoryCounts[cat] > 0 && <span class="cat-count">{categoryCounts[cat]}</span>}
+          </button>
+        ))}
+      </div>
+
+      <div class="post-stack" id="post-stack">
+        {posts.map((post: any) => <PostCard post={post} />)}
+      </div>
+
+      <!-- 페이지네이션 -->
+      {page.lastPage > 1 && (
+        <nav class="pagination" aria-label="페이지 네비게이션">
+          {page.url.prev ? (
+            <a href={page.url.prev} class="pagination__btn">← 이전</a>
+          ) : (
+            <span class="pagination__btn pagination__btn--disabled">← 이전</span>
+          )}
+
+          <div class="pagination__pages">
+            {Array.from({ length: page.lastPage }, (_, i) => i + 1).map((num) => (
+              <a
+                href={num === 1 ? "/posts/" : `/posts/${num}/`}
+                class:list={["pagination__page", { "pagination__page--current": num === page.currentPage }]}
+                aria-current={num === page.currentPage ? "page" : undefined}
+              >
+                {num}
+              </a>
+            ))}
+          </div>
+
+          {page.url.next ? (
+            <a href={page.url.next} class="pagination__btn">다음 →</a>
+          ) : (
+            <span class="pagination__btn pagination__btn--disabled">다음 →</span>
+          )}
+        </nav>
+      )}
+    </section>
+  </main>
+
+  <Footer />
+</BaseLayout>
+
+<script>
+  function initFilter() {
+    const btns = document.querySelectorAll<HTMLButtonElement>(".cat-btn");
+    const cards = document.querySelectorAll<HTMLElement>(".post-card");
+
+    if (!btns.length) return;
+
+    btns.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        btns.forEach((b) => b.classList.remove("cat-btn--active"));
+        btn.classList.add("cat-btn--active");
+
+        const cat = btn.dataset.cat ?? "";
+        cards.forEach((card) => {
+          const match = !cat || card.dataset.category === cat;
+          card.style.display = match ? "" : "none";
+        });
+      });
+    });
+  }
+
+  document.addEventListener("astro:after-swap", initFilter);
+  document.addEventListener("astro:page-load", initFilter);
+</script>
+
+<style>
+  .category-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .cat-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.85rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: border-color 150ms, background 150ms, color 150ms;
+  }
+
+  .cat-btn:hover {
+    border-color: var(--accent);
+    color: var(--text);
+  }
+
+  .cat-btn--active {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  .cat-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.2rem;
+    height: 1.2rem;
+    padding: 0 0.3rem;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--muted);
+    font-size: 0.68rem;
+    font-weight: 700;
+  }
+
+  .cat-btn--active .cat-count {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  /* ── 페이지네이션 ─────────────────────────────────── */
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .pagination__btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.4rem 0.9rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--panel-soft);
+    color: var(--muted);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: border-color 150ms, color 150ms;
+  }
+
+  .pagination__btn:not(.pagination__btn--disabled):hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .pagination__btn--disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+
+  .pagination__pages {
+    display: flex;
+    gap: 0.35rem;
+  }
+
+  .pagination__page {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--panel-soft);
+    color: var(--muted);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: border-color 150ms, background 150ms, color 150ms;
+  }
+
+  .pagination__page:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .pagination__page--current {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+</style>

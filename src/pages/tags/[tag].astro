@@ -1,0 +1,76 @@
+---
+import Footer from "../../components/Footer.astro";
+import Header from "../../components/Header.astro";
+import PostCard from "../../components/PostCard.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getPublishedPosts } from "../../lib/blog";
+
+export async function getStaticPaths() {
+  const posts = await getPublishedPosts();
+
+  const tagMap = new Map<string, typeof posts>();
+  for (const post of posts) {
+    for (const tag of post.data.tags) {
+      if (!tagMap.has(tag)) tagMap.set(tag, []);
+      tagMap.get(tag)!.push(post);
+    }
+  }
+
+  return [...tagMap.entries()].map(([tag, tagPosts]) => ({
+    params: { tag },
+    props: { tag, tagPosts }
+  }));
+}
+
+interface Props {
+  tag: string;
+  tagPosts: Awaited<ReturnType<typeof getPublishedPosts>>;
+}
+
+const { tag, tagPosts } = Astro.props;
+---
+
+<BaseLayout title={`#${tag}`} description={`"${tag}" 태그가 달린 글 목록입니다.`}>
+  <Header />
+
+  <main class="shell app-shell">
+    <section class="app-panel">
+      <div class="section-heading">
+        <p class="eyebrow">Tag</p>
+        <h1>#{tag}</h1>
+        <p>{tagPosts.length}개의 글</p>
+      </div>
+
+      <a href="/tags/" class="back-link">← 모든 태그</a>
+
+      <div class="post-stack">
+        {tagPosts.map((post) => <PostCard post={post} />)}
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+</BaseLayout>
+
+<style>
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 1.5rem;
+    padding: 0.3rem 0.85rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: border-color 150ms, transform 150ms;
+  }
+
+  .back-link:hover {
+    border-color: var(--accent);
+    transform: translateX(-2px);
+  }
+</style>

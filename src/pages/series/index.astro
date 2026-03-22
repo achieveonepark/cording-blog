@@ -1,0 +1,156 @@
+---
+import Footer from "../../components/Footer.astro";
+import Header from "../../components/Header.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getPublishedPosts } from "../../lib/blog";
+
+const posts = await getPublishedPosts();
+
+// 시리즈별 집계
+const seriesMap = new Map<string, typeof posts>();
+for (const post of posts) {
+  if (!post.data.series) continue;
+  if (!seriesMap.has(post.data.series)) seriesMap.set(post.data.series, []);
+  seriesMap.get(post.data.series)!.push(post);
+}
+
+const seriesList = [...seriesMap.entries()]
+  .map(([name, seriesPosts]) => ({
+    name,
+    posts: seriesPosts.sort((a, b) => (a.data.seriesOrder ?? 0) - (b.data.seriesOrder ?? 0)),
+    latestDate: seriesPosts.reduce(
+      (latest, p) => (p.data.pubDate > latest ? p.data.pubDate : latest),
+      new Date(0)
+    )
+  }))
+  .sort((a, b) => b.latestDate.getTime() - a.latestDate.getTime());
+---
+
+<BaseLayout title="시리즈" description="연재 시리즈 목록입니다.">
+  <Header />
+
+  <main class="shell app-shell">
+    <section class="app-panel">
+      <div class="section-heading">
+        <p class="eyebrow">Series</p>
+        <h1>연재 시리즈</h1>
+        <p>여러 편으로 이어지는 글 모음입니다.</p>
+      </div>
+
+      {seriesList.length === 0 ? (
+        <p class="empty">아직 시리즈가 없습니다.<br/>포스트 frontmatter에 <code>series</code> 필드를 추가하면 자동으로 묶입니다.</p>
+      ) : (
+        <ul class="series-list">
+          {seriesList.map(({ name, posts: sp }) => (
+            <li class="series-card">
+              <a href={`/series/${encodeURIComponent(name)}/`} class="series-card__link">
+                <div class="series-card__head">
+                  <span class="series-card__name">{name}</span>
+                  <span class="series-card__count">{sp.length}편</span>
+                </div>
+                <ol class="series-card__posts">
+                  {sp.slice(0, 3).map((p, i) => (
+                    <li>{i + 1}. {p.data.title}</li>
+                  ))}
+                  {sp.length > 3 && <li class="more">+ {sp.length - 3}편 더보기</li>}
+                </ol>
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  </main>
+
+  <Footer />
+</BaseLayout>
+
+<style>
+  .series-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+
+  .series-card__link {
+    display: block;
+    padding: 1.25rem 1.4rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    background: var(--panel-soft);
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 150ms, background 150ms, transform 150ms;
+  }
+
+  .series-card__link:hover {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    transform: translateY(-2px);
+  }
+
+  .series-card__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+    gap: 0.5rem;
+  }
+
+  .series-card__name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .series-card__count {
+    flex-shrink: 0;
+    padding: 0.15rem 0.55rem;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    border: 1px solid var(--border);
+    color: var(--accent);
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+
+  .series-card__posts {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .series-card__posts li {
+    font-size: 0.8rem;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .series-card__posts li.more {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .empty {
+    color: var(--muted);
+    font-size: 0.9rem;
+    line-height: 1.8;
+  }
+
+  .empty code {
+    background: var(--accent-soft);
+    color: var(--accent);
+    padding: 0.1em 0.4em;
+    border-radius: 4px;
+    font-family: var(--font-code);
+    font-size: 0.88em;
+  }
+</style>
