@@ -51,6 +51,15 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
         <button type="submit" id="submit-btn">커밋 & 발행</button>
       </div>
 
+      <div id="actions-progress" style="display:none">
+        <div id="actions-bar">
+          <div id="actions-bar-fill"></div>
+        </div>
+        <a id="actions-link" href="https://github.com/achieveonepark/cording-blog/actions" target="_blank" rel="noreferrer">
+          Actions 탭 열기 ↗
+        </a>
+      </div>
+
       <input type="hidden" id="edit-slug" value="" />
     </form>
   </div>
@@ -120,6 +129,67 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     );
     if (!res.ok) throw new Error((await res.json()).message ?? "이미지 업로드 실패");
     return `/images/${filename}`;
+  }
+
+  async function watchActions(token: string, slug: string, since: string): Promise<void> {
+    const statusEl = document.getElementById("submit-status");
+    const progressEl = document.getElementById("actions-progress");
+    if (progressEl) progressEl.style.display = "flex";
+
+    const labels: Record<string, string> = {
+      queued: "빌드 대기 중...",
+      in_progress: "빌드 중...",
+      completed: "배포 완료!",
+    };
+
+    let runId: number | null = null;
+
+    for (let i = 0; i < 60; i++) {
+      await new Promise((r) => setTimeout(r, 5000));
+
+      try {
+        const res = await fetch(
+          `https://api.github.com/repos/${OWNER}/${REPO}/actions/runs?branch=${BRANCH}&per_page=5`,
+          { headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json" } }
+        );
+        const data = await res.json();
+        const runs: any[] = data.workflow_runs ?? [];
+
+        // since 시점 이후 트리거된 run 찾기
+        const run = runs.find((r: any) => new Date(r.created_at) >= new Date(since));
+        if (!run) continue;
+
+        runId = run.id;
+        const status: string = run.status;
+        const conclusion: string | null = run.conclusion;
+
+        if (statusEl) statusEl.textContent = labels[status] ?? status;
+        updateProgressBar(status, conclusion);
+
+        if (status === "completed") {
+          if (progressEl) progressEl.style.display = "none";
+          if (conclusion === "success") {
+            if (statusEl) statusEl.textContent = "배포 완료! 글 페이지로 이동합니다...";
+            setTimeout(() => { window.location.href = `/posts/${slug}`; }, 1500);
+          } else {
+            if (statusEl) statusEl.textContent = `빌드 ${conclusion ?? "실패"}. Actions 탭을 확인해주세요.`;
+          }
+          return;
+        }
+      } catch { /* 무시하고 재시도 */ }
+    }
+
+    if (statusEl) statusEl.textContent = "배포 확인 시간 초과. GitHub Actions 탭을 직접 확인해주세요.";
+    if (progressEl) progressEl.style.display = "none";
+  }
+
+  function updateProgressBar(status: string, conclusion: string | null) {
+    const bar = document.getElementById("actions-bar-fill");
+    if (!bar) return;
+    if (status === "queued") bar.style.width = "20%";
+    else if (status === "in_progress") bar.style.width = "65%";
+    else if (status === "completed") bar.style.width = "100%";
+    bar.dataset.conclusion = conclusion ?? "";
   }
 
   async function commitPost(token: string, filename: string, content: string): Promise<void> {
@@ -398,9 +468,11 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       submitStatus.textContent = "커밋 중...";
 
       try {
+        const commitTime = new Date().toISOString();
         await commitPost(token, `${slug}.md`, fileContent);
-        submitStatus.textContent = editSlug ? "수정 완료! 배포 중..." : "발행 완료! 배포 중...";
+        submitStatus.textContent = "커밋 완료! Actions 대기 중...";
         submitBtn.disabled = false;
+        await watchActions(token, slug, commitTime);
       } catch (err) {
         submitStatus.textContent = `오류: ${err instanceof Error ? err.message : String(err)}`;
         submitBtn.disabled = false;
@@ -627,6 +699,42 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
   }
 
   #submit-status { font-size: 0.85rem; color: rgba(124, 255, 122, 0.7); }
+
+  #actions-progress {
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  #actions-bar {
+    width: 100%;
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(124, 255, 122, 0.1);
+    overflow: hidden;
+  }
+
+  #actions-bar-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 999px;
+    background: #7cff7a;
+    transition: width 600ms ease;
+  }
+
+  #actions-bar-fill[data-conclusion="failure"],
+  #actions-bar-fill[data-conclusion="cancelled"] {
+    background: #ff7070;
+  }
+
+  #actions-link {
+    font-size: 0.78rem;
+    color: rgba(124, 255, 122, 0.5);
+    text-decoration: none;
+  }
+
+  #actions-link:hover { color: #7cff7a; }
 
   button[type="submit"] {
     background: rgba(124, 255, 122, 0.15);
