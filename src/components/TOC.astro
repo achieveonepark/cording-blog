@@ -10,7 +10,7 @@ interface Props {
 }
 
 const { headings } = Astro.props;
-const toc = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
+const toc = headings.filter((h) => h.depth >= 1 && h.depth <= 3);
 ---
 
 {toc.length > 0 && (
@@ -18,7 +18,7 @@ const toc = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
     <p class="toc__label">목차</p>
     <ol class="toc__list">
       {toc.map((h) => (
-        <li class:list={["toc__item", { "toc__item--h3": h.depth === 3 }]}>
+        <li class:list={["toc__item", { "toc__item--h2": h.depth === 2, "toc__item--h3": h.depth === 3 }]}>
           <a href={`#${h.slug}`} class="toc__link">{h.text}</a>
         </li>
       ))}
@@ -56,8 +56,12 @@ const toc = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
     line-height: 1.4;
   }
 
-  .toc__item--h3 {
+  .toc__item--h2 {
     padding-left: 0.9rem;
+  }
+
+  .toc__item--h3 {
+    padding-left: 1.8rem;
   }
 
   .toc__link {
@@ -69,6 +73,11 @@ const toc = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
     text-decoration: none;
     transition: color 150ms, background 150ms;
     border-left: 2px solid transparent;
+  }
+
+  .toc__item--h2 .toc__link {
+    font-size: 0.8rem;
+    color: rgba(190, 220, 190, 0.6);
   }
 
   .toc__item--h3 .toc__link {
