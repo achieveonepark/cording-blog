@@ -178,12 +178,114 @@ select {
   position: sticky;
   top: 0;
   z-index: 10;
-  /* 모바일 드롭다운 기준점 */
-  isolation: isolate;
   backdrop-filter: blur(16px);
   background: var(--header-bg);
   border-bottom: 1px solid var(--header-border);
   transition: background var(--transition-base), border-color var(--transition-base);
+}
+
+/* ── 모바일 nav 드로어 ───────────────────────────────────── */
+#mobile-nav {
+  display: none;
+  position: fixed;
+  top: 4.5rem;
+  left: 0;
+  right: 0;
+  z-index: 9;
+  flex-direction: column;
+  gap: 0;
+  padding: 0.5rem 1.25rem 1.25rem;
+  background: rgba(5, 8, 12, 0.98);
+  border-bottom: 1px solid rgba(124, 255, 122, 0.12);
+  backdrop-filter: blur(20px);
+}
+
+#mobile-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 8;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+html.nav-open #mobile-nav    { display: flex; }
+html.nav-open #mobile-overlay { display: block; }
+
+.mobile-nav__links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.mobile-nav__links a {
+  display: block;
+  padding: 0.65rem 0.5rem;
+  font-size: 0.95rem;
+  font-family: var(--font-ui);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  transition: color 150ms, background 150ms;
+}
+
+.mobile-nav__links a:hover,
+.mobile-nav__links a[aria-current="page"] {
+  color: var(--accent);
+  background: rgba(124, 255, 122, 0.06);
+}
+
+.mobile-nav__icons {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(124, 255, 122, 0.08);
+}
+
+/* ── 햄버거 버튼 ─────────────────────────────────────────── */
+.mobile-menu-btn {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  width: 2.2rem;
+  height: 2.2rem;
+  padding: 0.45rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(124, 255, 122, 0.2);
+  background: transparent;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.burger-line {
+  display: block;
+  width: 16px;
+  height: 1.5px;
+  background: rgba(124, 255, 122, 0.8);
+  border-radius: 2px;
+  transition: transform 220ms ease, opacity 220ms ease;
+}
+
+.mobile-menu-btn.is-open .burger-line:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
+.mobile-menu-btn.is-open .burger-line:nth-child(2) { opacity: 0; }
+.mobile-menu-btn.is-open .burger-line:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
+
+@media (max-width: 640px) {
+  .mobile-menu-btn { display: flex; }
+  .site-nav        { display: none !important; }
+
+  .site-header__inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    min-height: auto;
+    padding: 0.8rem 0;
+    gap: 0;
+  }
 }
 
 .site-header__inner {
