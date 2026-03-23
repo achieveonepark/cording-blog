@@ -1,7 +1,7 @@
 export const site = {
   title: "Somblog",
   description: "작업 기록, 실험, 회고를 차분하게 쌓아가는 Astro 블로그.",
-  url: "https://blog.somiri.dev",
+  url: "https://somiri.dev",
   author: "Somiri",
   locale: "ko-KR"
 } as const;
