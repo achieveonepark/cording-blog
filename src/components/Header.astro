@@ -11,20 +11,13 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
       <strong>{site.title}</strong>
     </a>
 
-    <!-- 모바일 햄버거 버튼 -->
-    <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="메뉴 열기" aria-expanded="false">
-      <span class="burger-line"></span>
-      <span class="burger-line"></span>
-      <span class="burger-line"></span>
-    </button>
-
+    <!-- 데스크탑 nav -->
     <nav class="site-nav" aria-label="Primary navigation">
       <div class="site-nav__group site-nav__group--primary">
         {navigation.map((item) => {
           const isActive = item.href === "/"
             ? pathname === item.href
             : pathname.startsWith(item.href);
-
           return (
             <a href={item.href} aria-current={isActive ? "page" : undefined}>
               {item.label}
@@ -32,7 +25,6 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
           );
         })}
 
-        <!-- 인라인 검색 -->
         <div class="header-search" id="header-search">
           <div id="search-bar" class="header-search__bar">
             <span class="header-search__prompt" aria-hidden="true">&gt;</span>
@@ -57,14 +49,7 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
 
       <div class="site-nav__group site-nav__group--apps">
         {externalLinks.map((item) => (
-          <a
-            class="site-nav__icon-link"
-            href={item.href}
-            target="_blank"
-            rel="noreferrer"
-            aria-label={item.label}
-            title={item.label}
-          >
+          <a class="site-nav__icon-link" href={item.href} target="_blank" rel="noreferrer" aria-label={item.label} title={item.label}>
             {item.kind === "github" && (
               <svg viewBox="0 0 24 24" aria-hidden="true" class="nav-icon">
                 <path fill="currentColor" d="M12 2C6.48 2 2 6.59 2 12.25c0 4.52 2.87 8.35 6.84 9.7.5.1.68-.22.68-.5 0-.24-.01-1.04-.01-1.88-2.78.62-3.37-1.21-3.37-1.21-.45-1.2-1.11-1.52-1.11-1.52-.91-.64.07-.63.07-.63 1 .08 1.53 1.05 1.53 1.05.9 1.57 2.35 1.12 2.92.86.09-.67.35-1.12.63-1.38-2.22-.26-4.55-1.15-4.55-5.1 0-1.13.39-2.05 1.03-2.77-.1-.26-.45-1.31.1-2.74 0 0 .84-.28 2.75 1.06A9.3 9.3 0 0 1 12 7.1c.85 0 1.71.12 2.51.36 1.91-1.34 2.75-1.06 2.75-1.06.55 1.43.2 2.48.1 2.74.64.72 1.03 1.64 1.03 2.77 0 3.96-2.34 4.84-4.57 5.09.36.32.68.95.68 1.91 0 1.38-.01 2.49-.01 2.83 0 .28.18.61.69.5A10.23 10.23 0 0 0 22 12.25C22 6.59 17.52 2 12 2Z"/>
@@ -114,11 +99,96 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
         </button>
       </div>
     </nav>
+
+    <!-- 모바일 햄버거 버튼 -->
+    <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="메뉴 열기" aria-expanded="false">
+      <span class="burger-line"></span>
+      <span class="burger-line"></span>
+      <span class="burger-line"></span>
+    </button>
   </div>
 </header>
 
-<!-- 검색 결과 드롭다운 (header 바깥, fixed 포지션) -->
+<!-- 모바일 전용 nav (header 외부) -->
+<div id="mobile-nav" aria-label="모바일 메뉴">
+  <nav class="mobile-nav__links">
+    {navigation.map((item) => {
+      const isActive = item.href === "/"
+        ? pathname === item.href
+        : pathname.startsWith(item.href);
+      return (
+        <a href={item.href} aria-current={isActive ? "page" : undefined}>
+          {item.label}
+        </a>
+      );
+    })}
+  </nav>
+  <div class="mobile-nav__icons">
+    {externalLinks.map((item) => (
+      <a href={item.href} target="_blank" rel="noreferrer" aria-label={item.label} title={item.label} class="site-nav__icon-link">
+        {item.kind === "github" && (
+          <svg viewBox="0 0 24 24" aria-hidden="true" class="nav-icon">
+            <path fill="currentColor" d="M12 2C6.48 2 2 6.59 2 12.25c0 4.52 2.87 8.35 6.84 9.7.5.1.68-.22.68-.5 0-.24-.01-1.04-.01-1.88-2.78.62-3.37-1.21-3.37-1.21-.45-1.2-1.11-1.52-1.11-1.52-.91-.64.07-.63.07-.63 1 .08 1.53 1.05 1.53 1.05.9 1.57 2.35 1.12 2.92.86.09-.67.35-1.12.63-1.38-2.22-.26-4.55-1.15-4.55-5.1 0-1.13.39-2.05 1.03-2.77-.1-.26-.45-1.31.1-2.74 0 0 .84-.28 2.75 1.06A9.3 9.3 0 0 1 12 7.1c.85 0 1.71.12 2.51.36 1.91-1.34 2.75-1.06 2.75-1.06.55 1.43.2 2.48.1 2.74.64.72 1.03 1.64 1.03 2.77 0 3.96-2.34 4.84-4.57 5.09.36.32.68.95.68 1.91 0 1.38-.01 2.49-.01 2.83 0 .28.18.61.69.5A10.23 10.23 0 0 0 22 12.25C22 6.59 17.52 2 12 2Z"/>
+          </svg>
+        )}
+        {item.kind === "os" && (
+          <svg viewBox="0 0 24 24" aria-hidden="true" class="nav-icon">
+            <rect x="3.5" y="4.5" width="17" height="13" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M8 20h8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M12 17.5V20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M3.5 8.5h17" fill="none" stroke="currentColor" stroke-width="1.8"/>
+          </svg>
+        )}
+        {item.kind === "library" && (
+          <svg viewBox="0 0 24 24" aria-hidden="true" class="nav-icon">
+            <path d="M5 5.5h3v13H5zM10 4.5h4v14h-4zM16 6.5h3v12h-3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+            <path d="M4 19.5h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        )}
+      </a>
+    ))}
+    <a href="/rss.xml" class="site-nav__icon-link" aria-label="RSS" title="RSS">
+      <svg viewBox="0 0 24 24" aria-hidden="true" class="nav-icon">
+        <circle cx="6.5" cy="17.5" r="1.8" fill="currentColor"/>
+        <path d="M4.7 10.6a8.7 8.7 0 0 1 8.7 8.7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        <path d="M4.7 5a14.3 14.3 0 0 1 14.3 14.3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+    </a>
+  </div>
+</div>
+<!-- 오버레이 -->
+<div id="mobile-overlay"></div>
+
+<!-- 검색 결과 드롭다운 -->
 <div id="search-dropdown" class="search-dropdown" hidden role="listbox" aria-label="검색 결과"></div>
+
+<!-- 햄버거 JS: is:inline + window 가드로 중복 등록 방지 -->
+<script is:inline>
+  if (!window.__navInit) {
+    window.__navInit = true;
+    document.addEventListener('click', function(e) {
+      if (e.target.closest('#mobile-menu-btn')) {
+        var isOpen = document.documentElement.classList.contains('nav-open');
+        document.documentElement.classList.toggle('nav-open', !isOpen);
+        var btn = document.getElementById('mobile-menu-btn');
+        if (btn) {
+          btn.setAttribute('aria-expanded', String(!isOpen));
+          btn.classList.toggle('is-open', !isOpen);
+        }
+      }
+      if (e.target.closest('#mobile-overlay')) {
+        document.documentElement.classList.remove('nav-open');
+        var btn = document.getElementById('mobile-menu-btn');
+        if (btn) { btn.setAttribute('aria-expanded', 'false'); btn.classList.remove('is-open'); }
+      }
+    });
+    document.addEventListener('astro:before-swap', function() {
+      document.documentElement.classList.remove('nav-open');
+      var btn = document.getElementById('mobile-menu-btn');
+      if (btn) { btn.setAttribute('aria-expanded', 'false'); btn.classList.remove('is-open'); }
+    });
+  }
+</script>
 
 <script define:vars={{ clientId }}>
   const OWNER = "achieveonepark";
@@ -180,14 +250,12 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
 
   function extractExcerpt(html) {
     if (!html) return "";
-    // <mark> 주변 텍스트만 추출
     const m = html.match(/([^<>]{0,60})<mark>([^<]+)<\/mark>([^<>]{0,80})/);
     if (m) {
       const before = m[1].replace(/.*[\.\!\?]\s*/s, "").trimStart();
       const after  = m[3].replace(/[\.\!\?].*/s, "").trimEnd();
       return `${before}<mark>${m[2]}</mark>${after}`;
     }
-    // 마크 없으면 HTML 제거 후 단순 truncate
     return html.replace(/<[^>]+>/g, "").slice(0, 100);
   }
 
@@ -213,7 +281,6 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
 
   async function doSearch(query) {
     if (!query.trim()) { dropdown.setAttribute("hidden", ""); return; }
-
     try {
       if (!pagefindModule) {
         pagefindModule = await import("/pagefind/pagefind.js");
@@ -229,27 +296,16 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
   }
 
   closeBtn.addEventListener("click", closeSearch);
-
   searchInput.addEventListener("input", () => {
     clearTimeout(debounceTimer);
     positionDropdown();
     debounceTimer = setTimeout(() => doSearch(searchInput.value), 220);
   });
-
-  searchInput.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeSearch();
-  });
-
-  // 드롭다운 바깥 클릭 시 닫기
+  searchInput.addEventListener("keydown", (e) => { if (e.key === "Escape") closeSearch(); });
   document.addEventListener("click", (e) => {
-    if (!document.getElementById("header-search").contains(e.target) && !dropdown.contains(e.target)) {
-      closeSearch();
-    }
+    if (!document.getElementById("header-search").contains(e.target) && !dropdown.contains(e.target)) closeSearch();
   });
-
   window.addEventListener("resize", () => { if (!dropdown.hidden) positionDropdown(); });
-
-  // Cmd/Ctrl+K — 검색 포커스
   document.addEventListener("keydown", (e) => {
     if ((e.metaKey || e.ctrlKey) && e.key === "k") {
       e.preventDefault();
@@ -258,37 +314,14 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
       positionDropdown();
     }
   });
-
-  // 모바일 햄버거 메뉴 (페이지 이동 후에도 재초기화)
-  function initHamburger() {
-    const menuBtn = document.getElementById("mobile-menu-btn");
-    const siteNav = document.querySelector<HTMLElement>(".site-nav");
-    if (!menuBtn || !siteNav) return;
-
-    menuBtn.addEventListener("click", () => {
-      const isOpen = menuBtn.getAttribute("aria-expanded") === "true";
-      menuBtn.setAttribute("aria-expanded", String(!isOpen));
-      menuBtn.classList.toggle("is-open", !isOpen);
-      siteNav.classList.toggle("is-open", !isOpen);
-    });
-  }
-
-  document.addEventListener("astro:page-load", initHamburger);
-
-  // 페이지 이동 시 메뉴 닫기
-  document.addEventListener("astro:before-swap", () => {
-    document.getElementById("mobile-menu-btn")?.setAttribute("aria-expanded", "false");
-    document.getElementById("mobile-menu-btn")?.classList.remove("is-open");
-    document.querySelector(".site-nav")?.classList.remove("is-open");
-  });
 </script>
 
 <style>
+  /* ── 햄버거 버튼: 모바일에서만 표시 ─────────────────────── */
+  .mobile-menu-btn { display: none; }
+
   /* ── 인라인 검색 바 ─────────────────────────────────────── */
-  .header-search {
-    display: flex;
-    align-items: center;
-  }
+  .header-search { display: flex; align-items: center; }
 
   .header-search__bar {
     display: flex;
@@ -321,13 +354,8 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
     letter-spacing: 0.02em;
   }
 
-  .header-search__input::placeholder {
-    color: rgba(160, 200, 160, 0.4);
-  }
-
-  .header-search__input::-webkit-search-cancel-button {
-    display: none;
-  }
+  .header-search__input::placeholder { color: rgba(160, 200, 160, 0.4); }
+  .header-search__input::-webkit-search-cancel-button { display: none; }
 
   .search-kbd {
     flex-shrink: 0;
@@ -338,20 +366,13 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
     color: rgba(124, 255, 122, 0.4);
     font-size: 0.62rem;
     font-family: var(--font-code);
-    letter-spacing: 0.02em;
     user-select: none;
     pointer-events: none;
     transition: opacity 150ms;
   }
 
   #search-input:focus ~ .search-kbd,
-  #search-input:not(:placeholder-shown) ~ .search-kbd {
-    opacity: 0;
-  }
-
-  @media (max-width: 640px) {
-    .search-kbd { display: none; }
-  }
+  #search-input:not(:placeholder-shown) ~ .search-kbd { opacity: 0; }
 
   .header-search__close {
     display: inline-flex;
@@ -367,11 +388,7 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
     flex: none;
     transition: color 150ms, background 150ms;
   }
-
-  .header-search__close:hover {
-    color: #7cff7a;
-    background: rgba(124, 255, 122, 0.08);
-  }
+  .header-search__close:hover { color: #7cff7a; background: rgba(124, 255, 122, 0.08); }
 
   /* ── 검색 결과 드롭다운 ──────────────────────────────────── */
   .search-dropdown {
@@ -384,17 +401,14 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
     background: rgba(8, 12, 17, 0.98);
     border: 1px solid rgba(124, 255, 122, 0.15);
     border-radius: 10px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(124,255,122,0.04);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
     z-index: 200;
     padding: 0.4rem;
     margin-top: 0.5rem;
   }
-
   .search-dropdown[hidden] { display: none; }
-
   .search-dropdown__item {
     display: grid;
-    grid-template-rows: auto auto auto;
     gap: 0.15rem;
     padding: 0.7rem 0.9rem;
     border-radius: 7px;
@@ -402,59 +416,15 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
     border-left: 2px solid transparent;
     transition: background 120ms, border-color 120ms;
   }
+  .search-dropdown__item + .search-dropdown__item { border-top: 1px solid rgba(124, 255, 122, 0.05); }
+  .search-dropdown__item:hover { background: rgba(124, 255, 122, 0.05); border-left-color: rgba(124, 255, 122, 0.4); }
+  .search-dropdown__title { font-size: 0.88rem; font-weight: 600; color: #d6ffd6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .search-dropdown__excerpt { font-size: 0.75rem; color: rgba(160, 200, 160, 0.55); line-height: 1.5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .search-dropdown__excerpt mark { background: transparent; color: #7cff7a; font-weight: 600; }
+  .search-dropdown__path { font-size: 0.68rem; color: rgba(124, 255, 122, 0.3); font-family: var(--font-code); }
+  .search-dropdown__empty { padding: 1rem 0.9rem; font-size: 0.82rem; color: rgba(150, 180, 150, 0.5); margin: 0; text-align: center; }
 
-  .search-dropdown__item + .search-dropdown__item {
-    border-top: 1px solid rgba(124, 255, 122, 0.05);
-  }
-
-  .search-dropdown__item:hover {
-    background: rgba(124, 255, 122, 0.05);
-    border-left-color: rgba(124, 255, 122, 0.4);
-  }
-
-  .search-dropdown__title {
-    font-size: 0.88rem;
-    font-weight: 600;
-    color: #d6ffd6;
-    font-family: var(--font-ui);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .search-dropdown__excerpt {
-    font-size: 0.75rem;
-    color: rgba(160, 200, 160, 0.55);
-    font-family: var(--font-ui);
-    line-height: 1.5;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .search-dropdown__excerpt mark {
-    background: transparent;
-    color: #7cff7a;
-    font-weight: 600;
-  }
-
-  .search-dropdown__path {
-    font-size: 0.68rem;
-    color: rgba(124, 255, 122, 0.3);
-    font-family: var(--font-code);
-    letter-spacing: 0.03em;
-  }
-
-  .search-dropdown__empty {
-    padding: 1rem 0.9rem;
-    font-size: 0.82rem;
-    color: rgba(150, 180, 150, 0.5);
-    font-family: var(--font-ui);
-    margin: 0;
-    text-align: center;
-  }
-
-  /* ── 기존 아이콘 버튼 스타일 ────────────────────────────── */
+  /* ── 아이콘 버튼 ─────────────────────────────────────────── */
   .site-nav button.site-nav__icon-link {
     display: inline-flex;
     align-items: center;
@@ -469,126 +439,10 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
     cursor: pointer;
     transition: border-color 180ms ease, background 180ms ease, color 180ms ease, transform 180ms ease;
   }
-
   .site-nav button.site-nav__icon-link:hover {
     color: var(--text);
     border-color: rgba(124, 255, 122, 0.22);
     background: rgba(27, 34, 41, 0.9);
     transform: translateY(-1px);
-  }
-
-  /* ── 햄버거 버튼: 모바일에서만 표시 ─────────────────────── */
-  .mobile-menu-btn {
-    display: none;
-  }
-
-  @media (max-width: 640px) {
-    /* 헤더 내부: 브랜드 + 햄버거만 한 줄 */
-    .mobile-menu-btn {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      gap: 5px;
-      width: 2.2rem;
-      height: 2.2rem;
-      padding: 0.45rem;
-      border-radius: var(--radius-sm);
-      border: 1px solid rgba(124, 255, 122, 0.2);
-      background: transparent;
-      cursor: pointer;
-      flex-shrink: 0;
-    }
-
-    .burger-line {
-      display: block;
-      width: 16px;
-      height: 1.5px;
-      background: rgba(124, 255, 122, 0.8);
-      border-radius: 2px;
-      transition: transform 220ms ease, opacity 220ms ease;
-    }
-
-    .mobile-menu-btn.is-open .burger-line:nth-child(1) {
-      transform: translateY(6.5px) rotate(45deg);
-    }
-    .mobile-menu-btn.is-open .burger-line:nth-child(2) {
-      opacity: 0;
-    }
-    .mobile-menu-btn.is-open .burger-line:nth-child(3) {
-      transform: translateY(-6.5px) rotate(-45deg);
-    }
-
-    /* nav: 기본 숨김, is-open 시 드롭다운으로 표시 */
-    .site-nav {
-      display: none;
-      position: absolute;
-      top: 100%;
-      left: 0;
-      right: 0;
-      flex-direction: column;
-      gap: 0;
-      padding: 0.5rem 1rem 1rem;
-      background: rgba(5, 8, 12, 0.97);
-      border-bottom: 1px solid rgba(124, 255, 122, 0.12);
-      backdrop-filter: blur(16px);
-      z-index: 50;
-    }
-
-    .site-nav.is-open {
-      display: flex;
-    }
-
-    /* 메뉴 링크들: 세로로 */
-    .site-nav__group--primary {
-      flex-direction: column;
-      gap: 0.2rem;
-    }
-
-    .site-nav__group--primary a {
-      justify-content: flex-start;
-      padding: 0.55rem 0.5rem;
-      font-size: 0.9rem;
-      border-color: transparent;
-      background: transparent;
-    }
-
-    .site-nav__group--primary a:hover,
-    .site-nav__group--primary a[aria-current="page"] {
-      background: rgba(124, 255, 122, 0.06);
-      border-color: transparent;
-      transform: none;
-    }
-
-    /* 검색 바 */
-    .header-search {
-      margin-top: 0.4rem;
-    }
-
-    .header-search__bar {
-      width: 100%;
-      box-sizing: border-box;
-    }
-
-    .header-search__input {
-      width: 100%;
-      flex: 1;
-      min-width: 0;
-    }
-
-    .search-kbd {
-      display: none;
-    }
-
-    /* 아이콘 그룹: 가로로 */
-    .site-nav__group--apps,
-    .site-nav__group--rss,
-    .site-nav__group--admin {
-      flex-direction: row;
-      gap: 0.4rem;
-      margin-top: 0.75rem;
-      padding-top: 0.65rem;
-      border-top: 1px solid rgba(124, 255, 122, 0.07);
-    }
   }
 </style>
