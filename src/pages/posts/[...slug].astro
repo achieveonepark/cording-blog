@@ -29,7 +29,7 @@ const { post, allPosts } = Astro.props;
 const { Content, headings } = await render(post);
 
 const workerBase = import.meta.env.PUBLIC_OAUTH_WORKER_URL?.replace(/\/$/, "") ?? "";
-const postUrl = `${Astro.site?.toString().replace(/\/$/, "") ?? "https://blog.somiri.dev"}/posts/${post.id}/`;
+const postUrl = `${Astro.site?.toString().replace(/\/$/, "") ?? "https://somiri.dev"}/posts/${post.id}/`;
 ---
 
 <BaseLayout title={post.data.title} description={post.data.description} image={post.data.thumbnail}>
