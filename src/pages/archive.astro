@@ -1,0 +1,188 @@
+---
+import Footer from "../components/Footer.astro";
+import Header from "../components/Header.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { formatDate, getPublishedPosts } from "../lib/blog";
+
+const posts = await getPublishedPosts();
+
+// 연도/월별 그루핑
+const archiveMap = new Map<number, Map<number, typeof posts>>();
+
+for (const post of posts) {
+  const year = post.data.pubDate.getFullYear();
+  const month = post.data.pubDate.getMonth() + 1;
+
+  if (!archiveMap.has(year)) archiveMap.set(year, new Map());
+  const yearMap = archiveMap.get(year)!;
+
+  if (!yearMap.has(month)) yearMap.set(month, []);
+  yearMap.get(month)!.push(post);
+}
+
+const years = [...archiveMap.keys()].sort((a, b) => b - a);
+
+const MONTH_NAMES = [
+  "", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+];
+---
+
+<BaseLayout title="아카이브" description="월별 포스트 아카이브입니다.">
+  <Header />
+
+  <main class="shell app-shell">
+    <section class="app-panel">
+      <div class="section-heading">
+        <p class="eyebrow">Archive</p>
+        <h1>월별 아카이브</h1>
+        <p>총 {posts.length}개의 글 / {years.length}개 연도</p>
+      </div>
+
+      {years.map((year) => {
+        const yearMap = archiveMap.get(year)!;
+        const months = [...yearMap.keys()].sort((a, b) => b - a);
+        return (
+          <div class="year-block">
+            <h2 class="year-label">{year}</h2>
+            {months.map((month) => {
+              const monthPosts = yearMap.get(month)!;
+              return (
+                <div class="month-block">
+                  <h3 class="month-label">
+                    <span class="month-name">{MONTH_NAMES[month]}</span>
+                    <span class="month-count">{monthPosts.length}</span>
+                  </h3>
+                  <ul class="archive-posts">
+                    {monthPosts.map((post) => (
+                      <li class="archive-post">
+                        <time class="archive-post__date">{formatDate(post.data.pubDate)}</time>
+                        <a href={`/posts/${post.id}/`} class="archive-post__title">
+                          {post.data.title}
+                        </a>
+                        {post.data.category && (
+                          <span class="archive-post__cat">{post.data.category}</span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
+        );
+      })}
+    </section>
+  </main>
+
+  <Footer />
+</BaseLayout>
+
+<style>
+  .year-block {
+    margin-bottom: 2.5rem;
+  }
+
+  .year-label {
+    font-size: 1.4rem;
+    font-weight: 900;
+    font-family: var(--font-code);
+    color: var(--accent);
+    margin: 0 0 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+    letter-spacing: -0.02em;
+  }
+
+  .month-block {
+    margin-bottom: 1.25rem;
+    padding-left: 1rem;
+    border-left: 2px solid var(--border);
+  }
+
+  .month-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 0.6rem;
+  }
+
+  .month-name {
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .month-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.3rem;
+    height: 1.3rem;
+    padding: 0 0.3rem;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 0.65rem;
+    font-weight: 700;
+  }
+
+  .archive-posts {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .archive-post {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    flex-wrap: wrap;
+  }
+
+  .archive-post__date {
+    flex-shrink: 0;
+    font-size: 0.72rem;
+    font-family: var(--font-code);
+    color: var(--muted);
+    min-width: 6rem;
+  }
+
+  .archive-post__title {
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: var(--text);
+    text-decoration: none;
+    transition: color 150ms;
+  }
+
+  .archive-post__title:hover {
+    color: var(--accent);
+  }
+
+  .archive-post__cat {
+    flex-shrink: 0;
+    padding: 0.1rem 0.45rem;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    border: 1px solid var(--border);
+    color: var(--accent);
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  @media (max-width: 560px) {
+    .archive-post {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.2rem;
+    }
+  }
+</style>

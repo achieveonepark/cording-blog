@@ -1,0 +1,157 @@
+---
+import type { CollectionEntry } from "astro:content";
+import { formatDate } from "../lib/blog";
+
+interface Props {
+  currentPost: CollectionEntry<"blog">;
+  allPosts: CollectionEntry<"blog">[];
+}
+
+const { currentPost, allPosts } = Astro.props;
+
+if (!currentPost.data.series) return;
+
+const seriesPosts = allPosts
+  .filter((p) => p.data.series === currentPost.data.series)
+  .sort((a, b) => (a.data.seriesOrder ?? 0) - (b.data.seriesOrder ?? 0));
+
+if (seriesPosts.length < 2) return;
+
+const currentIndex = seriesPosts.findIndex((p) => p.id === currentPost.id);
+const prev = currentIndex > 0 ? seriesPosts[currentIndex - 1] : null;
+const next = currentIndex < seriesPosts.length - 1 ? seriesPosts[currentIndex + 1] : null;
+---
+
+<nav class="series-nav" aria-label="시리즈 네비게이션">
+  <div class="series-nav__header">
+    <span class="series-nav__label">시리즈</span>
+    <a href={`/series/${encodeURIComponent(currentPost.data.series)}/`} class="series-nav__name">
+      {currentPost.data.series}
+      <span class="series-nav__count">{currentIndex + 1} / {seriesPosts.length}</span>
+    </a>
+  </div>
+
+  <div class="series-nav__links">
+    {prev && (
+      <a href={`/posts/${prev.id}/`} class="series-nav__item series-nav__item--prev">
+        <span class="series-nav__dir">← 이전 편</span>
+        <span class="series-nav__title">{prev.data.title}</span>
+      </a>
+    )}
+    {next && (
+      <a href={`/posts/${next.id}/`} class="series-nav__item series-nav__item--next">
+        <span class="series-nav__dir">다음 편 →</span>
+        <span class="series-nav__title">{next.data.title}</span>
+      </a>
+    )}
+  </div>
+</nav>
+
+<style>
+  .series-nav {
+    margin: 2rem 0;
+    padding: 1.25rem 1.4rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    background: var(--panel-soft);
+  }
+
+  .series-nav__header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .series-nav__label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .series-nav__name {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .series-nav__name:hover {
+    text-decoration: underline;
+  }
+
+  .series-nav__count {
+    font-size: 0.72rem;
+    color: var(--muted);
+    font-weight: 400;
+  }
+
+  .series-nav__links {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+
+  .series-nav__item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    background: var(--panel);
+    text-decoration: none;
+    transition: border-color 150ms, background 150ms;
+  }
+
+  .series-nav__item:hover {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  .series-nav__item--next {
+    text-align: right;
+    grid-column: 2;
+  }
+
+  .series-nav__item--prev:only-child {
+    grid-column: 1;
+  }
+
+  .series-nav__item--next:only-child {
+    grid-column: 2;
+  }
+
+  .series-nav__dir {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .series-nav__title {
+    font-size: 0.82rem;
+    color: var(--text);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  @media (max-width: 560px) {
+    .series-nav__links {
+      grid-template-columns: 1fr;
+    }
+
+    .series-nav__item--next,
+    .series-nav__item--next:only-child {
+      grid-column: 1;
+    }
+  }
+</style>

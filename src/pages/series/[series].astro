@@ -1,0 +1,165 @@
+---
+import Footer from "../../components/Footer.astro";
+import Header from "../../components/Header.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { formatDate, getPublishedPosts } from "../../lib/blog";
+
+export async function getStaticPaths() {
+  const posts = await getPublishedPosts();
+
+  const seriesMap = new Map<string, typeof posts>();
+  for (const post of posts) {
+    if (!post.data.series) continue;
+    if (!seriesMap.has(post.data.series)) seriesMap.set(post.data.series, []);
+    seriesMap.get(post.data.series)!.push(post);
+  }
+
+  return [...seriesMap.entries()].map(([series, seriesPosts]) => ({
+    params: { series },
+    props: {
+      series,
+      seriesPosts: seriesPosts.sort((a, b) => (a.data.seriesOrder ?? 0) - (b.data.seriesOrder ?? 0))
+    }
+  }));
+}
+
+interface Props {
+  series: string;
+  seriesPosts: Awaited<ReturnType<typeof getPublishedPosts>>;
+}
+
+const { series, seriesPosts } = Astro.props;
+const currentSlug = Astro.url.pathname.split("/posts/")[1]?.replace(/\/$/, "");
+---
+
+<BaseLayout title={series} description={`${series} 시리즈 글 목록입니다.`}>
+  <Header />
+
+  <main class="shell app-shell">
+    <section class="app-panel">
+      <div class="section-heading">
+        <p class="eyebrow">Series</p>
+        <h1>{series}</h1>
+        <p>총 {seriesPosts.length}편</p>
+      </div>
+
+      <a href="/series/" class="back-link">← 모든 시리즈</a>
+
+      <ol class="series-posts">
+        {seriesPosts.map((post, i) => (
+          <li class:list={["series-post", { "series-post--current": post.id === currentSlug }]}>
+            <a href={`/posts/${post.id}/`}>
+              <span class="series-post__num">{i + 1}</span>
+              <span class="series-post__info">
+                <span class="series-post__title">{post.data.title}</span>
+                <time class="series-post__date">{formatDate(post.data.pubDate)}</time>
+              </span>
+            </a>
+          </li>
+        ))}
+      </ol>
+    </section>
+  </main>
+
+  <Footer />
+</BaseLayout>
+
+<style>
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 1.5rem;
+    padding: 0.3rem 0.85rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: border-color 150ms, transform 150ms;
+  }
+
+  .back-link:hover {
+    border-color: var(--accent);
+    transform: translateX(-2px);
+  }
+
+  .series-posts {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    counter-reset: none;
+  }
+
+  .series-post a {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.85rem 1.1rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    background: var(--panel-soft);
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 150ms, background 150ms, transform 150ms;
+  }
+
+  .series-post a:hover {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    transform: translateX(4px);
+  }
+
+  .series-post--current a {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  .series-post__num {
+    flex-shrink: 0;
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--accent);
+    font-size: 0.76rem;
+    font-weight: 700;
+    font-family: var(--font-code);
+  }
+
+  .series-post--current .series-post__num {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+  }
+
+  .series-post__info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+  }
+
+  .series-post__title {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .series-post__date {
+    font-size: 0.74rem;
+    color: var(--muted);
+  }
+</style>
