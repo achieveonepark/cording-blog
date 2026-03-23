@@ -4,7 +4,7 @@ description: "git LFS에 부딪친 후 대응에 대한 내용입니다."
 pubDate: 2026-03-23
 tags:
   - git
-  - troubleshooting
+  - Troubleshooting
 category: R&D
 ---
 
