@@ -11,6 +11,13 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
       <strong>{site.title}</strong>
     </a>
 
+    <!-- 모바일 햄버거 버튼 -->
+    <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="메뉴 열기" aria-expanded="false">
+      <span class="burger-line"></span>
+      <span class="burger-line"></span>
+      <span class="burger-line"></span>
+    </button>
+
     <nav class="site-nav" aria-label="Primary navigation">
       <div class="site-nav__group site-nav__group--primary">
         {navigation.map((item) => {
@@ -251,6 +258,24 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
       positionDropdown();
     }
   });
+
+  // 모바일 햄버거 메뉴
+  const menuBtn = document.getElementById("mobile-menu-btn");
+  const siteNav = document.querySelector(".site-nav");
+
+  menuBtn?.addEventListener("click", () => {
+    const isOpen = menuBtn.getAttribute("aria-expanded") === "true";
+    menuBtn.setAttribute("aria-expanded", String(!isOpen));
+    menuBtn.classList.toggle("is-open", !isOpen);
+    siteNav?.classList.toggle("is-open", !isOpen);
+  });
+
+  // 페이지 이동 시 메뉴 닫기
+  document.addEventListener("astro:before-swap", () => {
+    menuBtn?.setAttribute("aria-expanded", "false");
+    menuBtn?.classList.remove("is-open");
+    siteNav?.classList.remove("is-open");
+  });
 </script>
 
 <style>
@@ -450,6 +475,102 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
   @media (max-width: 640px) {
     .header-search__input {
       width: 120px;
+    }
+  }
+
+  /* ── 햄버거 버튼 (모바일만 표시) ─────────────────────────── */
+  .mobile-menu-btn {
+    display: none;
+  }
+
+  @media (max-width: 640px) {
+    .mobile-menu-btn {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5px;
+      width: 2.4rem;
+      height: 2.4rem;
+      padding: 0.5rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(124, 255, 122, 0.2);
+      background: transparent;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .burger-line {
+      display: block;
+      width: 100%;
+      height: 1.5px;
+      background: rgba(124, 255, 122, 0.7);
+      border-radius: 2px;
+      transition: transform 220ms ease, opacity 220ms ease;
+    }
+
+    .mobile-menu-btn.is-open .burger-line:nth-child(1) {
+      transform: translateY(6.5px) rotate(45deg);
+    }
+    .mobile-menu-btn.is-open .burger-line:nth-child(2) {
+      opacity: 0;
+    }
+    .mobile-menu-btn.is-open .burger-line:nth-child(3) {
+      transform: translateY(-6.5px) rotate(-45deg);
+    }
+
+    /* 모바일에서 nav 기본 숨김 */
+    .site-nav {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0;
+      padding: 0.75rem 1rem 1rem;
+      background: rgba(5, 8, 12, 0.97);
+      border-bottom: 1px solid rgba(124, 255, 122, 0.12);
+      backdrop-filter: blur(16px);
+      z-index: 50;
+    }
+
+    .site-nav.is-open {
+      display: flex;
+    }
+
+    .site-nav__group--primary {
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+
+    .site-nav__group--primary a {
+      justify-content: flex-start;
+      padding: 0.6rem 0.75rem;
+      font-size: 0.88rem;
+    }
+
+    .header-search {
+      margin-top: 0.5rem;
+    }
+
+    .header-search__bar {
+      width: 100%;
+    }
+
+    .header-search__input {
+      width: 100%;
+      flex: 1;
+    }
+
+    .site-nav__group--apps,
+    .site-nav__group--rss,
+    .site-nav__group--admin {
+      flex-direction: row;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid rgba(124, 255, 122, 0.08);
     }
   }
 </style>
