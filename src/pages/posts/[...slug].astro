@@ -44,6 +44,7 @@ const postUrl = `${Astro.site?.toString().replace(/\/$/, "") ?? "https://blog.so
       {headings.length > 0 && (
         <aside class="toc-col">
           <div class="toc-sticky">
+            <p class="toc-post-title">{post.data.title}</p>
             <TOC headings={headings} />
           </div>
         </aside>
@@ -249,11 +250,29 @@ const postUrl = `${Astro.site?.toString().replace(/\/$/, "") ?? "https://blog.so
   }
 
   .article { grid-area: article; }
-  .toc-col { grid-area: toc; }
+
+  .toc-col {
+    grid-area: toc;
+    align-self: stretch;
+  }
 
   .toc-sticky {
     position: sticky;
     top: 2rem;
+  }
+
+  .toc-post-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.4;
+    margin: 0 0 0.75rem;
+    padding: 0 0 0.65rem;
+    border-bottom: 1px solid rgba(124, 255, 122, 0.1);
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
   /* ── 모바일 목차 (인라인) ─────────────────── */

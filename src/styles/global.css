@@ -80,6 +80,7 @@
 
 html {
   scroll-behavior: smooth;
+  overscroll-behavior: none;
 }
 
 body {
@@ -620,24 +621,8 @@ select {
 }
 
 @media (max-width: 920px) {
-  .site-header__inner,
   .hero-grid {
     grid-template-columns: 1fr;
-  }
-
-  .site-nav {
-    width: 100%;
-    justify-content: space-between;
-    gap: 0.65rem;
-  }
-
-  .site-nav__group--primary {
-    flex-wrap: wrap;
-  }
-
-  .site-nav__group--apps,
-  .site-nav__group--rss {
-    flex: 0 0 auto;
   }
 
   .info-grid {
