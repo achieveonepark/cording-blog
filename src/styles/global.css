@@ -177,6 +177,8 @@ select {
   position: sticky;
   top: 0;
   z-index: 10;
+  /* 모바일 드롭다운 기준점 */
+  isolation: isolate;
   backdrop-filter: blur(16px);
   background: var(--header-bg);
   border-bottom: 1px solid var(--header-border);
@@ -653,29 +655,12 @@ select {
   }
 
   .site-header__inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     gap: 0.7rem;
     min-height: auto;
     padding: 0.8rem 0;
-  }
-
-  .site-nav {
-    display: grid;
-    grid-template-columns: 1fr auto auto;
-    align-items: start;
-    gap: 0.6rem;
-  }
-
-  .site-nav__group--primary {
-    gap: 0.55rem;
-  }
-
-  .site-nav__group--apps {
-    gap: 0.35rem;
-  }
-
-  .site-nav a {
-    min-height: 2.15rem;
-    padding: 0.45rem 0.75rem;
   }
 
   .site-nav__icon-link {
