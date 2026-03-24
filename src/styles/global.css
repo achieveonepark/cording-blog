@@ -244,6 +244,40 @@ html.nav-open #mobile-overlay { display: block; }
   border-top: 1px solid rgba(124, 255, 122, 0.08);
 }
 
+/* ── 모바일 언어 선택 ────────────────────────────────────── */
+.mobile-nav__lang {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid rgba(124, 255, 122, 0.08);
+}
+
+.lang-select-btn {
+  flex: 1;
+  padding: 0.5rem 0.6rem;
+  border-radius: 8px;
+  border: 1px solid rgba(124, 255, 122, 0.1);
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-family: var(--font-ui);
+  cursor: pointer;
+  transition: color 150ms, background 150ms, border-color 150ms;
+}
+
+.lang-select-btn:hover {
+  border-color: rgba(124, 255, 122, 0.25);
+  color: var(--text);
+}
+
+.lang-select-btn--active {
+  border-color: var(--accent);
+  background: rgba(124, 255, 122, 0.08);
+  color: var(--accent);
+}
+
 /* ── 햄버거 버튼 ─────────────────────────────────────────── */
 .mobile-menu-btn {
   display: none;
