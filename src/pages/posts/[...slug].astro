@@ -9,7 +9,7 @@ import RelatedPosts from "../../components/RelatedPosts.astro";
 import Giscus from "../../components/Giscus.astro";
 import ReadingProgress from "../../components/ReadingProgress.astro";
 import CodeCopy from "../../components/CodeCopy.astro";
-import { formatDate, getPublishedPosts, getReadingTime } from "../../lib/blog";
+import { formatDate, getPublishedPosts, getReadingTime, getPostLang, findTranslation } from "../../lib/blog";
 
 export async function getStaticPaths() {
   const posts = await getPublishedPosts();
@@ -27,6 +27,8 @@ interface Props {
 
 const { post, allPosts } = Astro.props;
 const { Content, headings } = await render(post);
+const currentLang = getPostLang(post);
+const translation = await findTranslation(post);
 
 const workerBase = import.meta.env.PUBLIC_OAUTH_WORKER_URL?.replace(/\/$/, "") ?? "";
 const postUrl = `${Astro.site?.toString().replace(/\/$/, "") ?? "https://blog.somiri.dev"}/posts/${post.id}/`;
@@ -65,6 +67,11 @@ const postUrl = `${Astro.site?.toString().replace(/\/$/, "") ?? "https://blog.so
             <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
             <span>{getReadingTime(post)}</span>
             {post.data.category && <span class="article-category">{post.data.category}</span>}
+            {translation && (
+              <a href={`/posts/${translation.id}/`} class="lang-switch-link">
+                {currentLang === "ko" ? "Read in English" : "한국어로 읽기"}
+              </a>
+            )}
             {workerBase && (
               <span class="visit-count" id="visit-count" title="조회수" aria-label="조회수">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -434,5 +441,27 @@ const postUrl = `${Astro.site?.toString().replace(/\/$/, "") ?? "https://blog.so
     border-color: rgba(255, 80, 80, 0.5);
     background: rgba(255, 80, 80, 0.08);
     color: #ff7070;
+  }
+
+  .lang-switch-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.15rem 0.6rem;
+    border-radius: 999px;
+    border: 1px solid rgba(124, 255, 122, 0.18);
+    background: rgba(124, 255, 122, 0.05);
+    color: rgba(124, 255, 122, 0.7);
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-decoration: none;
+    letter-spacing: 0.03em;
+    transition: color 150ms, background 150ms, border-color 150ms;
+  }
+
+  .lang-switch-link:hover {
+    color: var(--accent);
+    background: rgba(124, 255, 122, 0.1);
+    border-color: rgba(124, 255, 122, 0.35);
   }
 </style>
