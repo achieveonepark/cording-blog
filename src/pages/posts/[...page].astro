@@ -82,29 +82,31 @@ const categoryCounts = categories.reduce<Record<string, number>>((acc, cat) => {
   <Footer />
 </BaseLayout>
 
-<script>
-  function initFilter() {
-    const btns = document.querySelectorAll<HTMLButtonElement>(".cat-btn");
-    const cards = document.querySelectorAll<HTMLElement>(".post-card");
+<script is:inline>
+  if (!window.__catFilterInit) {
+    window.__catFilterInit = true;
+    document.addEventListener('click', function(e) {
+      var btn = e.target.closest('.cat-btn');
+      if (!btn) return;
 
-    if (!btns.length) return;
+      var group = btn.closest('.category-filter');
+      if (!group) return;
 
-    btns.forEach((btn) => {
-      btn.addEventListener("click", () => {
-        btns.forEach((b) => b.classList.remove("cat-btn--active"));
-        btn.classList.add("cat-btn--active");
+      var btns = group.querySelectorAll('.cat-btn');
+      var stack = document.getElementById('post-stack');
+      if (!stack) return;
+      var cards = stack.querySelectorAll('.post-card');
 
-        const cat = btn.dataset.cat ?? "";
-        cards.forEach((card) => {
-          const match = !cat || card.dataset.category === cat;
-          card.style.display = match ? "" : "none";
-        });
+      btns.forEach(function(b) { b.classList.remove('cat-btn--active'); });
+      btn.classList.add('cat-btn--active');
+
+      var cat = btn.dataset.cat || '';
+      cards.forEach(function(card) {
+        var match = !cat || card.dataset.category === cat;
+        card.style.display = match ? '' : 'none';
       });
     });
   }
-
-  document.addEventListener("astro:after-swap", initFilter);
-  document.addEventListener("astro:page-load", initFilter);
 </script>
 
 <style>

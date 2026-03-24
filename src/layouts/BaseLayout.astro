@@ -199,168 +199,145 @@ const gaId = import.meta.env.PUBLIC_GA_MEASUREMENT_ID ?? "";
     </style>
 
     <script is:inline>
-      const canvas = document.querySelector("[data-matrix-canvas]");
+      (function() {
+        var canvas = document.querySelector("[data-matrix-canvas]");
+        if (!(canvas instanceof HTMLCanvasElement)) return;
 
-      // transition:persist로 canvas가 유지되므로 최초 1회만 초기화
-      if (canvas instanceof HTMLCanvasElement && !canvas.dataset.initialized) {
+        // 이미 초기화된 경우 — 애니메이션이 멈췄으면 재시작
+        if (canvas.dataset.initialized === "true") {
+          if (window.__matrixRestart) window.__matrixRestart();
+          return;
+        }
+
         canvas.dataset.initialized = "true";
-        const context = canvas.getContext("2d");
+        var context = canvas.getContext("2d");
+        if (!context) return;
 
-        if (context) {
-          const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
-          const glyphs = ["0", "1"];
-          const monoStack = '"SFMono-Regular", Consolas, "Liberation Mono", monospace';
+        var motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
+        var glyphs = ["0", "1"];
+        var monoStack = '"SFMono-Regular", Consolas, "Liberation Mono", monospace';
 
-          let width = 0;
-          let height = 0;
-          let cellSize = 18;
-          let animationFrame = 0;
-          let lastTimestamp = 0;
-          let columns = [];
+        var width = 0, height = 0, cellSize = 18;
+        var animationFrame = 0, lastTimestamp = 0;
+        var columns = [];
 
-          const randomGlyph = () => glyphs[Math.floor(Math.random() * glyphs.length)];
+        var randomGlyph = function() { return glyphs[Math.floor(Math.random() * glyphs.length)]; };
 
-          const createColumn = (index) => ({
+        var createColumn = function(index) {
+          return {
             x: index * cellSize + Math.random() * cellSize * 0.35,
             y: height + Math.random() * height * 1.35,
             speed: 54 + Math.random() * 132,
             length: 8 + Math.floor(Math.random() * 18),
             brightness: 0.35 + Math.random() * 0.65
-          });
-
-          const resetColumn = (column, index) => {
-            column.x = index * cellSize + Math.random() * cellSize * 0.35;
-            column.y = height + Math.random() * height * 0.75;
-            column.speed = 54 + Math.random() * 132;
-            column.length = 8 + Math.floor(Math.random() * 18);
-            column.brightness = 0.35 + Math.random() * 0.65;
           };
+        };
 
-          const paintBackdrop = () => {
-            context.clearRect(0, 0, width, height);
-            context.fillStyle = "#05080c";
-            context.fillRect(0, 0, width, height);
-          };
+        var resetColumn = function(column, index) {
+          column.x = index * cellSize + Math.random() * cellSize * 0.35;
+          column.y = height + Math.random() * height * 0.75;
+          column.speed = 54 + Math.random() * 132;
+          column.length = 8 + Math.floor(Math.random() * 18);
+          column.brightness = 0.35 + Math.random() * 0.65;
+        };
 
-          const resizeCanvas = () => {
-            const dpr = Math.min(window.devicePixelRatio || 1, 2);
-            width = window.innerWidth;
-            height = window.innerHeight;
-            cellSize = width < 540 ? 14 : width < 900 ? 16 : 18;
+        var paintBackdrop = function() {
+          context.clearRect(0, 0, width, height);
+          context.fillStyle = "#05080c";
+          context.fillRect(0, 0, width, height);
+        };
 
-            canvas.width = Math.floor(width * dpr);
-            canvas.height = Math.floor(height * dpr);
-            canvas.style.width = `${width}px`;
-            canvas.style.height = `${height}px`;
+        var resizeCanvas = function() {
+          var dpr = Math.min(window.devicePixelRatio || 1, 2);
+          width = window.innerWidth;
+          height = window.innerHeight;
+          cellSize = width < 540 ? 14 : width < 900 ? 16 : 18;
 
-            context.setTransform(dpr, 0, 0, dpr, 0, 0);
-            context.font = `${cellSize}px ${monoStack}`;
-            context.textBaseline = "top";
+          canvas.width = Math.floor(width * dpr);
+          canvas.height = Math.floor(height * dpr);
+          canvas.style.width = width + "px";
+          canvas.style.height = height + "px";
 
-            const columnCount = Math.ceil(width / cellSize);
-            columns = Array.from({ length: columnCount }, (_, index) => createColumn(index));
-            if (motionPreference.matches) {
-              drawStaticFrame();
-            } else {
-              paintBackdrop();
-            }
-          };
+          context.setTransform(dpr, 0, 0, dpr, 0, 0);
+          context.font = cellSize + "px " + monoStack;
+          context.textBaseline = "top";
 
-          const drawStaticFrame = () => {
-            paintBackdrop();
+          var columnCount = Math.ceil(width / cellSize);
+          columns = Array.from({ length: columnCount }, function(_, i) { return createColumn(i); });
+          if (motionPreference.matches) { drawStaticFrame(); } else { paintBackdrop(); }
+        };
 
-            const count = Math.max(36, Math.floor((width * height) / 18000));
+        var drawStaticFrame = function() {
+          paintBackdrop();
+          var count = Math.max(36, Math.floor((width * height) / 18000));
+          for (var i = 0; i < count; i++) {
+            var x = Math.random() * width;
+            var y = Math.random() * height;
+            var alpha = 0.18 + Math.random() * 0.28;
+            context.fillStyle = "rgba(124, 255, 122, " + alpha + ")";
+            context.fillText(randomGlyph(), x, y);
+          }
+        };
 
-            for (let index = 0; index < count; index += 1) {
-              const x = Math.random() * width;
-              const y = Math.random() * height;
-              const alpha = 0.18 + Math.random() * 0.28;
+        var stopAnimation = function() {
+          if (animationFrame) { window.cancelAnimationFrame(animationFrame); animationFrame = 0; }
+        };
 
-              context.fillStyle = `rgba(124, 255, 122, ${alpha})`;
-              context.fillText(randomGlyph(), x, y);
-            }
-          };
+        var frame = function(timestamp) {
+          if (document.hidden) { stopAnimation(); return; }
 
-          const stopAnimation = () => {
-            if (animationFrame) {
-              window.cancelAnimationFrame(animationFrame);
-              animationFrame = 0;
-            }
-          };
+          var delta = lastTimestamp ? Math.min((timestamp - lastTimestamp) / 1000, 0.05) : 0.016;
+          lastTimestamp = timestamp;
 
-          const frame = (timestamp) => {
-            if (document.hidden) {
-              stopAnimation();
-              return;
-            }
+          context.fillStyle = "rgba(5, 8, 12, 0.22)";
+          context.fillRect(0, 0, width, height);
 
-            const delta = lastTimestamp
-              ? Math.min((timestamp - lastTimestamp) / 1000, 0.05)
-              : 0.016;
+          columns.forEach(function(column, index) {
+            column.y -= column.speed * delta;
+            if (column.y + column.length * cellSize < -cellSize) { resetColumn(column, index); }
 
-            lastTimestamp = timestamp;
+            for (var step = 0; step < column.length; step++) {
+              var y = column.y + step * cellSize;
+              if (y < -cellSize || y > height + cellSize) continue;
 
-            context.fillStyle = "rgba(5, 8, 12, 0.22)";
-            context.fillRect(0, 0, width, height);
+              var isHead = step === 0;
+              var opacity = isHead
+                ? Math.min(1, column.brightness * 0.95 + 0.15)
+                : (1 - step / column.length) * column.brightness * 0.78;
 
-            columns.forEach((column, index) => {
-              column.y -= column.speed * delta;
+              context.fillStyle = isHead
+                ? "rgba(214, 255, 214, " + opacity + ")"
+                : "rgba(124, 255, 122, " + opacity + ")";
 
-              if (column.y + column.length * cellSize < -cellSize) {
-                resetColumn(column, index);
-              }
-
-              for (let step = 0; step < column.length; step += 1) {
-                const y = column.y + step * cellSize;
-
-                if (y < -cellSize || y > height + cellSize) {
-                  continue;
-                }
-
-                const isHead = step === 0;
-                const opacity = isHead
-                  ? Math.min(1, column.brightness * 0.95 + 0.15)
-                  : (1 - step / column.length) * column.brightness * 0.78;
-
-                context.fillStyle = isHead
-                  ? `rgba(214, 255, 214, ${opacity})`
-                  : `rgba(124, 255, 122, ${opacity})`;
-
-                context.fillText(randomGlyph(), column.x, y);
-              }
-            });
-
-            animationFrame = window.requestAnimationFrame(frame);
-          };
-
-          const startAnimation = () => {
-            stopAnimation();
-            lastTimestamp = 0;
-
-            if (motionPreference.matches) {
-              drawStaticFrame();
-              return;
-            }
-
-            paintBackdrop();
-            animationFrame = window.requestAnimationFrame(frame);
-          };
-
-          resizeCanvas();
-          startAnimation();
-
-          window.addEventListener("resize", resizeCanvas, { passive: true });
-          document.addEventListener("visibilitychange", () => {
-            if (document.hidden) {
-              stopAnimation();
-            } else {
-              startAnimation();
+              context.fillText(randomGlyph(), column.x, y);
             }
           });
 
-          motionPreference.addEventListener("change", startAnimation);
-        }
-      }
+          animationFrame = window.requestAnimationFrame(frame);
+        };
+
+        var startAnimation = function() {
+          stopAnimation();
+          lastTimestamp = 0;
+          if (motionPreference.matches) { drawStaticFrame(); return; }
+          paintBackdrop();
+          animationFrame = window.requestAnimationFrame(frame);
+        };
+
+        // 전역에 재시작 함수 노출 (페이지 전환 후 재시작용)
+        window.__matrixRestart = function() {
+          if (!animationFrame && !document.hidden) startAnimation();
+        };
+
+        resizeCanvas();
+        startAnimation();
+
+        window.addEventListener("resize", resizeCanvas, { passive: true });
+        document.addEventListener("visibilitychange", function() {
+          if (document.hidden) stopAnimation(); else startAnimation();
+        });
+        motionPreference.addEventListener("change", startAnimation);
+      })();
     </script>
   </body>
 </html>
