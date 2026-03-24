@@ -17,31 +17,35 @@ const { post, featured = false } = Astro.props;
     </a>
   )}
 
-  <div class="post-card__meta">
-    <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
-    <span>{getReadingTime(post)}</span>
-    {post.data.category && <span class="post-category">{post.data.category}</span>}
+  <div class="post-card__body">
+    <div class="post-card__meta">
+      <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
+      <span class="post-card__sep" aria-hidden="true">/</span>
+      <span>{getReadingTime(post)}</span>
+      {post.data.category && <span class="post-category">{post.data.category}</span>}
+    </div>
+
+    <h2>
+      <a href={`/posts/${post.id}/`}>{post.data.title}</a>
+    </h2>
+
+    {post.data.description && <p>{post.data.description}</p>}
+
+    {post.data.tags.length > 0 && (
+      <ul class="tag-list" aria-label="Post tags">
+        {post.data.tags.map((tag) => <li>{tag}</li>)}
+      </ul>
+    )}
   </div>
-
-  <h2>
-    <a href={`/posts/${post.id}/`}>{post.data.title}</a>
-  </h2>
-
-  <p>{post.data.description}</p>
-
-  {post.data.tags.length > 0 && (
-    <ul class="tag-list" aria-label="Post tags">
-      {post.data.tags.map((tag) => <li>{tag}</li>)}
-    </ul>
-  )}
 </article>
 
 <style>
+  /* ── 썸네일 ─────────────────────────────────────────────── */
   .post-card__thumb-link {
     display: block;
-    margin: -1.25rem -1.25rem 1rem;
     overflow: hidden;
-    border-radius: 6px 6px 0 0;
+    border-radius: 8px;
+    flex-shrink: 0;
   }
 
   .post-card__thumb {
@@ -49,22 +53,59 @@ const { post, featured = false } = Astro.props;
     aspect-ratio: 16 / 9;
     object-fit: cover;
     display: block;
-    transition: transform 300ms ease;
+    transition: transform 400ms ease, filter 400ms ease;
+    filter: brightness(0.85) saturate(0.9);
   }
 
   .post-card:hover .post-card__thumb {
-    transform: scale(1.03);
+    transform: scale(1.04);
+    filter: brightness(0.95) saturate(1);
   }
 
+  /* ── Featured: 가로 레이아웃 ────────────────────────────── */
+  .post-card--featured {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    align-items: center;
+  }
+
+  .post-card--featured .post-card__thumb-link {
+    border-radius: 10px;
+  }
+
+  .post-card--featured .post-card__thumb {
+    aspect-ratio: 4 / 3;
+  }
+
+  @media (max-width: 640px) {
+    .post-card--featured {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+  }
+
+  /* ── 일반 카드: 썸네일 위에 ─────────────────────────────── */
+  .post-card:not(.post-card--featured) .post-card__thumb-link {
+    margin-bottom: 0.85rem;
+  }
+
+  /* ── 메타 구분자 ────────────────────────────────────────── */
+  .post-card__sep {
+    color: rgba(124, 255, 122, 0.2);
+    font-weight: 300;
+  }
+
+  /* ── 카테고리 뱃지 ──────────────────────────────────────── */
   .post-category {
     display: inline-flex;
     align-items: center;
-    padding: 0.15rem 0.55rem;
+    padding: 0.12rem 0.55rem;
     border-radius: 999px;
-    background: rgba(124, 255, 122, 0.1);
-    border: 1px solid rgba(124, 255, 122, 0.2);
+    background: rgba(124, 255, 122, 0.08);
+    border: 1px solid rgba(124, 255, 122, 0.18);
     color: #7cff7a;
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     font-weight: 600;
     letter-spacing: 0.06em;
     text-transform: uppercase;
