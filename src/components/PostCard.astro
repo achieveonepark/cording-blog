@@ -1,6 +1,6 @@
 ---
 import type { CollectionEntry } from "astro:content";
-import { formatDate, getReadingTime } from "../lib/blog";
+import { formatDate, getReadingTime, getPostLang } from "../lib/blog";
 
 interface Props {
   post: CollectionEntry<"blog">;
@@ -8,9 +8,10 @@ interface Props {
 }
 
 const { post, featured = false } = Astro.props;
+const lang = getPostLang(post);
 ---
 
-<article class:list={["post-card", { "post-card--featured": featured }]} data-category={post.data.category ?? ""}>
+<article class:list={["post-card", { "post-card--featured": featured }]} data-category={post.data.category ?? ""} data-lang={lang}>
   {post.data.thumbnail && (
     <a href={`/posts/${post.id}/`} class="post-card__thumb-link">
       <img class="post-card__thumb" src={post.data.thumbnail} alt="" loading="lazy" />

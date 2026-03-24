@@ -136,6 +136,25 @@ const gaId = import.meta.env.PUBLIC_GA_MEASUREMENT_ID ?? "";
       });
     </script>
 
+    <!-- 언어 필터링 (리스팅 페이지의 post-card를 lang 기준으로 필터) -->
+    <script is:inline>
+      function filterByLang() {
+        var lang = localStorage.getItem('blog_lang') || 'ko';
+        var cards = document.querySelectorAll('.post-card[data-lang]');
+        cards.forEach(function(card) {
+          var show = card.dataset.lang === lang;
+          card.style.display = show ? '' : 'none';
+        });
+      }
+      // 페이지 로드 시 필터
+      filterByLang();
+      // 언어 변경 이벤트 수신
+      if (!window.__langFilterInit) {
+        window.__langFilterInit = true;
+        window.addEventListener('lang-change', filterByLang);
+      }
+    </script>
+
     <style>
       #fab-group {
         position: fixed;
