@@ -53,7 +53,7 @@ const postUrl = `${Astro.site?.toString().replace(/\/$/, "") ?? "https://blog.so
       )}
 
       <!-- 본문 -->
-      <article class="app-panel article" data-pagefind-body data-pagefind-meta={`title:${post.data.title}`} data-post-slug={post.id} data-worker-base={workerBase}>
+      <article class="app-panel article" data-pagefind-body data-pagefind-meta={`title:${post.data.title}`} data-pagefind-filter={`lang:${currentLang}`} data-post-slug={post.id} data-worker-base={workerBase}>
         <a class="back-link" href="/posts" data-pagefind-ignore>모든 글로 돌아가기</a>
 
         <header class="article__header">
