@@ -220,11 +220,14 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
         var lang = langItem.dataset.lang;
         if (lang) {
           localStorage.setItem('blog_lang', lang);
-          window.dispatchEvent(new CustomEvent('lang-change', { detail: lang }));
+          document.documentElement.dataset.blogLang = lang;
           var label = document.getElementById('lang-label');
           if (label) label.textContent = lang.toUpperCase();
           var menu = document.getElementById('lang-menu');
           if (menu) menu.hidden = true;
+          document.querySelectorAll('.lang-select-btn').forEach(function(b) {
+            b.classList.toggle('lang-select-btn--active', b.dataset.lang === lang);
+          });
         }
         return;
       }
@@ -235,10 +238,12 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
         var lang = langBtn.dataset.lang;
         if (lang) {
           localStorage.setItem('blog_lang', lang);
-          window.dispatchEvent(new CustomEvent('lang-change', { detail: lang }));
+          document.documentElement.dataset.blogLang = lang;
           document.querySelectorAll('.lang-select-btn').forEach(function(b) {
             b.classList.toggle('lang-select-btn--active', b.dataset.lang === lang);
           });
+          var label = document.getElementById('lang-label');
+          if (label) label.textContent = lang.toUpperCase();
         }
         return;
       }
@@ -257,15 +262,25 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
     });
   }
 
-  // 페이지 로드마다 언어 라벨 동기화
-  (function() {
+  // 페이지 로드마다 언어 라벨 + html data-blog-lang 동기화
+  (function syncLang() {
     var lang = localStorage.getItem('blog_lang') || 'ko';
+    document.documentElement.dataset.blogLang = lang;
     var label = document.getElementById('lang-label');
     if (label) label.textContent = lang.toUpperCase();
     document.querySelectorAll('.lang-select-btn').forEach(function(b) {
       b.classList.toggle('lang-select-btn--active', b.dataset.lang === lang);
     });
   })();
+
+  // View Transitions 이후에도 동기화
+  if (!window.__langSyncInit) {
+    window.__langSyncInit = true;
+    document.addEventListener('astro:page-load', function() {
+      var lang = localStorage.getItem('blog_lang') || 'ko';
+      document.documentElement.dataset.blogLang = lang;
+    });
+  }
 </script>
 
 <script define:vars={{ clientId }}>
