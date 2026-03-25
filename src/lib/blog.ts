@@ -1,14 +1,14 @@
 import { getCollection, type CollectionEntry } from "astro:content";
 import { site } from "../config/site";
 
-/** 파일 id에서 언어 감지 (`.en.md` → "en", 나머지 → "ko") */
+/** frontmatter lang 필드에서 언어 감지 (기본값: "ko") */
 export function getPostLang(post: CollectionEntry<"blog">): string {
-  return post.id.endsWith(".en") ? "en" : "ko";
+  return post.data.lang ?? "ko";
 }
 
-/** 언어 접미사를 제거한 기본 slug */
+/** 언어 접미사를 제거한 기본 slug (Astro glob loader가 dot을 제거하므로 "en" suffix) */
 export function getBaseSlug(post: CollectionEntry<"blog">): string {
-  return post.id.replace(/\.en$/, "");
+  return getPostLang(post) === "en" ? post.id.replace(/en$/, "") : post.id;
 }
 
 export async function getPublishedPosts() {
@@ -25,14 +25,15 @@ export async function getPublishedPostsByLang(lang: string) {
   return posts.filter((p) => getPostLang(p) === lang);
 }
 
-/** 번역본이 있는지 확인하고 slug 반환 */
+/** 번역본이 있는지 확인하고 반환 */
 export async function findTranslation(post: CollectionEntry<"blog">) {
   const posts = await getPublishedPosts();
   const baseSlug = getBaseSlug(post);
   const currentLang = getPostLang(post);
   const targetLang = currentLang === "ko" ? "en" : "ko";
-  const targetId = targetLang === "en" ? `${baseSlug}.en` : baseSlug;
-  return posts.find((p) => p.id === targetId) ?? null;
+  // Astro glob loader가 dot을 제거: slug.en.md → id "slugen"
+  const targetId = targetLang === "en" ? `${baseSlug}en` : baseSlug;
+  return posts.find((p) => p.id === targetId && getPostLang(p) === targetLang) ?? null;
 }
 
 export function formatDate(date: Date) {

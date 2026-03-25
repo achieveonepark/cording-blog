@@ -1,6 +1,7 @@
 ---
 title: "Unity Build Play Tool"
 description: "A build deployment tool built with AI!"
+lang: en
 pubDate: 2026-03-24
 tags:
   - Unity
