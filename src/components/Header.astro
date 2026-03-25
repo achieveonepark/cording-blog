@@ -273,12 +273,16 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
     });
   })();
 
-  // View Transitions 이후에도 동기화
-  if (!window.__langSyncInit) {
-    window.__langSyncInit = true;
+  // astro:page-load 이후 lang 라벨 UI 동기화 (html[data-blog-lang]은 BaseLayout astro:after-swap에서 처리)
+  if (!window.__langLabelInit) {
+    window.__langLabelInit = true;
     document.addEventListener('astro:page-load', function() {
       var lang = localStorage.getItem('blog_lang') || 'ko';
-      document.documentElement.dataset.blogLang = lang;
+      var label = document.getElementById('lang-label');
+      if (label) label.textContent = lang.toUpperCase();
+      document.querySelectorAll('.lang-select-btn').forEach(function(b) {
+        b.classList.toggle('lang-select-btn--active', b.dataset.lang === lang);
+      });
     });
   }
 </script>

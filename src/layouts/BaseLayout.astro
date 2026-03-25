@@ -29,6 +29,12 @@ const gaId = import.meta.env.PUBLIC_GA_MEASUREMENT_ID ?? "";
     <!-- 언어 설정: 페인트 전에 즉시 실행 (FOUC 없음) -->
     <script is:inline>
       document.documentElement.dataset.blogLang = localStorage.getItem('blog_lang') || 'ko';
+      if (!window.__blogLangInit) {
+        window.__blogLangInit = true;
+        document.addEventListener('astro:after-swap', function() {
+          document.documentElement.dataset.blogLang = localStorage.getItem('blog_lang') || 'ko';
+        });
+      }
     </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
