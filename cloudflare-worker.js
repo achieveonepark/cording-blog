@@ -69,6 +69,15 @@ export default {
 
       if (!env.BLOG_KV) return json({ ok: true, visits: 0 });
 
+      // IP 기반 중복 방지 (24시간 TTL)
+      const ip = request.headers.get("CF-Connecting-IP") || "unknown";
+      const ipKey = `visit-ip:${post}:${ip}`;
+      if (await env.BLOG_KV.get(ipKey)) {
+        const visits = Number((await env.BLOG_KV.get(`visits:${post}`)) ?? 0);
+        return json({ ok: true, visits, duplicate: true });
+      }
+      await env.BLOG_KV.put(ipKey, "1", { expirationTtl: 86400 });
+
       const current = Number((await env.BLOG_KV.get(`visits:${post}`)) ?? 0);
       const updated = current + 1;
       await env.BLOG_KV.put(`visits:${post}`, String(updated));
@@ -87,6 +96,15 @@ export default {
       if (!post) return json({ error: "Missing post" }, 400);
 
       if (!env.BLOG_KV) return json({ ok: true, likes: 0 });
+
+      // IP 기반 중복 방지 (영구 — 좋아요는 1인 1회)
+      const ip = request.headers.get("CF-Connecting-IP") || "unknown";
+      const ipKey = `like-ip:${post}:${ip}`;
+      if (await env.BLOG_KV.get(ipKey)) {
+        const likes = Number((await env.BLOG_KV.get(`likes:${post}`)) ?? 0);
+        return json({ ok: true, likes, duplicate: true });
+      }
+      await env.BLOG_KV.put(ipKey, "1");
 
       const current = Number((await env.BLOG_KV.get(`likes:${post}`)) ?? 0);
       const updated = current + 1;
