@@ -29,7 +29,6 @@ const { Content, headings } = await render(post);
 const currentLang = getPostLang(post);
 const translation = await findTranslation(post);
 
-const workerBase = import.meta.env.PUBLIC_OAUTH_WORKER_URL?.replace(/\/$/, "") ?? "";
 const postUrl = `${Astro.site?.toString().replace(/\/$/, "") ?? "https://blog.somiri.dev"}/posts/${post.id}/`;
 ---
 
@@ -52,7 +51,7 @@ const postUrl = `${Astro.site?.toString().replace(/\/$/, "") ?? "https://blog.so
       )}
 
       <!-- 본문 -->
-      <article class="app-panel article" data-pagefind-body data-pagefind-meta={`title:${post.data.title}`} data-pagefind-filter={`lang:${currentLang}`} data-post-slug={post.id} data-worker-base={workerBase}>
+      <article class="app-panel article" data-pagefind-body data-pagefind-meta={`title:${post.data.title}`} data-pagefind-filter={`lang:${currentLang}`} data-post-slug={post.id}>
         <a class="back-link" href="/posts" data-pagefind-ignore>모든 글로 돌아가기</a>
 
         <header class="article__header">
@@ -70,12 +69,6 @@ const postUrl = `${Astro.site?.toString().replace(/\/$/, "") ?? "https://blog.so
               <a href={`/posts/${translation.id}/`} class="lang-switch-link">
                 {currentLang === "ko" ? "Read in English" : "한국어로 읽기"}
               </a>
-            )}
-            {workerBase && (
-              <span class="visit-count" id="visit-count" title="조회수" aria-label="조회수">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                <span id="visit-num">–</span>
-              </span>
             )}
           </div>
 
@@ -107,16 +100,6 @@ const postUrl = `${Astro.site?.toString().replace(/\/$/, "") ?? "https://blog.so
           <ShareButtons title={post.data.title} url={postUrl} image={post.data.thumbnail ?? ""} />
         </div>
 
-        <!-- 좋아요 버튼 -->
-        {workerBase && (
-          <div class="like-wrap" data-pagefind-ignore>
-            <button class="like-btn" id="like-btn" aria-label="좋아요">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-              <span id="like-num">–</span>
-            </button>
-          </div>
-        )}
-
         <!-- 댓글 -->
         <div data-pagefind-ignore>
           <Giscus />
@@ -146,8 +129,7 @@ const postUrl = `${Astro.site?.toString().replace(/\/$/, "") ?? "https://blog.so
     const article = document.querySelector("article[data-post-slug]") as HTMLElement | null;
     if (!article) { lastSlug = ""; return; }
 
-    const postSlug   = article.dataset.postSlug   ?? "";
-    const workerBase = (article.dataset.workerBase ?? "").replace(/\/$/, "");
+    const postSlug = article.dataset.postSlug ?? "";
 
     // 같은 페이지 중복 실행 방지
     if (postSlug && postSlug === lastSlug) return;
@@ -186,50 +168,6 @@ const postUrl = `${Astro.site?.toString().replace(/\/$/, "") ?? "https://blog.so
         body: JSON.stringify({ message: `chore: delete post - ${postSlug}`, sha: file.sha, branch: BRANCH }),
       });
       window.location.href = "/posts";
-    });
-
-    // --- 방문자 수 + 좋아요 ---
-    if (!workerBase) return;
-
-    const visitNumEl = document.getElementById("visit-num");
-    const likeNumEl  = document.getElementById("like-num");
-    const likeBtn    = document.getElementById("like-btn");
-    const LIKED_KEY  = `liked:${postSlug}`;
-
-    fetch(`${workerBase}/stats?post=${encodeURIComponent(postSlug)}`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (visitNumEl) visitNumEl.textContent = String(data.visits ?? 0);
-        if (likeNumEl)  likeNumEl.textContent  = String(data.likes   ?? 0);
-        if (likeBtn && localStorage.getItem(LIKED_KEY)) likeBtn.classList.add("like-btn--liked");
-      })
-      .catch(() => {
-        if (visitNumEl) visitNumEl.textContent = "–";
-        if (likeNumEl)  likeNumEl.textContent  = "–";
-      });
-
-    const VISIT_KEY = `visited:${postSlug}`;
-    if (!sessionStorage.getItem(VISIT_KEY)) {
-      sessionStorage.setItem(VISIT_KEY, "1");
-      fetch(`${workerBase}/visit`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ post: postSlug }),
-      }).catch(() => {});
-    }
-
-    likeBtn?.addEventListener("click", () => {
-      if (localStorage.getItem(LIKED_KEY)) return;
-      localStorage.setItem(LIKED_KEY, "1");
-      likeBtn.classList.add("like-btn--liked");
-      fetch(`${workerBase}/like`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ post: postSlug }),
-      })
-        .then((r) => r.json())
-        .then((data) => { if (likeNumEl) likeNumEl.textContent = String(data.likes ?? "–"); })
-        .catch(() => {});
     });
   }
 
@@ -330,57 +268,6 @@ const postUrl = `${Astro.site?.toString().replace(/\/$/, "") ?? "https://blog.so
     margin-top: 1rem;
     border: 1px solid rgba(124, 255, 122, 0.1);
   }
-
-  /* ── 방문자 수 ────────────────────────────── */
-  .visit-count {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    color: rgba(150, 180, 150, 0.5);
-    font-size: 0.8rem;
-  }
-
-  /* ── 좋아요 버튼 ─────────────────────────── */
-  .like-wrap {
-    display: flex;
-    justify-content: center;
-    margin: 2rem 0;
-  }
-
-  .like-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.6rem 1.4rem;
-    border-radius: 999px;
-    border: 1px solid rgba(255, 120, 140, 0.25);
-    background: transparent;
-    color: rgba(255, 150, 170, 0.6);
-    font-size: 0.9rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: border-color 150ms, background 150ms, color 150ms, transform 100ms;
-    font-family: inherit;
-  }
-
-  .like-btn:hover {
-    border-color: rgba(255, 120, 140, 0.5);
-    background: rgba(255, 120, 140, 0.07);
-    color: rgba(255, 150, 170, 0.9);
-  }
-
-  .like-btn--liked {
-    border-color: rgba(255, 120, 140, 0.6);
-    background: rgba(255, 120, 140, 0.1);
-    color: #ff8ca0;
-  }
-
-  .like-btn--liked svg {
-    fill: #ff8ca0;
-    stroke: #ff8ca0;
-  }
-
-  .like-btn:active { transform: scale(0.95); }
 
   /* ── 어드민 바 ────────────────────────────── */
   #post-admin-bar {
