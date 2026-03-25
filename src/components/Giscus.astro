@@ -34,15 +34,17 @@ const configured = repoId && categoryId;
     if (!wrap) { giscusCreated = false; return; }
 
     if (giscusCreated) {
-      // 이미 로드됐으면 postMessage로 현재 경로 전달 (Giscus SPA 업데이트 API)
       const iframe = document.querySelector("iframe.giscus-frame") as HTMLIFrameElement | null;
       if (iframe?.contentWindow) {
+        // 이미 로드됐으면 postMessage로 현재 경로 전달
         iframe.contentWindow.postMessage(
           { giscus: { setConfig: { term: window.location.pathname } } },
           "https://giscus.app"
         );
+        return;
       }
-      return;
+      // iframe이 DOM swap으로 사라졌으면 다시 생성
+      giscusCreated = false;
     }
 
     // 최초 1회: 스크립트 생성
