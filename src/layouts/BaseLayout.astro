@@ -146,12 +146,11 @@ const gaId = import.meta.env.PUBLIC_GA_MEASUREMENT_ID ?? "";
           card.style.display = show ? '' : 'none';
         });
       }
-      // 페이지 로드 시 필터
-      filterByLang();
-      // 언어 변경 이벤트 수신
       if (!window.__langFilterInit) {
         window.__langFilterInit = true;
         window.addEventListener('lang-change', filterByLang);
+        document.addEventListener('DOMContentLoaded', filterByLang);
+        document.addEventListener('astro:page-load', filterByLang);
       }
     </script>
 
