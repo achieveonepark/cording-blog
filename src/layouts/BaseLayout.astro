@@ -26,6 +26,10 @@ const gaId = import.meta.env.PUBLIC_GA_MEASUREMENT_ID ?? "";
 <!doctype html>
 <html lang="ko" data-theme="dark">
   <head>
+    <!-- 언어 설정: 페인트 전에 즉시 실행 (FOUC 없음) -->
+    <script is:inline>
+      document.documentElement.dataset.blogLang = localStorage.getItem('blog_lang') || 'ko';
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="generator" content={Astro.generator} />
@@ -134,24 +138,6 @@ const gaId = import.meta.env.PUBLIC_GA_MEASUREMENT_ID ?? "";
           });
         }
       });
-    </script>
-
-    <!-- 언어 필터링 (리스팅 페이지의 post-card를 lang 기준으로 필터) -->
-    <script is:inline>
-      function filterByLang() {
-        var lang = localStorage.getItem('blog_lang') || 'ko';
-        var cards = document.querySelectorAll('.post-card[data-lang]');
-        cards.forEach(function(card) {
-          var show = card.dataset.lang === lang;
-          card.style.display = show ? '' : 'none';
-        });
-      }
-      if (!window.__langFilterInit) {
-        window.__langFilterInit = true;
-        window.addEventListener('lang-change', filterByLang);
-        document.addEventListener('DOMContentLoaded', filterByLang);
-        document.addEventListener('astro:page-load', filterByLang);
-      }
     </script>
 
     <style>
