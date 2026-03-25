@@ -362,7 +362,11 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
       }
       dropdown.innerHTML = results.map(function(r) {
         var title = (r.meta && r.meta.title) ? r.meta.title : r.url;
-        return '<a class="search-dropdown__item" href="' + r.url + '">' + title + '</a>';
+        var desc = (r.meta && r.meta.description) ? r.meta.description : '';
+        return '<a class="search-dropdown__item" href="' + r.url + '">'
+          + '<span class="search-dropdown__title">' + title + '</span>'
+          + (desc ? '<span class="search-dropdown__desc">' + desc + '</span>' : '')
+          + '</a>';
       }).join("");
       dropdown.removeAttribute("hidden");
     }
@@ -528,19 +532,35 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
 
   /* 검색 결과는 JS로 동적 삽입 → :global() 필수 */
   #search-dropdown :global(.search-dropdown__item) {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
     padding: 0.6rem 0.85rem;
     text-decoration: none;
-    font-size: 0.84rem;
-    font-weight: 500;
-    color: #d6ffd6;
     border-bottom: 1px solid rgba(124, 255, 122, 0.08);
-    transition: background 100ms, color 100ms;
+    transition: background 100ms;
   }
   #search-dropdown :global(.search-dropdown__item:last-child) { border-bottom: none; }
   #search-dropdown :global(.search-dropdown__item:hover) {
     background: rgba(124, 255, 122, 0.06);
+  }
+  #search-dropdown :global(.search-dropdown__title) {
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: #d6ffd6;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  #search-dropdown :global(.search-dropdown__item:hover .search-dropdown__title) {
     color: #7cff7a;
+  }
+  #search-dropdown :global(.search-dropdown__desc) {
+    font-size: 0.72rem;
+    color: rgba(160, 200, 160, 0.5);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   #search-dropdown :global(.search-dropdown__empty) { padding: 1.2rem 0.9rem; font-size: 0.82rem; color: rgba(150, 180, 150, 0.5); margin: 0; text-align: center; }
