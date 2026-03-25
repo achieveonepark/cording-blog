@@ -526,9 +526,10 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
   }
   .search-dropdown[hidden] { display: none; }
 
-  .search-dropdown__item {
+  /* 검색 결과는 JS로 동적 삽입 → :global() 필수 */
+  #search-dropdown :global(.search-dropdown__item) {
     display: block;
-    padding: 0.65rem 0.85rem;
+    padding: 0.6rem 0.85rem;
     text-decoration: none;
     font-size: 0.84rem;
     font-weight: 500;
@@ -536,13 +537,13 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
     border-bottom: 1px solid rgba(124, 255, 122, 0.08);
     transition: background 100ms, color 100ms;
   }
-  .search-dropdown__item:last-child { border-bottom: none; }
-  .search-dropdown__item:hover {
+  #search-dropdown :global(.search-dropdown__item:last-child) { border-bottom: none; }
+  #search-dropdown :global(.search-dropdown__item:hover) {
     background: rgba(124, 255, 122, 0.06);
     color: #7cff7a;
   }
 
-  .search-dropdown__empty { padding: 1.2rem 0.9rem; font-size: 0.82rem; color: rgba(150, 180, 150, 0.5); margin: 0; text-align: center; }
+  #search-dropdown :global(.search-dropdown__empty) { padding: 1.2rem 0.9rem; font-size: 0.82rem; color: rgba(150, 180, 150, 0.5); margin: 0; text-align: center; }
 
   /* ── 아이콘 버튼 ─────────────────────────────────────────── */
   .site-nav button.site-nav__icon-link {
