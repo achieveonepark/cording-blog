@@ -385,9 +385,10 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
 
     function doSearch(query) {
       if (!query.trim()) { dropdown.setAttribute("hidden", ""); return; }
+      var currentLang = document.documentElement.dataset.blogLang || 'ko';
       var pf = window.__pagefindModule;
       var run = function(mod) {
-        mod.search(query).then(function(result) {
+        mod.search(query, { filters: { lang: [currentLang] } }).then(function(result) {
           return Promise.all(result.results.slice(0, 6).map(function(r) { return r.data(); }));
         }).then(renderResults).catch(function() {
           dropdown.innerHTML = '<p class="search-dropdown__empty">검색은 빌드 후 사용할 수 있어요.</p>';
