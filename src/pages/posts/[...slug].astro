@@ -60,7 +60,7 @@ const postUrl = `${Astro.site?.toString().replace(/\/$/, "") ?? "https://blog.so
             <p class="eyebrow">Post</p>
           </div>
           <h1>{post.data.title}</h1>
-          <p>{post.data.description}</p>
+          <p data-pagefind-meta="description">{post.data.description}</p>
 
           <div class="article__meta" data-pagefind-ignore>
             <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
