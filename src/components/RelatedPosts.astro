@@ -1,6 +1,6 @@
 ---
 import type { CollectionEntry } from "astro:content";
-import { formatDate } from "../lib/blog";
+import { formatDate, getPostLang } from "../lib/blog";
 
 interface Props {
   currentPost: CollectionEntry<"blog">;
@@ -8,6 +8,7 @@ interface Props {
 }
 
 const { currentPost, allPosts } = Astro.props;
+const currentLang = getPostLang(currentPost);
 
 function score(post: CollectionEntry<"blog">) {
   let s = 0;
@@ -18,7 +19,7 @@ function score(post: CollectionEntry<"blog">) {
 }
 
 const related = allPosts
-  .filter((p) => p.id !== currentPost.id)
+  .filter((p) => p.id !== currentPost.id && getPostLang(p) === currentLang)
   .map((p) => ({ post: p, score: score(p) }))
   .filter(({ score }) => score > 0)
   .sort((a, b) => b.score - a.score)
