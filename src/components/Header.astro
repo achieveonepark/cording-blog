@@ -221,13 +221,7 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
         if (lang) {
           localStorage.setItem('blog_lang', lang);
           document.documentElement.dataset.blogLang = lang;
-          var label = document.getElementById('lang-label');
-          if (label) label.textContent = lang.toUpperCase();
-          var menu = document.getElementById('lang-menu');
-          if (menu) menu.hidden = true;
-          document.querySelectorAll('.lang-select-btn').forEach(function(b) {
-            b.classList.toggle('lang-select-btn--active', b.dataset.lang === lang);
-          });
+          window.location.href = '/';
         }
         return;
       }
@@ -239,11 +233,7 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
         if (lang) {
           localStorage.setItem('blog_lang', lang);
           document.documentElement.dataset.blogLang = lang;
-          document.querySelectorAll('.lang-select-btn').forEach(function(b) {
-            b.classList.toggle('lang-select-btn--active', b.dataset.lang === lang);
-          });
-          var label = document.getElementById('lang-label');
-          if (label) label.textContent = lang.toUpperCase();
+          window.location.href = '/';
         }
         return;
       }
@@ -372,20 +362,7 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
       }
       dropdown.innerHTML = results.map(function(r) {
         var title = (r.meta && r.meta.title) ? r.meta.title : r.url;
-        var desc = (r.meta && r.meta.description) ? r.meta.description : '';
-        var category = (r.meta && r.meta.category) ? r.meta.category : '';
-        var excerpt = extractExcerpt(r.excerpt || "");
-        // excerpt가 title과 동일하면 description을 대신 사용
-        var plain = excerpt.replace(/<[^>]+>/g, '').trim();
-        if (plain === title || plain.length < 8) excerpt = '';
-        var summary = excerpt || desc;
-        return '<a class="search-dropdown__item" href="' + r.url + '">'
-          + '<div class="search-dropdown__head">'
-          + '<span class="search-dropdown__title">' + title + '</span>'
-          + (category ? '<span class="search-dropdown__cat">' + category + '</span>' : '')
-          + '</div>'
-          + (summary ? '<p class="search-dropdown__desc">' + summary + '</p>' : '')
-          + '</a>';
+        return '<a class="search-dropdown__item" href="' + r.url + '">' + title + '</a>';
       }).join("");
       dropdown.removeAttribute("hidden");
     }
@@ -551,65 +528,21 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
 
   .search-dropdown__item {
     display: block;
-    padding: 0.7rem 0.85rem;
-    margin: 0.25rem;
-    border-radius: 8px;
+    padding: 0.65rem 0.85rem;
     text-decoration: none;
-    background: rgba(124, 255, 122, 0.02);
-    border: 1px solid rgba(124, 255, 122, 0.06);
-    transition: background 120ms, border-color 120ms, transform 120ms;
+    font-size: 0.84rem;
+    font-weight: 500;
+    color: #d6ffd6;
+    border-bottom: 1px solid rgba(124, 255, 122, 0.08);
+    transition: background 100ms, color 100ms;
   }
+  .search-dropdown__item:last-child { border-bottom: none; }
   .search-dropdown__item:hover {
     background: rgba(124, 255, 122, 0.06);
-    border-color: rgba(124, 255, 122, 0.2);
-    transform: translateX(2px);
+    color: #7cff7a;
   }
 
-  .search-dropdown__head {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 0.3rem;
-  }
-
-  .search-dropdown__title {
-    font-size: 0.84rem;
-    font-weight: 600;
-    color: #d6ffd6;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    flex: 1;
-    min-width: 0;
-  }
-  .search-dropdown__item:hover .search-dropdown__title { color: #7cff7a; }
-
-  .search-dropdown__cat {
-    flex-shrink: 0;
-    padding: 0.1rem 0.45rem;
-    border-radius: 999px;
-    background: rgba(124, 255, 122, 0.08);
-    border: 1px solid rgba(124, 255, 122, 0.15);
-    color: rgba(124, 255, 122, 0.6);
-    font-size: 0.62rem;
-    font-weight: 600;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-  }
-
-  .search-dropdown__desc {
-    margin: 0;
-    font-size: 0.74rem;
-    color: rgba(160, 200, 160, 0.55);
-    line-height: 1.5;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-  .search-dropdown__desc mark { background: transparent; color: #7cff7a; font-weight: 600; }
-
-  .search-dropdown__empty { padding: 1.5rem 0.9rem; font-size: 0.82rem; color: rgba(150, 180, 150, 0.5); margin: 0; text-align: center; }
+  .search-dropdown__empty { padding: 1.2rem 0.9rem; font-size: 0.82rem; color: rgba(150, 180, 150, 0.5); margin: 0; text-align: center; }
 
   /* ── 아이콘 버튼 ─────────────────────────────────────────── */
   .site-nav button.site-nav__icon-link {
