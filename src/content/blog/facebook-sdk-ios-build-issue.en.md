@@ -1,6 +1,7 @@
 ---
 title: "Facebook SDK Build Issue (iOS)"
 description: "Summary of iOS build and runtime issues when using Facebook SDK 17.0.1 in environments below Xcode 15.3."
+lang: en
 pubDate: 2026-03-20
 tags:
   - iOS

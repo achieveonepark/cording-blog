@@ -1,6 +1,7 @@
 ---
 title: "Addressables Experience"
 description: "A record of my experience using Addressables in Unity."
+lang: en
 pubDate: 2026-03-23
 tags:
   - Unity

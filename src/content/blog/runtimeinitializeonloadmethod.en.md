@@ -1,6 +1,7 @@
 ---
 title: "RuntimeInitializeOnLoadMethod"
 description: "A post summarizing my hard-earned experience with this attribute."
+lang: en
 pubDate: 2026-03-24
 tags:
   - Unity

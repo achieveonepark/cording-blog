@@ -5,7 +5,7 @@ const pathname = Astro.url.pathname;
 const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
 ---
 
-<header class="site-header">
+<header class="site-header" data-client-id={clientId}>
   <div class="site-header__inner shell">
     <a href="/" class="brand-link" aria-label={`${site.title} 홈`}>
       <strong>{site.title}</strong>
@@ -287,131 +287,169 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
   }
 </script>
 
-<script define:vars={{ clientId }}>
-  const OWNER = "achieveonepark";
-  const CALLBACK = `${window.location.origin}/admin/callback`;
-  const loginBtn = document.getElementById("nav-login-btn");
-  const logoutBtn = document.getElementById("nav-logout-btn");
+<script is:inline>
+  // ── 검색 + 인증: View Transitions 호환 ──
+  // pagefind 모듈은 전역에 캐시 (재 import 불필요)
+  if (!window.__pagefindModule) window.__pagefindModule = null;
 
-  function showLogin() { loginBtn.style.display = ""; logoutBtn.style.display = "none"; }
-  function showOwner() { loginBtn.style.display = "none"; logoutBtn.style.display = ""; }
+  function initHeaderFeatures() {
+    var OWNER = "achieveonepark";
+    var headerEl = document.querySelector(".site-header");
+    var clientId = headerEl ? headerEl.getAttribute("data-client-id") : "";
 
-  loginBtn.addEventListener("click", () => {
-    const url = `https://github.com/login/oauth/authorize?client_id=${clientId}&scope=public_repo&redirect_uri=${encodeURIComponent(CALLBACK)}`;
-    const w = 520, h = 680;
-    const left = Math.round(window.screenX + (window.outerWidth - w) / 2);
-    const top = Math.round(window.screenY + (window.outerHeight - h) / 2);
-    window.open(url, "github-oauth", `width=${w},height=${h},left=${left},top=${top},toolbar=0,scrollbars=1,status=0`);
-    window.addEventListener("message", (e) => {
-      if (e.origin !== window.location.origin || e.data?.type !== "oauth-success") return;
-      localStorage.setItem("gh_token", e.data.token);
-      window.location.reload();
-    }, { once: true });
-  });
+    // ── 인증 ──
+    var loginBtn = document.getElementById("nav-login-btn");
+    var logoutBtn = document.getElementById("nav-logout-btn");
 
-  logoutBtn.addEventListener("click", () => {
-    localStorage.removeItem("gh_token");
-    window.location.reload();
-  });
+    if (loginBtn && logoutBtn) {
+      function showLogin() { loginBtn.style.display = ""; logoutBtn.style.display = "none"; }
+      function showOwner() { loginBtn.style.display = "none"; logoutBtn.style.display = ""; }
 
-  (async () => {
-    const token = localStorage.getItem("gh_token");
-    if (!token) { showLogin(); return; }
-    try {
-      const res = await fetch("https://api.github.com/user", { headers: { Authorization: `Bearer ${token}` } });
-      const user = await res.json();
-      if (user.login === OWNER) showOwner();
-      else { localStorage.removeItem("gh_token"); showLogin(); }
-    } catch { showLogin(); }
-  })();
+      loginBtn.onclick = function() {
+        var CALLBACK = window.location.origin + "/admin/callback";
+        var url = "https://github.com/login/oauth/authorize?client_id=" + clientId + "&scope=public_repo&redirect_uri=" + encodeURIComponent(CALLBACK);
+        var w = 520, h = 680;
+        var left = Math.round(window.screenX + (window.outerWidth - w) / 2);
+        var top = Math.round(window.screenY + (window.outerHeight - h) / 2);
+        window.open(url, "github-oauth", "width=" + w + ",height=" + h + ",left=" + left + ",top=" + top + ",toolbar=0,scrollbars=1,status=0");
+        window.addEventListener("message", function(e) {
+          if (e.origin !== window.location.origin || !e.data || e.data.type !== "oauth-success") return;
+          localStorage.setItem("gh_token", e.data.token);
+          window.location.reload();
+        }, { once: true });
+      };
 
-  // ── 인라인 검색 ──────────────────────────────────────────
-  const searchInput = document.getElementById("search-input");
-  const closeBtn   = document.getElementById("search-close");
-  const dropdown   = document.getElementById("search-dropdown");
-  const headerEl   = document.querySelector(".site-header");
+      logoutBtn.onclick = function() {
+        localStorage.removeItem("gh_token");
+        window.location.reload();
+      };
 
-  let pagefindModule = null;
-  let debounceTimer = null;
-
-  function positionDropdown() {
-    const rect = headerEl.getBoundingClientRect();
-    dropdown.style.top = `${rect.bottom}px`;
-  }
-
-  function closeSearch() {
-    dropdown.setAttribute("hidden", "");
-    dropdown.innerHTML = "";
-    searchInput.value = "";
-  }
-
-  function extractExcerpt(html) {
-    if (!html) return "";
-    // mark 태그 주변 문맥 추출
-    const m = html.match(/([^<>]{0,80})<mark>([^<]+)<\/mark>([^<>]{0,100})/);
-    if (m) {
-      const before = m[1].replace(/^[\s\S]*[.!?]\s+/, "").trimStart();
-      const after  = m[3].replace(/[.!?][\s\S]*$/, "").trimEnd();
-      return `${before}<mark>${m[2]}</mark>${after}`;
-    }
-    return html.replace(/<[^>]+>/g, "").trim().slice(0, 160);
-  }
-
-  function renderResults(results) {
-    if (!results.length) {
-      dropdown.innerHTML = `<p class="search-dropdown__empty">검색 결과가 없어요.</p>`;
-      dropdown.removeAttribute("hidden");
-      return;
-    }
-    dropdown.innerHTML = results.map(r => {
-      const title   = r.meta?.title ?? r.url;
-      const excerpt = extractExcerpt(r.excerpt ?? "");
-      const path    = r.url.replace(/^https?:\/\/[^/]+/, "").replace(/\/$/, "") || "/";
-      return `
-        <a class="search-dropdown__item" href="${r.url}">
-          <span class="search-dropdown__title">${title}</span>
-          ${excerpt ? `<span class="search-dropdown__excerpt">${excerpt}</span>` : ""}
-          <span class="search-dropdown__path">${path}</span>
-        </a>`;
-    }).join("");
-    dropdown.removeAttribute("hidden");
-  }
-
-  async function doSearch(query) {
-    if (!query.trim()) { dropdown.setAttribute("hidden", ""); return; }
-    try {
-      if (!pagefindModule) {
-        pagefindModule = await import("/pagefind/pagefind.js");
-        await pagefindModule.init();
+      var token = localStorage.getItem("gh_token");
+      if (!token) { showLogin(); }
+      else {
+        fetch("https://api.github.com/user", { headers: { Authorization: "Bearer " + token } })
+          .then(function(r) { return r.json(); })
+          .then(function(u) { if (u.login === OWNER) showOwner(); else { localStorage.removeItem("gh_token"); showLogin(); } })
+          .catch(function() { showLogin(); });
       }
-      const result = await pagefindModule.search(query);
-      const items = await Promise.all(result.results.slice(0, 6).map(r => r.data()));
-      renderResults(items);
-    } catch {
-      dropdown.innerHTML = `<p class="search-dropdown__empty">검색은 빌드 후 사용할 수 있어요.</p>`;
+    }
+
+    // ── 검색 ──
+    var searchInput = document.getElementById("search-input");
+    var closeBtn = document.getElementById("search-close");
+    var dropdown = document.getElementById("search-dropdown");
+    if (!searchInput || !closeBtn || !dropdown || !headerEl) return;
+
+    var debounceTimer = null;
+
+    function positionDropdown() {
+      var rect = headerEl.getBoundingClientRect();
+      dropdown.style.top = rect.bottom + "px";
+    }
+
+    function closeSearch() {
+      dropdown.setAttribute("hidden", "");
+      dropdown.innerHTML = "";
+      searchInput.value = "";
+    }
+
+    function extractExcerpt(html) {
+      if (!html) return "";
+      var m = html.match(/([^<>]{0,80})<mark>([^<]+)<\/mark>([^<>]{0,100})/);
+      if (m) {
+        var before = m[1].replace(/^[\s\S]*[.!?]\s+/, "").trimStart();
+        var after = m[3].replace(/[.!?][\s\S]*$/, "").trimEnd();
+        return before + "<mark>" + m[2] + "</mark>" + after;
+      }
+      return html.replace(/<[^>]+>/g, "").trim().slice(0, 160);
+    }
+
+    function renderResults(results) {
+      if (!results.length) {
+        dropdown.innerHTML = '<p class="search-dropdown__empty">검색 결과가 없어요.</p>';
+        dropdown.removeAttribute("hidden");
+        return;
+      }
+      dropdown.innerHTML = results.map(function(r) {
+        var title = (r.meta && r.meta.title) ? r.meta.title : r.url;
+        var excerpt = extractExcerpt(r.excerpt || "");
+        var path = r.url.replace(/^https?:\/\/[^/]+/, "").replace(/\/$/, "") || "/";
+        return '<a class="search-dropdown__item" href="' + r.url + '">'
+          + '<span class="search-dropdown__title">' + title + '</span>'
+          + (excerpt ? '<span class="search-dropdown__excerpt">' + excerpt + '</span>' : '')
+          + '<span class="search-dropdown__path">' + path + '</span>'
+          + '</a>';
+      }).join("");
       dropdown.removeAttribute("hidden");
     }
+
+    function doSearch(query) {
+      if (!query.trim()) { dropdown.setAttribute("hidden", ""); return; }
+      var pf = window.__pagefindModule;
+      var run = function(mod) {
+        mod.search(query).then(function(result) {
+          return Promise.all(result.results.slice(0, 6).map(function(r) { return r.data(); }));
+        }).then(renderResults).catch(function() {
+          dropdown.innerHTML = '<p class="search-dropdown__empty">검색은 빌드 후 사용할 수 있어요.</p>';
+          dropdown.removeAttribute("hidden");
+        });
+      };
+      if (pf) { run(pf); return; }
+      import("/pagefind/pagefind.js").then(function(mod) {
+        window.__pagefindModule = mod;
+        return mod.init().then(function() { run(mod); });
+      }).catch(function() {
+        dropdown.innerHTML = '<p class="search-dropdown__empty">검색은 빌드 후 사용할 수 있어요.</p>';
+        dropdown.removeAttribute("hidden");
+      });
+    }
+
+    closeBtn.onclick = closeSearch;
+    searchInput.oninput = function() {
+      clearTimeout(debounceTimer);
+      positionDropdown();
+      debounceTimer = setTimeout(function() { doSearch(searchInput.value); }, 50);
+    };
+    searchInput.onkeydown = function(e) { if (e.key === "Escape") closeSearch(); };
   }
 
-  closeBtn.addEventListener("click", closeSearch);
-  searchInput.addEventListener("input", () => {
-    clearTimeout(debounceTimer);
-    positionDropdown();
-    debounceTimer = setTimeout(() => doSearch(searchInput.value), 50);
-  });
-  searchInput.addEventListener("keydown", (e) => { if (e.key === "Escape") closeSearch(); });
-  document.addEventListener("click", (e) => {
-    if (!document.getElementById("header-search").contains(e.target) && !dropdown.contains(e.target)) closeSearch();
-  });
-  window.addEventListener("resize", () => { if (!dropdown.hidden) positionDropdown(); });
-  document.addEventListener("keydown", (e) => {
-    if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-      e.preventDefault();
-      searchInput.focus();
-      searchInput.select();
-      positionDropdown();
-    }
-  });
+  // 매 페이지 로드마다 재초기화
+  initHeaderFeatures();
+
+  if (!window.__headerFeaturesInit) {
+    window.__headerFeaturesInit = true;
+    document.addEventListener('astro:page-load', initHeaderFeatures);
+
+    // 검색 외부 클릭 닫기 (document 레벨 - 한번만 등록)
+    document.addEventListener("click", function(e) {
+      var hs = document.getElementById("header-search");
+      var dd = document.getElementById("search-dropdown");
+      if (hs && dd && !hs.contains(e.target) && !dd.contains(e.target)) {
+        dd.setAttribute("hidden", "");
+        dd.innerHTML = "";
+        var si = document.getElementById("search-input");
+        if (si) si.value = "";
+      }
+    });
+
+    // ⌘K 단축키 (document 레벨 - 한번만 등록)
+    document.addEventListener("keydown", function(e) {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        var si = document.getElementById("search-input");
+        var hdr = document.querySelector(".site-header");
+        var dd = document.getElementById("search-dropdown");
+        if (si) { si.focus(); si.select(); }
+        if (hdr && dd) { dd.style.top = hdr.getBoundingClientRect().bottom + "px"; }
+      }
+    });
+
+    window.addEventListener("resize", function() {
+      var dd = document.getElementById("search-dropdown");
+      var hdr = document.querySelector(".site-header");
+      if (dd && hdr && !dd.hidden) { dd.style.top = hdr.getBoundingClientRect().bottom + "px"; }
+    });
+  }
 </script>
 
 <style>
