@@ -6,31 +6,13 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 import {
   BLOG_LANGS,
   type BlogLang,
+  buildPostsPageData,
   filterPostsByLang,
-  getPublishedPosts
+  getPostsPageUrl,
+  getPublishedPosts,
+  type PaginatedPageData
 } from "../../lib/blog";
 import categories from "../../data/categories.json";
-
-function getPostsPageUrl(pageNumber: number) {
-  return pageNumber <= 1 ? "/posts/" : `/posts/${pageNumber}/`;
-}
-
-function buildPageData<T>(posts: T[], pageNumber: number, pageSize: number) {
-  const lastPage = Math.max(1, Math.ceil(posts.length / pageSize));
-  const hasPage = pageNumber <= lastPage;
-  const start = (pageNumber - 1) * pageSize;
-
-  return {
-    data: hasPage ? posts.slice(start, start + pageSize) : [],
-    currentPage: pageNumber,
-    lastPage,
-    hasPage,
-    url: {
-      prev: pageNumber > 1 ? getPostsPageUrl(Math.min(pageNumber - 1, lastPage)) : null,
-      next: pageNumber < lastPage ? getPostsPageUrl(pageNumber + 1) : null
-    }
-  };
-}
 
 export async function getStaticPaths() {
   const pageSize = 10;
@@ -60,8 +42,8 @@ export async function getStaticPaths() {
       props: {
         pageNumber,
         pages: {
-          ko: buildPageData(postsByLang.ko, pageNumber, pageSize),
-          en: buildPageData(postsByLang.en, pageNumber, pageSize)
+          ko: buildPostsPageData(postsByLang.ko, pageNumber, pageSize),
+          en: buildPostsPageData(postsByLang.en, pageNumber, pageSize)
         },
         postsByLang,
         categoryCountsByLang
@@ -71,16 +53,7 @@ export async function getStaticPaths() {
 }
 
 type PublishedPost = Awaited<ReturnType<typeof getPublishedPosts>>[number];
-type PaginatedPosts = {
-  data: PublishedPost[];
-  currentPage: number;
-  lastPage: number;
-  hasPage: boolean;
-  url: {
-    prev: string | null;
-    next: string | null;
-  };
-};
+type PaginatedPosts = PaginatedPageData<PublishedPost>;
 
 const { pageNumber, pages, postsByLang, categoryCountsByLang } = Astro.props as {
   pageNumber: number;

@@ -39,6 +39,43 @@ export function groupPostsByLang<T extends CollectionEntry<"blog">>(posts: T[]) 
   } satisfies Record<BlogLang, T[]>;
 }
 
+export function getPostsPageUrl(pageNumber: number) {
+  return pageNumber <= 1 ? "/posts/" : `/posts/${pageNumber}/`;
+}
+
+export type PaginatedPageData<T> = {
+  data: T[];
+  currentPage: number;
+  lastPage: number;
+  hasPage: boolean;
+  url: {
+    prev: string | null;
+    next: string | null;
+  };
+};
+
+// Astro isolates getStaticPaths(), so shared pagination helpers must be imported.
+export function buildPostsPageData<T>(
+  posts: T[],
+  pageNumber: number,
+  pageSize: number
+): PaginatedPageData<T> {
+  const lastPage = Math.max(1, Math.ceil(posts.length / pageSize));
+  const hasPage = pageNumber <= lastPage;
+  const start = (pageNumber - 1) * pageSize;
+
+  return {
+    data: hasPage ? posts.slice(start, start + pageSize) : [],
+    currentPage: pageNumber,
+    lastPage,
+    hasPage,
+    url: {
+      prev: pageNumber > 1 ? getPostsPageUrl(Math.min(pageNumber - 1, lastPage)) : null,
+      next: pageNumber < lastPage ? getPostsPageUrl(pageNumber + 1) : null
+    }
+  };
+}
+
 /** 번역본이 있는지 확인하고 반환 */
 export async function findTranslation(post: CollectionEntry<"blog">) {
   const posts = await getPublishedPosts();
