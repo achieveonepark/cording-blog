@@ -7,7 +7,13 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
 
 <header class="site-header" data-client-id={clientId}>
   <div class="site-header__inner shell">
-    <a href="/" class="brand-link" aria-label={`${site.title} 홈`}>
+    <a
+      href="/"
+      class="brand-link"
+      aria-label={`${site.title} 홈`}
+      data-label-ko={`${site.title} 홈`}
+      data-label-en={`${site.title} Home`}
+    >
       <strong>{site.title}</strong>
     </a>
 
@@ -20,7 +26,8 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
             : pathname.startsWith(item.href);
           return (
             <a href={item.href} aria-current={isActive ? "page" : undefined}>
-              {item.label}
+              <span data-ui-lang="ko">{item.label.ko}</span>
+              <span data-ui-lang="en">{item.label.en}</span>
             </a>
           );
         })}
@@ -35,9 +42,19 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
               placeholder="검색..."
               autocomplete="off"
               aria-label="검색어 입력"
+              data-placeholder-ko="검색..."
+              data-placeholder-en="Search..."
+              data-label-ko="검색어 입력"
+              data-label-en="Search query"
             />
             <kbd class="search-kbd" aria-hidden="true">⌘K</kbd>
-            <button id="search-close" class="header-search__close" aria-label="닫기">
+            <button
+              id="search-close"
+              class="header-search__close"
+              aria-label="닫기"
+              data-label-ko="닫기"
+              data-label-en="Close"
+            >
               <svg viewBox="0 0 24 24" aria-hidden="true" width="14" height="14">
                 <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                 <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -84,7 +101,14 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
 
         <!-- 언어 드롭다운 -->
         <div class="lang-dropdown" id="lang-dropdown">
-          <button class="lang-dropdown__btn" id="lang-btn" aria-label="언어 선택" title="언어 변경">
+          <button
+            class="lang-dropdown__btn"
+            id="lang-btn"
+            aria-label="언어 선택"
+            title="언어 변경"
+            data-label-ko="언어 변경"
+            data-label-en="Change language"
+          >
             <svg viewBox="0 0 24 24" aria-hidden="true" class="nav-icon" width="15" height="15">
               <circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="1.6"/>
               <ellipse cx="12" cy="12" rx="4" ry="9.5" fill="none" stroke="currentColor" stroke-width="1.6"/>
@@ -101,13 +125,29 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
       </div>
 
       <div class="site-nav__group site-nav__group--admin">
-        <button id="nav-login-btn" class="site-nav__icon-link" aria-label="GitHub 로그인" title="GitHub 로그인" style="display:none">
+        <button
+          id="nav-login-btn"
+          class="site-nav__icon-link"
+          aria-label="GitHub 로그인"
+          title="GitHub 로그인"
+          style="display:none"
+          data-label-ko="GitHub 로그인"
+          data-label-en="Sign in with GitHub"
+        >
           <svg viewBox="0 0 24 24" aria-hidden="true" class="nav-icon">
             <circle cx="12" cy="8" r="3.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
             <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
           </svg>
         </button>
-        <button id="nav-logout-btn" class="site-nav__icon-link" aria-label="로그아웃" title="로그아웃" style="display:none">
+        <button
+          id="nav-logout-btn"
+          class="site-nav__icon-link"
+          aria-label="로그아웃"
+          title="로그아웃"
+          style="display:none"
+          data-label-ko="로그아웃"
+          data-label-en="Sign out"
+        >
           <svg viewBox="0 0 24 24" aria-hidden="true" class="nav-icon">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
             <polyline points="16 17 21 12 16 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
@@ -118,7 +158,14 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
     </nav>
 
     <!-- 모바일 햄버거 버튼 -->
-    <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="메뉴 열기" aria-expanded="false">
+    <button
+      id="mobile-menu-btn"
+      class="mobile-menu-btn"
+      aria-label="메뉴 열기"
+      aria-expanded="false"
+      data-label-ko="메뉴 열기"
+      data-label-en="Open menu"
+    >
       <span class="burger-line"></span>
       <span class="burger-line"></span>
       <span class="burger-line"></span>
@@ -127,7 +174,7 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
 </header>
 
 <!-- 모바일 전용 nav (header 외부) -->
-<div id="mobile-nav" aria-label="모바일 메뉴">
+<div id="mobile-nav" aria-label="모바일 메뉴" data-label-ko="모바일 메뉴" data-label-en="Mobile menu">
   <nav class="mobile-nav__links">
     {navigation.map((item) => {
       const isActive = item.href === "/"
@@ -135,7 +182,8 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
         : pathname.startsWith(item.href);
       return (
         <a href={item.href} aria-current={isActive ? "page" : undefined}>
-          {item.label}
+          <span data-ui-lang="ko">{item.label.ko}</span>
+          <span data-ui-lang="en">{item.label.en}</span>
         </a>
       );
     })}
@@ -182,10 +230,74 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
 <div id="mobile-overlay"></div>
 
 <!-- 검색 결과 드롭다운 -->
-<div id="search-dropdown" class="search-dropdown" hidden role="listbox" aria-label="검색 결과"></div>
+<div
+  id="search-dropdown"
+  class="search-dropdown"
+  hidden
+  role="listbox"
+  aria-label="검색 결과"
+  data-label-ko="검색 결과"
+  data-label-en="Search results"
+></div>
 
 <!-- 햄버거 + 언어 드롭다운 JS -->
 <script is:inline>
+  function getUiLang() {
+    return localStorage.getItem('blog_lang') === 'en' ? 'en' : 'ko';
+  }
+
+  function syncHeaderUi(lang) {
+    document.documentElement.dataset.blogLang = lang;
+    document.documentElement.lang = lang;
+
+    var label = document.getElementById('lang-label');
+    if (label) label.textContent = lang.toUpperCase();
+
+    document.querySelectorAll('.lang-select-btn').forEach(function(b) {
+      b.classList.toggle('lang-select-btn--active', b.dataset.lang === lang);
+    });
+
+    var brandLink = document.querySelector('.brand-link');
+    if (brandLink instanceof HTMLElement) {
+      var brandLabel = brandLink.getAttribute('data-label-' + lang);
+      if (brandLabel) brandLink.setAttribute('aria-label', brandLabel);
+    }
+
+    var searchInput = document.getElementById('search-input');
+    if (searchInput instanceof HTMLInputElement) {
+      var placeholder = searchInput.getAttribute('data-placeholder-' + lang);
+      var inputLabel = searchInput.getAttribute('data-label-' + lang);
+      if (placeholder) searchInput.placeholder = placeholder;
+      if (inputLabel) searchInput.setAttribute('aria-label', inputLabel);
+    }
+
+    document.querySelectorAll('[data-label-ko][data-label-en]').forEach(function(el) {
+      if (!(el instanceof HTMLElement)) return;
+      var localizedLabel = el.getAttribute('data-label-' + lang);
+      if (!localizedLabel) return;
+      if (el.id !== 'search-input') {
+        el.setAttribute('aria-label', localizedLabel);
+      }
+      if (el.hasAttribute('title')) {
+        el.setAttribute('title', localizedLabel);
+      }
+    });
+
+    var mobileNav = document.getElementById('mobile-nav');
+    if (mobileNav instanceof HTMLElement) {
+      var mobileNavLabel = mobileNav.getAttribute('data-label-' + lang);
+      if (mobileNavLabel) mobileNav.setAttribute('aria-label', mobileNavLabel);
+    }
+
+    var searchDropdown = document.getElementById('search-dropdown');
+    if (searchDropdown instanceof HTMLElement) {
+      var searchDropdownLabel = searchDropdown.getAttribute('data-label-' + lang);
+      if (searchDropdownLabel) searchDropdown.setAttribute('aria-label', searchDropdownLabel);
+    }
+
+    document.dispatchEvent(new CustomEvent('blog-language-sync', { detail: { lang: lang } }));
+  }
+
   if (!window.__navInit) {
     window.__navInit = true;
 
@@ -254,25 +366,14 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
 
   // 페이지 로드마다 언어 라벨 + html data-blog-lang 동기화
   (function syncLang() {
-    var lang = localStorage.getItem('blog_lang') || 'ko';
-    document.documentElement.dataset.blogLang = lang;
-    var label = document.getElementById('lang-label');
-    if (label) label.textContent = lang.toUpperCase();
-    document.querySelectorAll('.lang-select-btn').forEach(function(b) {
-      b.classList.toggle('lang-select-btn--active', b.dataset.lang === lang);
-    });
+    syncHeaderUi(getUiLang());
   })();
 
   // astro:page-load 이후 lang 라벨 UI 동기화 (html[data-blog-lang]은 BaseLayout astro:after-swap에서 처리)
   if (!window.__langLabelInit) {
     window.__langLabelInit = true;
     document.addEventListener('astro:page-load', function() {
-      var lang = localStorage.getItem('blog_lang') || 'ko';
-      var label = document.getElementById('lang-label');
-      if (label) label.textContent = lang.toUpperCase();
-      document.querySelectorAll('.lang-select-btn').forEach(function(b) {
-        b.classList.toggle('lang-select-btn--active', b.dataset.lang === lang);
-      });
+      syncHeaderUi(getUiLang());
     });
   }
 </script>
@@ -281,6 +382,16 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
   // ── 검색 + 인증: View Transitions 호환 ──
   // pagefind 모듈은 전역에 캐시 (재 import 불필요)
   if (!window.__pagefindModule) window.__pagefindModule = null;
+  var searchUiCopy = {
+    ko: {
+      noResults: "검색 결과가 없어요.",
+      buildRequired: "검색은 빌드 후 사용할 수 있어요."
+    },
+    en: {
+      noResults: "No search results found.",
+      buildRequired: "Search is available after running a build."
+    }
+  };
 
   function initHeaderFeatures() {
     var OWNER = "achieveonepark";
@@ -355,8 +466,9 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
     }
 
     function renderResults(results) {
+      var lang = document.documentElement.dataset.blogLang === 'en' ? 'en' : 'ko';
       if (!results.length) {
-        dropdown.innerHTML = '<p class="search-dropdown__empty">검색 결과가 없어요.</p>';
+        dropdown.innerHTML = '<p class="search-dropdown__empty">' + searchUiCopy[lang].noResults + '</p>';
         dropdown.removeAttribute("hidden");
         return;
       }
@@ -379,7 +491,7 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
         mod.search(query, { filters: { lang: [currentLang] } }).then(function(result) {
           return Promise.all(result.results.slice(0, 6).map(function(r) { return r.data(); }));
         }).then(renderResults).catch(function() {
-          dropdown.innerHTML = '<p class="search-dropdown__empty">검색은 빌드 후 사용할 수 있어요.</p>';
+          dropdown.innerHTML = '<p class="search-dropdown__empty">' + searchUiCopy[currentLang].buildRequired + '</p>';
           dropdown.removeAttribute("hidden");
         });
       };
@@ -388,7 +500,7 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
         window.__pagefindModule = mod;
         return mod.init().then(function() { run(mod); });
       }).catch(function() {
-        dropdown.innerHTML = '<p class="search-dropdown__empty">검색은 빌드 후 사용할 수 있어요.</p>';
+        dropdown.innerHTML = '<p class="search-dropdown__empty">' + searchUiCopy[currentLang].buildRequired + '</p>';
         dropdown.removeAttribute("hidden");
       });
     }

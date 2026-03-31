@@ -3,79 +3,170 @@ import Footer from "../../components/Footer.astro";
 import Header from "../../components/Header.astro";
 import PostCard from "../../components/PostCard.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import { getPublishedPosts } from "../../lib/blog";
+import {
+  BLOG_LANGS,
+  type BlogLang,
+  filterPostsByLang,
+  getPublishedPosts
+} from "../../lib/blog";
 import categories from "../../data/categories.json";
 
-export async function getStaticPaths({ paginate }: { paginate: Function }) {
-  const posts = await getPublishedPosts();
-  return paginate(posts, { pageSize: 10 });
+const PAGE_SIZE = 10;
+
+function getPostsPageUrl(pageNumber: number) {
+  return pageNumber <= 1 ? "/posts/" : `/posts/${pageNumber}/`;
 }
 
-const { page } = Astro.props as { page: any };
-const posts = page.data;
-const allPosts = await getPublishedPosts();
+function buildPageData<T>(posts: T[], pageNumber: number) {
+  const lastPage = Math.max(1, Math.ceil(posts.length / PAGE_SIZE));
+  const hasPage = pageNumber <= lastPage;
+  const start = (pageNumber - 1) * PAGE_SIZE;
 
-const categoryCounts = categories.reduce<Record<string, number>>((acc, cat) => {
-  acc[cat] = allPosts.filter((p) => p.data.category === cat).length;
-  return acc;
-}, {});
+  return {
+    data: hasPage ? posts.slice(start, start + PAGE_SIZE) : [],
+    currentPage: pageNumber,
+    lastPage,
+    hasPage,
+    url: {
+      prev: pageNumber > 1 ? getPostsPageUrl(Math.min(pageNumber - 1, lastPage)) : null,
+      next: pageNumber < lastPage ? getPostsPageUrl(pageNumber + 1) : null
+    }
+  };
+}
+
+export async function getStaticPaths() {
+  const allPosts = await getPublishedPosts();
+  const postsByLang = {
+    ko: filterPostsByLang(allPosts, "ko"),
+    en: filterPostsByLang(allPosts, "en")
+  };
+
+  const maxPages = Math.max(
+    ...BLOG_LANGS.map((lang) => Math.max(1, Math.ceil(postsByLang[lang].length / PAGE_SIZE)))
+  );
+
+  const categoryCountsByLang = BLOG_LANGS.reduce((acc, lang) => {
+    acc[lang] = categories.reduce<Record<string, number>>((counts, category) => {
+      counts[category] = postsByLang[lang].filter((post) => post.data.category === category).length;
+      return counts;
+    }, {});
+    return acc;
+  }, {} as Record<BlogLang, Record<string, number>>);
+
+  return Array.from({ length: maxPages }, (_, index) => {
+    const pageNumber = index + 1;
+
+    return {
+      params: { page: pageNumber === 1 ? undefined : String(pageNumber) },
+      props: {
+        pageNumber,
+        pages: {
+          ko: buildPageData(postsByLang.ko, pageNumber),
+          en: buildPageData(postsByLang.en, pageNumber)
+        },
+        postsByLang,
+        categoryCountsByLang
+      }
+    };
+  });
+}
+
+type PublishedPost = Awaited<ReturnType<typeof getPublishedPosts>>[number];
+type PaginatedPosts = {
+  data: PublishedPost[];
+  currentPage: number;
+  lastPage: number;
+  hasPage: boolean;
+  url: {
+    prev: string | null;
+    next: string | null;
+  };
+};
+
+const { pageNumber, pages, postsByLang, categoryCountsByLang } = Astro.props as {
+  pageNumber: number;
+  pages: Record<BlogLang, PaginatedPosts>;
+  postsByLang: Record<BlogLang, Awaited<ReturnType<typeof getPublishedPosts>>>;
+  categoryCountsByLang: Record<BlogLang, Record<string, number>>;
+};
 ---
 
-<BaseLayout title={page.currentPage === 1 ? "모든 글" : `모든 글 — ${page.currentPage}페이지`} description="Somiri 블로그의 전체 글 목록입니다.">
+<BaseLayout title="Posts" description="A complete list of Somiri blog posts.">
   <Header />
 
   <main class="shell app-shell">
     <section class="app-panel">
-      <div class="section-heading">
-        <p class="eyebrow">Archive</p>
-        <h1>모든 로그</h1>
-        <p>저장된 글을 시간순으로 훑을 수 있는 전체 스트림입니다.</p>
-      </div>
+      {BLOG_LANGS.map((lang) => {
+        const page = pages[lang];
+        const currentPosts = page.data;
+        const allPosts = postsByLang[lang];
 
-      <div class="category-filter" role="group" aria-label="카테고리 필터">
-        <button class="cat-btn cat-btn--active" data-cat="">
-          전체 <span class="cat-count">{allPosts.length}</span>
-        </button>
-        {categories.map((cat) => (
-          <button class="cat-btn" data-cat={cat}>
-            {cat}
-            {categoryCounts[cat] > 0 && <span class="cat-count">{categoryCounts[cat]}</span>}
-          </button>
-        ))}
-      </div>
+        return (
+          <div data-ui-lang={lang} data-posts-page>
+            <div class="section-heading">
+              <p class="eyebrow">{lang === "en" ? "Posts" : "글"}</p>
+              <h1>{lang === "en" ? "All Posts" : "모든 글"}</h1>
+              <p>
+                {lang === "en"
+                  ? "A chronological stream of every published entry."
+                  : "저장된 글을 시간순으로 훑을 수 있는 전체 스트림입니다."}
+              </p>
+            </div>
 
-      <div class="post-stack" id="post-stack">
-        {posts.map((post: any) => <PostCard post={post} />)}
-      </div>
+            <div class="category-filter" data-category-filter role="group" aria-label={lang === "en" ? "Category filter" : "카테고리 필터"}>
+              <button class="cat-btn cat-btn--active" data-cat="">
+                {lang === "en" ? "All" : "전체"} <span class="cat-count">{allPosts.length}</span>
+              </button>
+              {categories.map((category) => (
+                <button class="cat-btn" data-cat={category}>
+                  {category}
+                  {categoryCountsByLang[lang][category] > 0 && (
+                    <span class="cat-count">{categoryCountsByLang[lang][category]}</span>
+                  )}
+                </button>
+              ))}
+            </div>
 
-      <!-- 페이지네이션 -->
-      {page.lastPage > 1 && (
-        <nav class="pagination" aria-label="페이지 네비게이션">
-          {page.url.prev ? (
-            <a href={page.url.prev} class="pagination__btn">← 이전</a>
-          ) : (
-            <span class="pagination__btn pagination__btn--disabled">← 이전</span>
-          )}
+            {page.hasPage ? (
+              <div class="post-stack" data-post-stack>
+                {currentPosts.map((post) => <PostCard post={post} />)}
+              </div>
+            ) : (
+              <p class="empty">
+                {lang === "en" ? "No posts are available on this page." : "이 페이지에는 표시할 글이 없습니다."}
+              </p>
+            )}
 
-          <div class="pagination__pages">
-            {Array.from({ length: page.lastPage }, (_, i) => i + 1).map((num) => (
-              <a
-                href={num === 1 ? "/posts/" : `/posts/${num}/`}
-                class:list={["pagination__page", { "pagination__page--current": num === page.currentPage }]}
-                aria-current={num === page.currentPage ? "page" : undefined}
-              >
-                {num}
-              </a>
-            ))}
+            {page.lastPage > 1 && (
+              <nav class="pagination" aria-label={lang === "en" ? "Pagination" : "페이지 네비게이션"}>
+                {page.url.prev ? (
+                  <a href={page.url.prev} class="pagination__btn">{lang === "en" ? "← Prev" : "← 이전"}</a>
+                ) : (
+                  <span class="pagination__btn pagination__btn--disabled">{lang === "en" ? "← Prev" : "← 이전"}</span>
+                )}
+
+                <div class="pagination__pages">
+                  {Array.from({ length: page.lastPage }, (_, index) => index + 1).map((num) => (
+                    <a
+                      href={getPostsPageUrl(num)}
+                      class:list={["pagination__page", { "pagination__page--current": num === pageNumber }]}
+                      aria-current={num === pageNumber ? "page" : undefined}
+                    >
+                      {num}
+                    </a>
+                  ))}
+                </div>
+
+                {page.url.next ? (
+                  <a href={page.url.next} class="pagination__btn">{lang === "en" ? "Next →" : "다음 →"}</a>
+                ) : (
+                  <span class="pagination__btn pagination__btn--disabled">{lang === "en" ? "Next →" : "다음 →"}</span>
+                )}
+              </nav>
+            )}
           </div>
-
-          {page.url.next ? (
-            <a href={page.url.next} class="pagination__btn">다음 →</a>
-          ) : (
-            <span class="pagination__btn pagination__btn--disabled">다음 →</span>
-          )}
-        </nav>
-      )}
+        );
+      })}
     </section>
   </main>
 
@@ -89,12 +180,14 @@ const categoryCounts = categories.reduce<Record<string, number>>((acc, cat) => {
       var btn = e.target.closest('.cat-btn');
       if (!btn) return;
 
-      var group = btn.closest('.category-filter');
-      if (!group) return;
+      var pageSection = btn.closest('[data-posts-page]');
+      if (!pageSection) return;
+
+      var group = pageSection.querySelector('[data-category-filter]');
+      var stack = pageSection.querySelector('[data-post-stack]');
+      if (!group || !stack) return;
 
       var btns = group.querySelectorAll('.cat-btn');
-      var stack = document.getElementById('post-stack');
-      if (!stack) return;
       var cards = stack.querySelectorAll('.post-card');
 
       btns.forEach(function(b) { b.classList.remove('cat-btn--active'); });
@@ -163,7 +256,12 @@ const categoryCounts = categories.reduce<Record<string, number>>((acc, cat) => {
     color: var(--accent);
   }
 
-  /* ── 페이지네이션 ─────────────────────────────────── */
+  .empty {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin: 0;
+  }
+
   .pagination {
     display: flex;
     align-items: center;

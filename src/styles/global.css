@@ -4,6 +4,8 @@
 /* ── 언어별 포스트 카드 필터 (CSS 기반 — JS 타이밍 문제 없음) ─ */
 [data-blog-lang="ko"] .post-card[data-lang="en"] { display: none !important; }
 [data-blog-lang="en"] .post-card[data-lang="ko"] { display: none !important; }
+[data-blog-lang="ko"] [data-ui-lang="en"] { display: none !important; }
+[data-blog-lang="en"] [data-ui-lang="ko"] { display: none !important; }
 
 :root,
 [data-theme="dark"] {

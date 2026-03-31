@@ -3,7 +3,11 @@ import Footer from "../../components/Footer.astro";
 import Header from "../../components/Header.astro";
 import PostCard from "../../components/PostCard.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import { getPublishedPosts } from "../../lib/blog";
+import {
+  BLOG_LANGS,
+  groupPostsByLang,
+  getPublishedPosts
+} from "../../lib/blog";
 
 export async function getStaticPaths() {
   const posts = await getPublishedPosts();
@@ -28,24 +32,39 @@ interface Props {
 }
 
 const { tag, tagPosts } = Astro.props;
+const tagPostsByLang = groupPostsByLang(tagPosts);
 ---
 
-<BaseLayout title={`#${tag}`} description={`"${tag}" 태그가 달린 글 목록입니다.`}>
+<BaseLayout title={`#${tag}`} description={`Posts tagged with ${tag}.`}>
   <Header />
 
   <main class="shell app-shell">
     <section class="app-panel">
-      <div class="section-heading">
-        <p class="eyebrow">Tag</p>
-        <h1>#{tag}</h1>
-        <p>{tagPosts.length}개의 글</p>
-      </div>
+      {BLOG_LANGS.map((lang) => {
+        const posts = tagPostsByLang[lang];
 
-      <a href="/tags/" class="back-link">← 모든 태그</a>
+        return (
+          <div data-ui-lang={lang}>
+            <div class="section-heading">
+              <p class="eyebrow">{lang === "en" ? "Tag" : "태그"}</p>
+              <h1>#{tag}</h1>
+              <p>{lang === "en" ? `${posts.length} posts` : `${posts.length}개의 글`}</p>
+            </div>
 
-      <div class="post-stack">
-        {tagPosts.map((post) => <PostCard post={post} />)}
-      </div>
+            <a href="/tags/" class="back-link">
+              {lang === "en" ? "← All tags" : "← 모든 태그"}
+            </a>
+
+            {posts.length === 0 ? (
+              <p class="empty">{lang === "en" ? "No posts for this tag yet." : "이 태그에 해당하는 글이 아직 없습니다."}</p>
+            ) : (
+              <div class="post-stack">
+                {posts.map((post) => <PostCard post={post} />)}
+              </div>
+            )}
+          </div>
+        );
+      })}
     </section>
   </main>
 
@@ -72,5 +91,11 @@ const { tag, tagPosts } = Astro.props;
   .back-link:hover {
     border-color: var(--accent);
     transform: translateX(-2px);
+  }
+
+  .empty {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin: 0;
   }
 </style>

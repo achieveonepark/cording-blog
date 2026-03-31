@@ -7,11 +7,11 @@ export const site = {
 } as const;
 
 export const navigation = [
-  { href: "/", label: "Home" },
-  { href: "/posts", label: "Post" },
-  { href: "/tags", label: "Tags" },
-  { href: "/archive", label: "Archive" },
-  { href: "/about", label: "About" },
+  { href: "/", label: { ko: "홈", en: "Home" } },
+  { href: "/posts", label: { ko: "글", en: "Posts" } },
+  { href: "/tags", label: { ko: "태그", en: "Tags" } },
+  { href: "/archive", label: { ko: "아카이브", en: "Archive" } },
+  { href: "/about", label: { ko: "소개", en: "About" } },
 ] as const;
 
 export const externalLinks = [

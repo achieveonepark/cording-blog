@@ -4,15 +4,24 @@ import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
 ---
 
-<BaseLayout title="검색" description="블로그 글을 검색합니다.">
+<BaseLayout title="Search" description="Search blog posts.">
   <Header />
 
   <main class="shell app-shell">
     <section class="app-panel">
       <div class="section-heading">
-        <p class="eyebrow">Search</p>
-        <h1>검색</h1>
-        <p>제목, 내용, 태그로 글을 검색할 수 있어요.</p>
+        <p class="eyebrow">
+          <span data-ui-lang="ko">검색</span>
+          <span data-ui-lang="en">Search</span>
+        </p>
+        <h1>
+          <span data-ui-lang="ko">검색</span>
+          <span data-ui-lang="en">Search</span>
+        </h1>
+        <p>
+          <span data-ui-lang="ko">제목, 내용, 태그로 글을 검색할 수 있어요.</span>
+          <span data-ui-lang="en">Search posts by title, content, and tags.</span>
+        </p>
       </div>
 
       <div id="search" class="search-wrap"></div>
@@ -22,27 +31,53 @@ import Footer from "../components/Footer.astro";
   <Footer />
 </BaseLayout>
 
-<!-- Pagefind UI: /pagefind/ 는 빌드 후 생성됩니다 -->
 <link href="/pagefind/pagefind-ui.css" rel="stylesheet" />
 <script src="/pagefind/pagefind-ui.js" is:inline></script>
 <script is:inline>
-  window.addEventListener("DOMContentLoaded", () => {
+  var searchPageCopy = {
+    ko: {
+      buildRequired: '검색은 빌드 후 사용할 수 있어요. (<code>npm run build</code>)',
+      placeholder: '검색어를 입력하세요...',
+      zeroResults: '검색 결과가 없어요.'
+    },
+    en: {
+      buildRequired: 'Search is available after running a build. (<code>npm run build</code>)',
+      placeholder: 'Type a search term...',
+      zeroResults: 'No search results found.'
+    }
+  };
+
+  function initSearchPage() {
+    var mount = document.getElementById("search");
+    if (!mount) return;
+
+    var lang = document.documentElement.dataset.blogLang === "en" ? "en" : "ko";
+    var copy = searchPageCopy[lang];
+
     if (typeof PagefindUI === "undefined") {
-      document.getElementById("search").innerHTML =
-        '<p style="color:rgba(150,180,150,0.6);font-size:0.85rem;">검색은 빌드 후 사용할 수 있어요. (<code>npm run build</code>)</p>';
+      mount.innerHTML =
+        '<p style="color:rgba(150,180,150,0.6);font-size:0.85rem;">' + copy.buildRequired + '</p>';
       return;
     }
+
+    mount.innerHTML = "";
     new PagefindUI({
       element: "#search",
       showImages: false,
       showEmptyFilters: false,
       resetStyles: false,
+      filters: {
+        lang: [lang]
+      },
       translations: {
-        placeholder: "검색어를 입력하세요...",
-        zero_results: "검색 결과가 없어요.",
+        placeholder: copy.placeholder,
+        zero_results: copy.zeroResults,
       },
     });
-  });
+  }
+
+  initSearchPage();
+  document.addEventListener("astro:page-load", initSearchPage);
 </script>
 
 <style is:global>

@@ -1,6 +1,6 @@
 ---
 import type { CollectionEntry } from "astro:content";
-import { formatDate } from "../lib/blog";
+import { formatDate, getPostLang } from "../lib/blog";
 
 interface Props {
   currentPost: CollectionEntry<"blog">;
@@ -8,6 +8,7 @@ interface Props {
 }
 
 const { currentPost, allPosts } = Astro.props;
+const currentLang = getPostLang(currentPost);
 
 if (!currentPost.data.series) return;
 
@@ -22,9 +23,9 @@ const prev = currentIndex > 0 ? seriesPosts[currentIndex - 1] : null;
 const next = currentIndex < seriesPosts.length - 1 ? seriesPosts[currentIndex + 1] : null;
 ---
 
-<nav class="series-nav" aria-label="시리즈 네비게이션">
+<nav class="series-nav" aria-label={currentLang === "en" ? "Series navigation" : "시리즈 네비게이션"}>
   <div class="series-nav__header">
-    <span class="series-nav__label">시리즈</span>
+    <span class="series-nav__label">{currentLang === "en" ? "Series" : "시리즈"}</span>
     <a href={`/series/${encodeURIComponent(currentPost.data.series)}/`} class="series-nav__name">
       {currentPost.data.series}
       <span class="series-nav__count">{currentIndex + 1} / {seriesPosts.length}</span>
@@ -34,13 +35,13 @@ const next = currentIndex < seriesPosts.length - 1 ? seriesPosts[currentIndex + 
   <div class="series-nav__links">
     {prev && (
       <a href={`/posts/${prev.id}/`} class="series-nav__item series-nav__item--prev">
-        <span class="series-nav__dir">← 이전 편</span>
+        <span class="series-nav__dir">{currentLang === "en" ? "← Previous" : "← 이전 편"}</span>
         <span class="series-nav__title">{prev.data.title}</span>
       </a>
     )}
     {next && (
       <a href={`/posts/${next.id}/`} class="series-nav__item series-nav__item--next">
-        <span class="series-nav__dir">다음 편 →</span>
+        <span class="series-nav__dir">{currentLang === "en" ? "Next →" : "다음 편 →"}</span>
         <span class="series-nav__title">{next.data.title}</span>
       </a>
     )}
