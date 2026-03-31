@@ -20,9 +20,9 @@ const lang = getPostLang(post);
 
   <div class="post-card__body">
     <div class="post-card__meta">
-      <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
+      <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate, lang)}</time>
       <span class="post-card__sep" aria-hidden="true">/</span>
-      <span>{getReadingTime(post)}</span>
+      <span>{getReadingTime(post, lang)}</span>
       {post.data.category && <span class="post-category">{post.data.category}</span>}
     </div>
 
@@ -33,7 +33,7 @@ const lang = getPostLang(post);
     {post.data.description && <p>{post.data.description}</p>}
 
     {post.data.tags.length > 0 && (
-      <ul class="tag-list" aria-label="Post tags">
+      <ul class="tag-list" aria-label={lang === "en" ? "Post tags" : "글 태그"}>
         {post.data.tags.map((tag) => <li>{tag}</li>)}
       </ul>
     )}

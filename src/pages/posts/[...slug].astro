@@ -45,25 +45,27 @@ const postUrl = `${Astro.site?.toString().replace(/\/$/, "") ?? "https://blog.so
         <aside class="toc-col">
           <div class="toc-sticky">
             <p class="toc-post-title">{post.data.title}</p>
-            <TOC headings={headings} />
+            <TOC headings={headings} lang={currentLang} />
           </div>
         </aside>
       )}
 
       <!-- 본문 -->
-      <article class="app-panel article" data-pagefind-body data-pagefind-meta={`title:${post.data.title}`} data-pagefind-filter={`lang:${currentLang}`} data-post-slug={post.id}>
-        <a class="back-link" href="/posts" data-pagefind-ignore>모든 글로 돌아가기</a>
+      <article class="app-panel article" data-pagefind-body data-pagefind-meta={`title:${post.data.title}`} data-pagefind-filter={`lang:${currentLang}`} data-post-slug={post.id} data-post-lang={currentLang}>
+        <a class="back-link" href="/posts" data-pagefind-ignore>
+          {currentLang === "en" ? "Back to all posts" : "모든 글로 돌아가기"}
+        </a>
 
         <header class="article__header">
           <div class="panel-heading" data-pagefind-ignore>
-            <p class="eyebrow">Post</p>
+            <p class="eyebrow">{currentLang === "en" ? "Post" : "글"}</p>
           </div>
           <h1>{post.data.title}</h1>
           <p data-pagefind-meta="description">{post.data.description}</p>
 
           <div class="article__meta" data-pagefind-ignore>
-            <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
-            <span>{getReadingTime(post)}</span>
+            <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate, currentLang)}</time>
+            <span>{getReadingTime(post, currentLang)}</span>
             {post.data.category && <span class="article-category">{post.data.category}</span>}
             {translation && (
               <a
@@ -71,13 +73,13 @@ const postUrl = `${Astro.site?.toString().replace(/\/$/, "") ?? "https://blog.so
                 class="lang-switch-link"
                 data-target-lang={currentLang === "ko" ? "en" : "ko"}
               >
-                {currentLang === "ko" ? "Read in English" : "한국어로 읽기"}
+                {currentLang === "ko" ? "영어로 읽기" : "Read in Korean"}
               </a>
             )}
           </div>
 
           {post.data.tags.length > 0 && (
-            <ul class="tag-list" aria-label="Post tags" data-pagefind-ignore>
+            <ul class="tag-list" aria-label={currentLang === "en" ? "Post tags" : "글 태그"} data-pagefind-ignore>
               {post.data.tags.map((tag) => <li>{tag}</li>)}
             </ul>
           )}
@@ -90,8 +92,8 @@ const postUrl = `${Astro.site?.toString().replace(/\/$/, "") ?? "https://blog.so
         <!-- 모바일용 목차 (인라인) -->
         {headings.length > 0 && (
           <details class="toc-mobile" data-pagefind-ignore>
-            <summary>목차</summary>
-            <TOC headings={headings} />
+            <summary>{currentLang === "en" ? "Contents" : "목차"}</summary>
+            <TOC headings={headings} lang={currentLang} />
           </details>
         )}
 
@@ -101,7 +103,7 @@ const postUrl = `${Astro.site?.toString().replace(/\/$/, "") ?? "https://blog.so
 
         <!-- 공유 버튼 -->
         <div data-pagefind-ignore>
-          <ShareButtons title={post.data.title} url={postUrl} image={post.data.thumbnail ?? ""} />
+          <ShareButtons title={post.data.title} url={postUrl} image={post.data.thumbnail ?? ""} lang={currentLang} />
         </div>
 
         <!-- 댓글 -->
@@ -111,8 +113,8 @@ const postUrl = `${Astro.site?.toString().replace(/\/$/, "") ?? "https://blog.so
 
         <!-- 어드민 바 -->
         <div id="post-admin-bar" style="display:none" data-pagefind-ignore>
-          <a href={`/admin/new-post?edit=${post.id}`} class="post-admin-btn">수정</a>
-          <button id="post-delete-btn" class="post-admin-btn post-admin-btn--danger">삭제</button>
+          <a href={`/admin/new-post?edit=${post.id}`} class="post-admin-btn">{currentLang === "en" ? "Edit" : "수정"}</a>
+          <button id="post-delete-btn" class="post-admin-btn post-admin-btn--danger">{currentLang === "en" ? "Delete" : "삭제"}</button>
         </div>
       </article>
 
@@ -134,6 +136,7 @@ const postUrl = `${Astro.site?.toString().replace(/\/$/, "") ?? "https://blog.so
     if (!article) { lastSlug = ""; return; }
 
     const postSlug = article.dataset.postSlug ?? "";
+    const postLang = article.dataset.postLang === "en" ? "en" : "ko";
 
     // 같은 페이지 중복 실행 방지
     if (postSlug && postSlug === lastSlug) return;
@@ -164,7 +167,10 @@ const postUrl = `${Astro.site?.toString().replace(/\/$/, "") ?? "https://blog.so
     }
 
     deleteBtn?.addEventListener("click", async () => {
-      if (!confirm(`"${postSlug}" 포스트를 삭제할까요? 되돌릴 수 없어요.`)) return;
+      const deleteMessage = postLang === "en"
+        ? `Delete "${postSlug}"? This cannot be undone.`
+        : `"${postSlug}" 포스트를 삭제할까요? 되돌릴 수 없어요.`;
+      if (!confirm(deleteMessage)) return;
       const path = `src/content/blog/${postSlug}.md`;
       const fileRes = await fetch(
         `https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}?ref=${BRANCH}`,

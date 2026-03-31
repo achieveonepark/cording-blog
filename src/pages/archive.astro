@@ -2,70 +2,104 @@
 import Footer from "../components/Footer.astro";
 import Header from "../components/Header.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
-import { formatDate, getPublishedPosts } from "../lib/blog";
+import {
+  BLOG_LANGS,
+  type BlogLang,
+  filterPostsByLang,
+  formatDate,
+  getPublishedPosts
+} from "../lib/blog";
 
 const posts = await getPublishedPosts();
 
-// 연도/월별 그루핑
-const archiveMap = new Map<number, Map<number, typeof posts>>();
+function buildArchive(postsByLang: Awaited<ReturnType<typeof getPublishedPosts>>) {
+  const archiveMap = new Map<number, Map<number, typeof postsByLang>>();
 
-for (const post of posts) {
-  const year = post.data.pubDate.getFullYear();
-  const month = post.data.pubDate.getMonth() + 1;
+  for (const post of postsByLang) {
+    const year = post.data.pubDate.getFullYear();
+    const month = post.data.pubDate.getMonth() + 1;
 
-  if (!archiveMap.has(year)) archiveMap.set(year, new Map());
-  const yearMap = archiveMap.get(year)!;
+    if (!archiveMap.has(year)) archiveMap.set(year, new Map());
+    const yearMap = archiveMap.get(year)!;
 
-  if (!yearMap.has(month)) yearMap.set(month, []);
-  yearMap.get(month)!.push(post);
+    if (!yearMap.has(month)) yearMap.set(month, []);
+    yearMap.get(month)!.push(post);
+  }
+
+  return {
+    archiveMap,
+    years: [...archiveMap.keys()].sort((a, b) => b - a)
+  };
 }
 
-const years = [...archiveMap.keys()].sort((a, b) => b - a);
+const postsByLang = {
+  ko: filterPostsByLang(posts, "ko"),
+  en: filterPostsByLang(posts, "en")
+};
 
-const MONTH_NAMES = [
-  "", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-];
+const archiveByLang = BLOG_LANGS.reduce((acc, lang) => {
+  acc[lang] = buildArchive(postsByLang[lang]);
+  return acc;
+}, {} as Record<BlogLang, ReturnType<typeof buildArchive>>);
+
+const monthNames = {
+  ko: ["", "1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"],
+  en: ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+} satisfies Record<BlogLang, string[]>;
 ---
 
-<BaseLayout title="아카이브" description="월별 포스트 아카이브입니다.">
+<BaseLayout title="Archive" description="Monthly post archives.">
   <Header />
 
   <main class="shell app-shell">
     <section class="app-panel">
-      <div class="section-heading">
-        <p class="eyebrow">Archive</p>
-        <h1>월별 아카이브</h1>
-        <p>총 {posts.length}개의 글 / {years.length}개 연도</p>
-      </div>
+      {BLOG_LANGS.map((lang) => {
+        const langPosts = postsByLang[lang];
+        const { archiveMap, years } = archiveByLang[lang];
 
-      {years.map((year) => {
-        const yearMap = archiveMap.get(year)!;
-        const months = [...yearMap.keys()].sort((a, b) => b - a);
         return (
-          <div class="year-block">
-            <h2 class="year-label">{year}</h2>
-            {months.map((month) => {
-              const monthPosts = yearMap.get(month)!;
+          <div data-ui-lang={lang}>
+            <div class="section-heading">
+              <p class="eyebrow">{lang === "en" ? "Archive" : "아카이브"}</p>
+              <h1>{lang === "en" ? "Monthly Archive" : "월별 아카이브"}</h1>
+              <p>
+                {lang === "en"
+                  ? `${langPosts.length} posts across ${years.length} years`
+                  : `총 ${langPosts.length}개의 글 / ${years.length}개 연도`}
+              </p>
+            </div>
+
+            {years.map((year) => {
+              const yearMap = archiveMap.get(year)!;
+              const months = [...yearMap.keys()].sort((a, b) => b - a);
+
               return (
-                <div class="month-block">
-                  <h3 class="month-label">
-                    <span class="month-name">{MONTH_NAMES[month]}</span>
-                    <span class="month-count">{monthPosts.length}</span>
-                  </h3>
-                  <ul class="archive-posts">
-                    {monthPosts.map((post) => (
-                      <li class="archive-post">
-                        <time class="archive-post__date">{formatDate(post.data.pubDate)}</time>
-                        <a href={`/posts/${post.id}/`} class="archive-post__title">
-                          {post.data.title}
-                        </a>
-                        {post.data.category && (
-                          <span class="archive-post__cat">{post.data.category}</span>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
+                <div class="year-block">
+                  <h2 class="year-label">{year}</h2>
+                  {months.map((month) => {
+                    const monthPosts = yearMap.get(month)!;
+                    return (
+                      <div class="month-block">
+                        <h3 class="month-label">
+                          <span class="month-name">{monthNames[lang][month]}</span>
+                          <span class="month-count">{monthPosts.length}</span>
+                        </h3>
+                        <ul class="archive-posts">
+                          {monthPosts.map((post) => (
+                            <li class="archive-post">
+                              <time class="archive-post__date">{formatDate(post.data.pubDate, lang)}</time>
+                              <a href={`/posts/${post.id}/`} class="archive-post__title">
+                                {post.data.title}
+                              </a>
+                              {post.data.category && (
+                                <span class="archive-post__cat">{post.data.category}</span>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    );
+                  })}
                 </div>
               );
             })}

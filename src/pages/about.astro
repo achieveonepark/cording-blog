@@ -3,18 +3,25 @@ import Footer from "../components/Footer.astro";
 import Header from "../components/Header.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { site } from "../config/site";
-import { getPublishedPosts } from "../lib/blog";
+import {
+  BLOG_LANGS,
+  filterPostsByLang,
+  getPublishedPosts
+} from "../lib/blog";
 
 const posts = await getPublishedPosts();
-const postCount = posts.length;
+const postsByLang = {
+  ko: filterPostsByLang(posts, "ko"),
+  en: filterPostsByLang(posts, "en")
+};
 
-const tags = new Set(posts.flatMap((p) => p.data.tags));
+const tagCountsByLang = {
+  ko: new Set(postsByLang.ko.flatMap((post) => post.data.tags)).size,
+  en: new Set(postsByLang.en.flatMap((post) => post.data.tags)).size
+};
 ---
 
-<BaseLayout
-  title="About"
-  description={`${site.author}의 블로그 소개 페이지입니다.`}
->
+<BaseLayout title="About" description="About the author and this blog.">
   <Header />
 
   <main class="shell app-shell">
@@ -28,36 +35,57 @@ const tags = new Set(posts.flatMap((p) => p.data.tags));
           </svg>
         </div>
         <div>
-          <p class="eyebrow">About</p>
+          <p class="eyebrow">
+            <span data-ui-lang="ko">소개</span>
+            <span data-ui-lang="en">About</span>
+          </p>
           <h1>{site.author}</h1>
-          <p class="about-tagline">{site.description}</p>
+          <p class="about-tagline">
+            <span data-ui-lang="ko">작업 기록, 실험, 회고를 차분하게 쌓아가는 Astro 블로그.</span>
+            <span data-ui-lang="en">An Astro blog for quietly collecting work logs, experiments, and retrospectives.</span>
+          </p>
         </div>
       </div>
 
-      <div class="about-stats">
-        <div class="stat">
-          <span class="stat__num">{postCount}</span>
-          <span class="stat__label">Posts</span>
+      {BLOG_LANGS.map((lang) => (
+        <div class="about-stats" data-ui-lang={lang}>
+          <div class="stat">
+            <span class="stat__num">{postsByLang[lang].length}</span>
+            <span class="stat__label">{lang === "en" ? "Posts" : "글"}</span>
+          </div>
+          <div class="stat">
+            <span class="stat__num">{tagCountsByLang[lang]}</span>
+            <span class="stat__label">{lang === "en" ? "Tags" : "태그"}</span>
+          </div>
         </div>
-        <div class="stat">
-          <span class="stat__num">{tags.size}</span>
-          <span class="stat__label">Tags</span>
-        </div>
-      </div>
+      ))}
 
       <div class="about-section">
-        <h2>소개</h2>
-        <p>
+        <h2>
+          <span data-ui-lang="ko">소개</span>
+          <span data-ui-lang="en">Overview</span>
+        </h2>
+        <p data-ui-lang="ko">
           8년 차 Unity 개발자로서 <strong>PC와 모바일 게임의 개발부터 런칭</strong>까지 전 과정을 경험했습니다.<br /><br />
           최근에는 <strong>기술 지원 조직</strong>에서 공용 시스템 구축과 개발 환경 개선을 통해 <strong>팀의 생산성을 높이는 데 주력</strong>하고 있습니다.<br /><br />
           <code>C#</code>을 사용하는 <code>Unity</code>와 <code>.NET</code> 환경에 능숙하며, 특히 <strong>동료들의 불편함을 해소</strong>하고 효율을 극대화하는 <strong>툴 개발</strong> 과정에서 큰 보람을 느낍니다.<br /><br />
           어린 시절 RPG를 좋아했던 순수한 열정을 바탕으로 게임 개발자가 되었으며, 항상 많은 게임을 즐깁니다.<br /><br />
           <strong>긴밀한 소통과 목표 공유가 최고의 결과를 만든다는 믿음을 갖고 동료들과 함께 성장하고 있습니다.</strong>
         </p>
+        <p data-ui-lang="en">
+          As a Unity developer with eight years of experience, I have worked through the full cycle of <strong>building and launching both PC and mobile games</strong>.<br /><br />
+          More recently, I have been focused on <strong>improving team productivity</strong> through shared systems and better development workflows within a <strong>technical support organization</strong>.<br /><br />
+          I am comfortable working in <code>Unity</code> and <code>.NET</code> environments with <code>C#</code>, and I find the most satisfaction in <strong>building tools</strong> that <strong>remove friction for teammates</strong> and make teams more effective.<br /><br />
+          I became a game developer out of the same pure enthusiasm I had as a child when I loved RPGs, and I still spend a lot of time enjoying games myself.<br /><br />
+          <strong>I believe the best results come from close communication and shared goals, and I keep growing together with the people around me.</strong>
+        </p>
       </div>
 
       <div class="about-section">
-        <h2>기술 스택</h2>
+        <h2>
+          <span data-ui-lang="ko">기술 스택</span>
+          <span data-ui-lang="en">Tech Stack</span>
+        </h2>
         <ul class="tech-list">
           <li>Unity</li>
           <li>C#</li>
@@ -70,7 +98,10 @@ const tags = new Set(posts.flatMap((p) => p.data.tags));
       </div>
 
       <div class="about-section">
-        <h2>연락처</h2>
+        <h2>
+          <span data-ui-lang="ko">연락처</span>
+          <span data-ui-lang="en">Contact</span>
+        </h2>
         <ul class="contact-list">
           <li>
             <a href="https://github.com/achieveonepark" target="_blank" rel="noreferrer">

@@ -2,50 +2,79 @@
 import Footer from "../../components/Footer.astro";
 import Header from "../../components/Header.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import { getPublishedPosts } from "../../lib/blog";
+import {
+  BLOG_LANGS,
+  type BlogLang,
+  filterPostsByLang,
+  getPublishedPosts
+} from "../../lib/blog";
 
 const posts = await getPublishedPosts();
 
-// 태그별 카운트 집계
-const tagMap = new Map<string, number>();
-for (const post of posts) {
-  for (const tag of post.data.tags) {
-    tagMap.set(tag, (tagMap.get(tag) ?? 0) + 1);
-  }
-}
+const postsByLang = {
+  ko: filterPostsByLang(posts, "ko"),
+  en: filterPostsByLang(posts, "en")
+};
 
-const tags = [...tagMap.entries()].sort((a, b) => b[1] - a[1]);
-const maxCount = Math.max(...tags.map(([, c]) => c), 1);
+const tagsByLang = BLOG_LANGS.reduce((acc, lang) => {
+  const tagMap = new Map<string, number>();
+
+  for (const post of postsByLang[lang]) {
+    for (const tag of post.data.tags) {
+      tagMap.set(tag, (tagMap.get(tag) ?? 0) + 1);
+    }
+  }
+
+  acc[lang] = [...tagMap.entries()].sort((a, b) => b[1] - a[1]);
+  return acc;
+}, {} as Record<BlogLang, [string, number][]>);
+
+const maxCountByLang = BLOG_LANGS.reduce((acc, lang) => {
+  acc[lang] = Math.max(...tagsByLang[lang].map(([, count]) => count), 1);
+  return acc;
+}, {} as Record<BlogLang, number>);
 ---
 
-<BaseLayout title="태그" description="모든 태그 목록입니다.">
+<BaseLayout title="Tags" description="Browse tags by language.">
   <Header />
 
   <main class="shell app-shell">
     <section class="app-panel">
-      <div class="section-heading">
-        <p class="eyebrow">Tags</p>
-        <h1>태그 목록</h1>
-        <p>총 {tags.length}개의 태그, {posts.length}개의 글</p>
-      </div>
+      {BLOG_LANGS.map((lang) => {
+        const tags = tagsByLang[lang];
 
-      {tags.length === 0 ? (
-        <p class="empty">아직 태그가 없습니다.</p>
-      ) : (
-        <ul class="tag-cloud" aria-label="태그 클라우드">
-          {tags.map(([tag, count]) => {
-            const size = 0.8 + (count / maxCount) * 0.8;
-            return (
-              <li>
-                <a href={`/tags/${encodeURIComponent(tag)}/`} style={`font-size: ${size}rem`}>
-                  {tag}
-                  <span class="tag-count">{count}</span>
-                </a>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+        return (
+          <div data-ui-lang={lang}>
+            <div class="section-heading">
+              <p class="eyebrow">{lang === "en" ? "Tags" : "태그"}</p>
+              <h1>{lang === "en" ? "Tags" : "태그 목록"}</h1>
+              <p>
+                {lang === "en"
+                  ? `${tags.length} tags, ${postsByLang[lang].length} posts`
+                  : `총 ${tags.length}개의 태그, ${postsByLang[lang].length}개의 글`}
+              </p>
+            </div>
+
+            {tags.length === 0 ? (
+              <p class="empty">{lang === "en" ? "No tags yet." : "아직 태그가 없습니다."}</p>
+            ) : (
+              <ul class="tag-cloud" aria-label={lang === "en" ? "Tag cloud" : "태그 클라우드"}>
+                {tags.map(([tag, count]) => {
+                  const size = 0.8 + (count / maxCountByLang[lang]) * 0.8;
+                  return (
+                    <li>
+                      <a href={`/tags/${encodeURIComponent(tag)}/`} style={`font-size: ${size}rem`}>
+                        {tag}
+                        <span class="tag-count">{count}</span>
+                      </a>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        );
+      })}
     </section>
   </main>
 

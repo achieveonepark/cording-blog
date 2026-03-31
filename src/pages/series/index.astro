@@ -2,63 +2,100 @@
 import Footer from "../../components/Footer.astro";
 import Header from "../../components/Header.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import { getPublishedPosts } from "../../lib/blog";
+import {
+  BLOG_LANGS,
+  type BlogLang,
+  filterPostsByLang,
+  getPublishedPosts
+} from "../../lib/blog";
 
 const posts = await getPublishedPosts();
 
-// 시리즈별 집계
-const seriesMap = new Map<string, typeof posts>();
-for (const post of posts) {
-  if (!post.data.series) continue;
-  if (!seriesMap.has(post.data.series)) seriesMap.set(post.data.series, []);
-  seriesMap.get(post.data.series)!.push(post);
+function buildSeriesList(seriesPosts: Awaited<ReturnType<typeof getPublishedPosts>>) {
+  const seriesMap = new Map<string, typeof seriesPosts>();
+
+  for (const post of seriesPosts) {
+    if (!post.data.series) continue;
+    if (!seriesMap.has(post.data.series)) seriesMap.set(post.data.series, []);
+    seriesMap.get(post.data.series)!.push(post);
+  }
+
+  return [...seriesMap.entries()]
+    .map(([name, posts]) => ({
+      name,
+      posts: posts.sort((a, b) => (a.data.seriesOrder ?? 0) - (b.data.seriesOrder ?? 0)),
+      latestDate: posts.reduce(
+        (latest, post) => (post.data.pubDate > latest ? post.data.pubDate : latest),
+        new Date(0)
+      )
+    }))
+    .sort((a, b) => b.latestDate.getTime() - a.latestDate.getTime());
 }
 
-const seriesList = [...seriesMap.entries()]
-  .map(([name, seriesPosts]) => ({
-    name,
-    posts: seriesPosts.sort((a, b) => (a.data.seriesOrder ?? 0) - (b.data.seriesOrder ?? 0)),
-    latestDate: seriesPosts.reduce(
-      (latest, p) => (p.data.pubDate > latest ? p.data.pubDate : latest),
-      new Date(0)
-    )
-  }))
-  .sort((a, b) => b.latestDate.getTime() - a.latestDate.getTime());
+const postsByLang = {
+  ko: filterPostsByLang(posts, "ko"),
+  en: filterPostsByLang(posts, "en")
+};
+
+const seriesByLang = BLOG_LANGS.reduce((acc, lang) => {
+  acc[lang] = buildSeriesList(postsByLang[lang]);
+  return acc;
+}, {} as Record<BlogLang, ReturnType<typeof buildSeriesList>>);
 ---
 
-<BaseLayout title="시리즈" description="연재 시리즈 목록입니다.">
+<BaseLayout title="Series" description="Browse post series by language.">
   <Header />
 
   <main class="shell app-shell">
     <section class="app-panel">
-      <div class="section-heading">
-        <p class="eyebrow">Series</p>
-        <h1>연재 시리즈</h1>
-        <p>여러 편으로 이어지는 글 모음입니다.</p>
-      </div>
+      {BLOG_LANGS.map((lang) => {
+        const seriesList = seriesByLang[lang];
 
-      {seriesList.length === 0 ? (
-        <p class="empty">아직 시리즈가 없습니다.<br/>포스트 frontmatter에 <code>series</code> 필드를 추가하면 자동으로 묶입니다.</p>
-      ) : (
-        <ul class="series-list">
-          {seriesList.map(({ name, posts: sp }) => (
-            <li class="series-card">
-              <a href={`/series/${encodeURIComponent(name)}/`} class="series-card__link">
-                <div class="series-card__head">
-                  <span class="series-card__name">{name}</span>
-                  <span class="series-card__count">{sp.length}편</span>
-                </div>
-                <ol class="series-card__posts">
-                  {sp.slice(0, 3).map((p, i) => (
-                    <li>{i + 1}. {p.data.title}</li>
-                  ))}
-                  {sp.length > 3 && <li class="more">+ {sp.length - 3}편 더보기</li>}
-                </ol>
-              </a>
-            </li>
-          ))}
-        </ul>
-      )}
+        return (
+          <div data-ui-lang={lang}>
+            <div class="section-heading">
+              <p class="eyebrow">{lang === "en" ? "Series" : "시리즈"}</p>
+              <h1>{lang === "en" ? "Series" : "연재 시리즈"}</h1>
+              <p>{lang === "en" ? "Collections of posts that continue across multiple entries." : "여러 편으로 이어지는 글 모음입니다."}</p>
+            </div>
+
+            {seriesList.length === 0 ? (
+              <p class="empty">
+                {lang === "en" ? (
+                  <>No series yet.<br />Add a <code>series</code> field to post frontmatter to group them automatically.</>
+                ) : (
+                  <>아직 시리즈가 없습니다.<br />포스트 frontmatter에 <code>series</code> 필드를 추가하면 자동으로 묶입니다.</>
+                )}
+              </p>
+            ) : (
+              <ul class="series-list">
+                {seriesList.map(({ name, posts }) => (
+                  <li class="series-card">
+                    <a href={`/series/${encodeURIComponent(name)}/`} class="series-card__link">
+                      <div class="series-card__head">
+                        <span class="series-card__name">{name}</span>
+                        <span class="series-card__count">
+                          {lang === "en" ? `${posts.length} posts` : `${posts.length}편`}
+                        </span>
+                      </div>
+                      <ol class="series-card__posts">
+                        {posts.slice(0, 3).map((post, index) => (
+                          <li>{index + 1}. {post.data.title}</li>
+                        ))}
+                        {posts.length > 3 && (
+                          <li class="more">
+                            {lang === "en" ? `+ ${posts.length - 3} more` : `+ ${posts.length - 3}편 더보기`}
+                          </li>
+                        )}
+                      </ol>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        );
+      })}
     </section>
   </main>
 

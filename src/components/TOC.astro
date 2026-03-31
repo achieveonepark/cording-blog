@@ -7,15 +7,16 @@ interface Heading {
 
 interface Props {
   headings: Heading[];
+  lang?: "ko" | "en";
 }
 
-const { headings } = Astro.props;
+const { headings, lang = "ko" } = Astro.props;
 const toc = headings.filter((h) => h.depth >= 1 && h.depth <= 3);
 ---
 
 {toc.length > 0 && (
-  <nav class="toc" aria-label="목차">
-    <p class="toc__label">목차</p>
+  <nav class="toc" aria-label={lang === "en" ? "Contents" : "목차"}>
+    <p class="toc__label">{lang === "en" ? "Contents" : "목차"}</p>
     <ol class="toc__list">
       {toc.map((h) => (
         <li class:list={["toc__item", { "toc__item--h2": h.depth === 2, "toc__item--h3": h.depth === 3 }]}>

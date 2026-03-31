@@ -3,22 +3,26 @@ import Footer from "../components/Footer.astro";
 import Header from "../components/Header.astro";
 import PostCard from "../components/PostCard.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
-import { getPublishedPosts } from "../lib/blog";
+import { BLOG_LANGS, groupPostsByLang, getPublishedPosts } from "../lib/blog";
 
 const posts = await getPublishedPosts();
+const postsByLang = groupPostsByLang(posts);
 ---
 
 <BaseLayout title="Somblog" description="매트릭스 배경과 Codex 같은 다크 패널 위에서 기록을 쌓는 somiri.dev 블로그입니다.">
   <Header />
 
   <main class="shell app-shell">
-    {posts.length > 0 && (
-      <section class="app-panel">
-        <div class="post-stack">
-          {posts.map((post, index) => <PostCard post={post} featured={index === 0} />)}
-        </div>
-      </section>
-    )}
+    {BLOG_LANGS.map((lang) => {
+      const langPosts = postsByLang[lang];
+      return langPosts.length > 0 ? (
+        <section class="app-panel" data-ui-lang={lang}>
+          <div class="post-stack">
+            {langPosts.map((post, index) => <PostCard post={post} featured={index === 0} />)}
+          </div>
+        </section>
+      ) : null;
+    })}
   </main>
 
   <Footer />

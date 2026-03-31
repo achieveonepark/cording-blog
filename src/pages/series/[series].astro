@@ -2,7 +2,12 @@
 import Footer from "../../components/Footer.astro";
 import Header from "../../components/Header.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import { formatDate, getPublishedPosts } from "../../lib/blog";
+import {
+  BLOG_LANGS,
+  formatDate,
+  groupPostsByLang,
+  getPublishedPosts
+} from "../../lib/blog";
 
 export async function getStaticPaths() {
   const posts = await getPublishedPosts();
@@ -29,35 +34,50 @@ interface Props {
 }
 
 const { series, seriesPosts } = Astro.props;
+const seriesPostsByLang = groupPostsByLang(seriesPosts);
 const currentSlug = Astro.url.pathname.split("/posts/")[1]?.replace(/\/$/, "");
 ---
 
-<BaseLayout title={series} description={`${series} 시리즈 글 목록입니다.`}>
+<BaseLayout title={series} description={`Series posts for ${series}.`}>
   <Header />
 
   <main class="shell app-shell">
     <section class="app-panel">
-      <div class="section-heading">
-        <p class="eyebrow">Series</p>
-        <h1>{series}</h1>
-        <p>총 {seriesPosts.length}편</p>
-      </div>
+      {BLOG_LANGS.map((lang) => {
+        const posts = seriesPostsByLang[lang];
 
-      <a href="/series/" class="back-link">← 모든 시리즈</a>
+        return (
+          <div data-ui-lang={lang}>
+            <div class="section-heading">
+              <p class="eyebrow">{lang === "en" ? "Series" : "시리즈"}</p>
+              <h1>{series}</h1>
+              <p>{lang === "en" ? `${posts.length} posts` : `총 ${posts.length}편`}</p>
+            </div>
 
-      <ol class="series-posts">
-        {seriesPosts.map((post, i) => (
-          <li class:list={["series-post", { "series-post--current": post.id === currentSlug }]}>
-            <a href={`/posts/${post.id}/`}>
-              <span class="series-post__num">{i + 1}</span>
-              <span class="series-post__info">
-                <span class="series-post__title">{post.data.title}</span>
-                <time class="series-post__date">{formatDate(post.data.pubDate)}</time>
-              </span>
+            <a href="/series/" class="back-link">
+              {lang === "en" ? "← All series" : "← 모든 시리즈"}
             </a>
-          </li>
-        ))}
-      </ol>
+
+            {posts.length === 0 ? (
+              <p class="empty">{lang === "en" ? "No posts in this series yet." : "이 시리즈에 해당하는 글이 아직 없습니다."}</p>
+            ) : (
+              <ol class="series-posts">
+                {posts.map((post, index) => (
+                  <li class:list={["series-post", { "series-post--current": post.id === currentSlug }]}>
+                    <a href={`/posts/${post.id}/`}>
+                      <span class="series-post__num">{index + 1}</span>
+                      <span class="series-post__info">
+                        <span class="series-post__title">{post.data.title}</span>
+                        <time class="series-post__date">{formatDate(post.data.pubDate, lang)}</time>
+                      </span>
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </div>
+        );
+      })}
     </section>
   </main>
 
@@ -161,5 +181,11 @@ const currentSlug = Astro.url.pathname.split("/posts/")[1]?.replace(/\/$/, "");
   .series-post__date {
     font-size: 0.74rem;
     color: var(--muted);
+  }
+
+  .empty {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin: 0;
   }
 </style>
