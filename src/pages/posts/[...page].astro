@@ -11,19 +11,17 @@ import {
 } from "../../lib/blog";
 import categories from "../../data/categories.json";
 
-const PAGE_SIZE = 10;
-
 function getPostsPageUrl(pageNumber: number) {
   return pageNumber <= 1 ? "/posts/" : `/posts/${pageNumber}/`;
 }
 
-function buildPageData<T>(posts: T[], pageNumber: number) {
-  const lastPage = Math.max(1, Math.ceil(posts.length / PAGE_SIZE));
+function buildPageData<T>(posts: T[], pageNumber: number, pageSize: number) {
+  const lastPage = Math.max(1, Math.ceil(posts.length / pageSize));
   const hasPage = pageNumber <= lastPage;
-  const start = (pageNumber - 1) * PAGE_SIZE;
+  const start = (pageNumber - 1) * pageSize;
 
   return {
-    data: hasPage ? posts.slice(start, start + PAGE_SIZE) : [],
+    data: hasPage ? posts.slice(start, start + pageSize) : [],
     currentPage: pageNumber,
     lastPage,
     hasPage,
@@ -35,6 +33,7 @@ function buildPageData<T>(posts: T[], pageNumber: number) {
 }
 
 export async function getStaticPaths() {
+  const pageSize = 10;
   const allPosts = await getPublishedPosts();
   const postsByLang = {
     ko: filterPostsByLang(allPosts, "ko"),
@@ -42,7 +41,7 @@ export async function getStaticPaths() {
   };
 
   const maxPages = Math.max(
-    ...BLOG_LANGS.map((lang) => Math.max(1, Math.ceil(postsByLang[lang].length / PAGE_SIZE)))
+    ...BLOG_LANGS.map((lang) => Math.max(1, Math.ceil(postsByLang[lang].length / pageSize)))
   );
 
   const categoryCountsByLang = BLOG_LANGS.reduce((acc, lang) => {
@@ -61,8 +60,8 @@ export async function getStaticPaths() {
       props: {
         pageNumber,
         pages: {
-          ko: buildPageData(postsByLang.ko, pageNumber),
-          en: buildPageData(postsByLang.en, pageNumber)
+          ko: buildPageData(postsByLang.ko, pageNumber, pageSize),
+          en: buildPageData(postsByLang.en, pageNumber, pageSize)
         },
         postsByLang,
         categoryCountsByLang
