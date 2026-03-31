@@ -66,7 +66,11 @@ const postUrl = `${Astro.site?.toString().replace(/\/$/, "") ?? "https://blog.so
             <span>{getReadingTime(post)}</span>
             {post.data.category && <span class="article-category">{post.data.category}</span>}
             {translation && (
-              <a href={`/posts/${translation.id}/`} class="lang-switch-link">
+              <a
+                href={`/posts/${translation.id}/`}
+                class="lang-switch-link"
+                data-target-lang={currentLang === "ko" ? "en" : "ko"}
+              >
                 {currentLang === "ko" ? "Read in English" : "한국어로 읽기"}
               </a>
             )}
@@ -102,7 +106,7 @@ const postUrl = `${Astro.site?.toString().replace(/\/$/, "") ?? "https://blog.so
 
         <!-- 댓글 -->
         <div data-pagefind-ignore>
-          <Giscus />
+          <Giscus lang={currentLang} />
         </div>
 
         <!-- 어드민 바 -->
@@ -136,6 +140,15 @@ const postUrl = `${Astro.site?.toString().replace(/\/$/, "") ?? "https://blog.so
     lastSlug = postSlug;
 
     const token = localStorage.getItem("gh_token");
+    const translationLink = document.querySelector(".lang-switch-link") as HTMLAnchorElement | null;
+
+    translationLink?.addEventListener("click", () => {
+      const targetLang = translationLink.dataset.targetLang;
+      if (targetLang === "ko" || targetLang === "en") {
+        localStorage.setItem("blog_lang", targetLang);
+        document.documentElement.dataset.blogLang = targetLang;
+      }
+    });
 
     // --- 어드민 바 ---
     const adminBar  = document.getElementById("post-admin-bar");

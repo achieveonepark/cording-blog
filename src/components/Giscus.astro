@@ -4,10 +4,17 @@ const repoId     = import.meta.env.PUBLIC_GISCUS_REPO_ID      ?? "";
 const category   = import.meta.env.PUBLIC_GISCUS_CATEGORY     ?? "Comments";
 const categoryId = import.meta.env.PUBLIC_GISCUS_CATEGORY_ID  ?? "";
 const configured = repoId && categoryId;
+
+interface Props {
+  lang?: "ko" | "en";
+}
+
+const { lang = "ko" } = Astro.props as Props;
+const uiLang = lang === "en" ? "en" : "ko";
 ---
 
 <section class="comments">
-  <p class="comments__label">댓글</p>
+  <p class="comments__label">{uiLang === "en" ? "Comments" : "댓글"}</p>
   {configured ? (
     <div
       class="giscus-wrap"
@@ -15,40 +22,80 @@ const configured = repoId && categoryId;
       data-repo-id={repoId}
       data-category={category}
       data-category-id={categoryId}
+      data-lang={uiLang}
     ></div>
   ) : (
     <p class="comments__notice">
-      댓글을 활성화하려면 <code>.env</code>에 Giscus 설정이 필요합니다.<br />
-      <a href="https://giscus.app" target="_blank" rel="noopener">giscus.app</a>에서 repo-id와 category-id를 발급받으세요.
+      {uiLang === "en" ? (
+        <>
+          To enable comments, add Giscus settings to <code>.env</code>.<br />
+          Get your repo-id and category-id from <a href="https://giscus.app" target="_blank" rel="noopener">giscus.app</a>.
+        </>
+      ) : (
+        <>
+          댓글을 활성화하려면 <code>.env</code>에 Giscus 설정이 필요합니다.<br />
+          <a href="https://giscus.app" target="_blank" rel="noopener">giscus.app</a>에서 repo-id와 category-id를 발급받으세요.
+        </>
+      )}
     </p>
   )}
 </section>
 
 <script>
   let giscusCreated = false;
+  let currentLang = "";
+  let currentTerm = "";
+
+  function getGiscusLang(wrap: HTMLElement) {
+    const explicitLang = wrap.dataset.lang;
+    if (explicitLang === "en" || explicitLang === "ko") {
+      return explicitLang;
+    }
+
+    const savedLang =
+      document.documentElement.dataset.blogLang ||
+      localStorage.getItem("blog_lang") ||
+      "ko";
+
+    return savedLang === "en" ? "en" : "ko";
+  }
 
   function loadGiscus() {
     const wrap = document.getElementById("giscus-wrap") as HTMLElement | null;
+    const term = window.location.pathname;
 
     // 포스트 페이지가 아니면 초기화 상태 리셋
-    if (!wrap) { giscusCreated = false; return; }
+    if (!wrap) {
+      giscusCreated = false;
+      currentLang = "";
+      currentTerm = "";
+      return;
+    }
+
+    const lang = getGiscusLang(wrap);
 
     if (giscusCreated) {
       const iframe = document.querySelector("iframe.giscus-frame") as HTMLIFrameElement | null;
-      if (iframe?.contentWindow) {
+      if (iframe?.contentWindow && currentLang === lang) {
         // 이미 로드됐으면 postMessage로 현재 경로 전달
-        iframe.contentWindow.postMessage(
-          { giscus: { setConfig: { term: window.location.pathname } } },
-          "https://giscus.app"
-        );
+        if (currentTerm !== term) {
+          iframe.contentWindow.postMessage(
+            { giscus: { setConfig: { term } } },
+            "https://giscus.app"
+          );
+          currentTerm = term;
+        }
         return;
       }
-      // iframe이 DOM swap으로 사라졌으면 다시 생성
+
+      wrap.replaceChildren();
       giscusCreated = false;
     }
 
     // 최초 1회: 스크립트 생성
     giscusCreated = true;
+    currentLang = lang;
+    currentTerm = term;
     const script = document.createElement("script");
     script.src = "https://giscus.app/client.js";
     script.setAttribute("data-repo",              "achieveonepark/cording-blog");
@@ -61,7 +108,7 @@ const configured = repoId && categoryId;
     script.setAttribute("data-emit-metadata",     "0");
     script.setAttribute("data-input-position",    "top");
     script.setAttribute("data-theme",             "https://blog.somiri.dev/giscus-theme.css");
-    script.setAttribute("data-lang",              "ko");
+    script.setAttribute("data-lang",              lang);
     script.setAttribute("crossorigin",            "anonymous");
     script.async = true;
     wrap.appendChild(script);
