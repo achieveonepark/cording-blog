@@ -14,8 +14,6 @@ thumbnail: /images/1775345275634.png
 
 ## Xcode
 
-![image](/images/1775345275634.png)
-
 유니티 개발자라면 현업에서 강제로 접하게 되고 구글에게 열심히 해답을 찾으며 사흘밤낮을 헤매게 하는 무서운 툴... 이라고 생각하며 살았지만
 
 이제는 이 Xcode라는 녀석을 제대로 이해를 좀 해야겠다는 생각이 들었다.
@@ -24,13 +22,13 @@ thumbnail: /images/1775345275634.png
 
 일반적인 경우는 Unity 빌드 후 나온 결과물을 실행하여 Build / Archive 하는 형태. iOS 빌드 테스트하는 환경으로 가장 많이 접해봤을 듯.
 
-- provisioning profile 미설정으로 겪는 빌드 에러
-- pods의 무언가가 설정이 안되어 빌드 에러
-- SDK 문제로 인해 코드 에러
-- Compatibility 미설정으로 기능 미동작
-- Xcode 버전 업데이트로 인한 호환성 깨짐
-- Build Option에 변수 선언 대응 (지금은 좀 덜하지만...)
-- build 시도 시에는 잘 됐는데 archive하려니 안됨
+* provisioning profile 미설정으로 겪는 빌드 에러
+* pods의 무언가가 설정이 안되어 빌드 에러
+* SDK 문제로 인해 코드 에러
+* Compatibility 미설정으로 기능 미동작
+* Xcode 버전 업데이트로 인한 호환성 깨짐
+* Build Option에 변수 선언 대응 (지금은 좀 덜하지만...)
+* build 시도 시에는 잘 됐는데 archive하려니 안됨
 
 몇 년간 겪은걸 취합하자면 이 정도인데, 생각 안나는 게 더 있을지도 모르겠다...
 
