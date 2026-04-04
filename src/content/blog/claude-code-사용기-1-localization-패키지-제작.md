@@ -1,12 +1,12 @@
 ---
 title: "Claude Code 사용기 1 - Localization 패키지 제작"
 description: "클로드에게 시켜본 Localization 기능 제작"
-pubDate: 2026-03-31
+pubDate: 2026-04-04
 tags:
   - Unity
   - Localization
   - AI
-category: Thinking
+category: AI
 thumbnail: /images/1774959561563.png
 ---
 
