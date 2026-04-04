@@ -644,6 +644,10 @@ html.nav-open #mobile-overlay { display: block; }
   overflow: hidden;
 }
 
+.post-card[hidden] {
+  display: none !important;
+}
+
 /* 상단 하이라이트 라인 */
 .post-card::before {
   content: "";
