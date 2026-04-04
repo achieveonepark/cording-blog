@@ -9,13 +9,26 @@
       : { copy: "코드 복사", copied: "복사됨!", failed: "실패" };
   }
 
+  function syncCopyButtonPosition(pre, btn) {
+    const code = pre.querySelector("code");
+    const styles = window.getComputedStyle(pre);
+    const paddingLeft = parseFloat(styles.paddingLeft) || 0;
+    const paddingRight = parseFloat(styles.paddingRight) || 0;
+    const contentWidth = Math.max(pre.clientWidth, (code?.scrollWidth ?? 0) + paddingLeft + paddingRight);
+    const overflowX = Math.max(0, contentWidth - pre.clientWidth);
+    const offsetX = Math.max(0, overflowX - pre.scrollLeft);
+
+    btn.style.transform = `translate3d(${offsetX}px, 0, 0)`;
+  }
+
   function initCodeCopy() {
     const blocks = document.querySelectorAll<HTMLElement>(".prose pre");
     const lang = document.documentElement.dataset.blogLang === "en" ? "en" : "ko";
     const ui = getCopyUi(lang);
 
     blocks.forEach((pre) => {
-      if (pre.querySelector(".copy-btn")) return; // 중복 방지
+      if (pre.dataset.copyReady === "true") return;
+      pre.dataset.copyReady = "true";
 
       pre.style.position = "relative";
 
@@ -42,6 +55,18 @@
       });
 
       pre.appendChild(btn);
+      syncCopyButtonPosition(pre, btn);
+      pre.addEventListener("scroll", () => syncCopyButtonPosition(pre, btn), { passive: true });
+
+      if ("ResizeObserver" in window) {
+        const observer = new ResizeObserver(() => syncCopyButtonPosition(pre, btn));
+        observer.observe(pre);
+
+        const code = pre.querySelector("code");
+        if (code instanceof HTMLElement) observer.observe(code);
+      } else {
+        window.addEventListener("resize", () => syncCopyButtonPosition(pre, btn), { passive: true });
+      }
     });
   }
 
@@ -57,6 +82,7 @@
     position: absolute;
     top: 0.55rem;
     right: 0.55rem;
+    z-index: 1;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -68,11 +94,13 @@
     color: rgba(124, 255, 122, 0.5);
     cursor: pointer;
     opacity: 0;
+    will-change: transform;
     transition: opacity 150ms, color 150ms, border-color 150ms, background 150ms;
     backdrop-filter: blur(4px);
   }
 
-  .prose pre:hover .copy-btn {
+  .prose pre:hover .copy-btn,
+  .prose pre:focus-within .copy-btn {
     opacity: 1;
   }
 
