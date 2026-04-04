@@ -299,4 +299,14 @@ const { pageNumber, pages, postsByLang, categoryCountsByLang } = Astro.props as 
     background: var(--accent-soft);
     color: var(--accent);
   }
+
+  @media (max-width: 720px) {
+    .category-filter {
+      display: none;
+    }
+
+    .pagination {
+      flex-wrap: wrap;
+    }
+  }
 </style>

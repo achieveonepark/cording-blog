@@ -1,29 +1,98 @@
 ---
 import Footer from "../components/Footer.astro";
 import Header from "../components/Header.astro";
+import HomeCategorySidebar from "../components/HomeCategorySidebar.astro";
 import PostCard from "../components/PostCard.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { BLOG_LANGS, groupPostsByLang, getPublishedPosts } from "../lib/blog";
+import categories from "../data/categories.json";
 
 const posts = await getPublishedPosts();
 const postsByLang = groupPostsByLang(posts);
+const categoryCountsByLang = BLOG_LANGS.reduce((acc, lang) => {
+  acc[lang] = categories.reduce<Record<string, number>>((counts, category) => {
+    counts[category] = postsByLang[lang].filter((post) => post.data.category === category).length;
+    return counts;
+  }, {});
+  return acc;
+}, {} as Record<(typeof BLOG_LANGS)[number], Record<string, number>>);
+
+const totalPostsByLang = BLOG_LANGS.reduce((acc, lang) => {
+  acc[lang] = postsByLang[lang].length;
+  return acc;
+}, {} as Record<(typeof BLOG_LANGS)[number], number>);
 ---
 
 <BaseLayout title="Somblog" description="매트릭스 배경과 Codex 같은 다크 패널 위에서 기록을 쌓는 somiri.dev 블로그입니다.">
   <Header />
 
   <main class="shell app-shell">
-    {BLOG_LANGS.map((lang) => {
-      const langPosts = postsByLang[lang];
-      return langPosts.length > 0 ? (
-        <section class="app-panel" data-ui-lang={lang}>
-          <div class="post-stack">
-            {langPosts.map((post, index) => <PostCard post={post} featured={index === 0} />)}
-          </div>
-        </section>
-      ) : null;
-    })}
+    <HomeCategorySidebar
+      categories={categories}
+      categoryCountsByLang={categoryCountsByLang}
+      totalPostsByLang={totalPostsByLang}
+    >
+      {BLOG_LANGS.map((lang) => {
+        const langPosts = postsByLang[lang];
+        return langPosts.length > 0 ? (
+          <section class="app-panel" data-ui-lang={lang} data-home-section>
+            <div class="post-stack" data-home-post-stack>
+              {langPosts.map((post) => <PostCard post={post} />)}
+            </div>
+            <p
+              class="home-feed__empty"
+              data-ui-lang={lang}
+              data-home-empty-filter
+              data-home-empty-visible="false"
+              aria-hidden="true"
+            >
+              {lang === "en"
+                ? "No posts match this category in the current language."
+                : "현재 언어에서 이 카테고리에 해당하는 글이 없어요."}
+            </p>
+          </section>
+        ) : null;
+      })}
+    </HomeCategorySidebar>
   </main>
 
   <Footer />
 </BaseLayout>
+
+<style>
+  .home-feed__empty {
+    margin: 0;
+    padding: 0 1rem;
+    border-radius: var(--radius-md);
+    border: 0 dashed rgba(124, 255, 122, 0.16);
+    background: rgba(11, 15, 20, 0.48);
+    color: var(--muted);
+    font-size: 0.84rem;
+    max-height: 0;
+    opacity: 0;
+    overflow: clip;
+    transform: translateY(-0.4rem);
+    transition:
+      max-height 380ms cubic-bezier(0.22, 1, 0.36, 1),
+      margin-top 380ms cubic-bezier(0.22, 1, 0.36, 1),
+      padding 380ms cubic-bezier(0.22, 1, 0.36, 1),
+      border-width 220ms ease,
+      opacity 220ms ease,
+      transform 380ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .home-feed__empty[data-home-empty-visible="true"] {
+    margin-top: 1rem;
+    padding: 0.95rem 1rem;
+    border-width: 1px;
+    max-height: 6rem;
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .home-feed__empty {
+      transition: none;
+    }
+  }
+</style>

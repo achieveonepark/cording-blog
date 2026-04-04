@@ -1,0 +1,756 @@
+---
+import { BLOG_LANGS, type BlogLang } from "../lib/blog";
+
+interface Props {
+  categories: string[];
+  categoryCountsByLang: Record<BlogLang, Record<string, number>>;
+  totalPostsByLang: Record<BlogLang, number>;
+}
+
+const { categories, categoryCountsByLang, totalPostsByLang } = Astro.props;
+---
+
+<div class="home-shell" data-home-shell data-sidebar-collapsed="false">
+  <button
+    class="home-sidebar__reveal"
+    type="button"
+    data-home-sidebar-reveal
+    aria-label="카테고리 열기"
+    title="카테고리 열기"
+    data-label-ko="카테고리 열기"
+    data-label-en="Show categories"
+  >
+    <span aria-hidden="true">&gt;</span>
+  </button>
+
+  <div class="home-layout">
+    <aside class="home-sidebar-rail" aria-label="Category filter">
+      <div class="home-sidebar app-panel">
+        <button
+          class="home-sidebar__collapse"
+          type="button"
+          data-home-sidebar-collapse
+          aria-label="카테고리 숨기기"
+          title="카테고리 숨기기"
+          data-label-ko="카테고리 숨기기"
+          data-label-en="Hide categories"
+        >
+          <span aria-hidden="true">&lt;</span>
+        </button>
+
+        <div class="home-sidebar__header">
+          <p class="eyebrow" data-ui-lang="ko">Category</p>
+          <p class="eyebrow" data-ui-lang="en">Category</p>
+        </div>
+
+        {BLOG_LANGS.map((lang) => {
+          const availableCategories = categories.filter(
+            (category) => (categoryCountsByLang[lang][category] ?? 0) > 0
+          ).length;
+
+          return (
+            <section class="home-sidebar__section" data-ui-lang={lang}>
+              <div class="home-sidebar__summary">
+                <strong>
+                  {totalPostsByLang[lang]}
+                  <span>{lang === "en" ? " posts" : "개 글"}</span>
+                </strong>
+                <span>
+                  {lang === "en"
+                    ? `${availableCategories} categories`
+                    : `${availableCategories}개 카테고리`}
+                </span>
+              </div>
+
+              <div
+                class="home-category-list"
+                role="group"
+                aria-label={lang === "en" ? "Home category filter" : "홈 카테고리 필터"}
+              >
+                <button
+                  class="home-category-btn home-category-btn--active"
+                  type="button"
+                  data-home-category=""
+                  aria-pressed="true"
+                >
+                  <span class="home-category-btn__text">
+                    <span class="home-category-btn__label">{lang === "en" ? "All posts" : "전체 글"}</span>
+                  </span>
+                  <span class="home-category-btn__count">{totalPostsByLang[lang]}</span>
+                </button>
+
+                {categories.map((category) => {
+                  const count = categoryCountsByLang[lang][category] ?? 0;
+
+                  return (
+                    <button
+                      class="home-category-btn"
+                      type="button"
+                      data-home-category={category}
+                      aria-pressed="false"
+                      disabled={count === 0}
+                    >
+                      <span class="home-category-btn__text">
+                        <span class="home-category-btn__label">{category}</span>
+                      </span>
+                      <span class="home-category-btn__count">{count}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          );
+        })}
+      </div>
+    </aside>
+
+    <div class="home-feed">
+      <slot />
+    </div>
+  </div>
+</div>
+
+<script is:inline>
+  function getHomeShell() {
+    return document.querySelector("[data-home-shell]");
+  }
+
+  function getHomeUiLang() {
+    return document.documentElement.dataset.blogLang === "en" ? "en" : "ko";
+  }
+
+  function readHomeSidebarStorage(key, fallback) {
+    try {
+      var value = localStorage.getItem(key);
+      return value === null ? fallback : value;
+    } catch (_error) {
+      return fallback;
+    }
+  }
+
+  function writeHomeSidebarStorage(key, value) {
+    try {
+      localStorage.setItem(key, value);
+    } catch (_error) {}
+  }
+
+  function isHomeCompactViewport() {
+    return window.matchMedia("(max-width: 960px)").matches;
+  }
+
+  var HOME_FILTER_EASING = "cubic-bezier(0.22, 1, 0.36, 1)";
+  var HOME_FILTER_MOVE_DURATION = 340;
+  var HOME_FILTER_HEIGHT_DURATION = 380;
+
+  function syncHomeSidebarLabels(shell, lang) {
+    shell.querySelectorAll("[data-label-ko][data-label-en]").forEach(function(element) {
+      if (!(element instanceof HTMLElement)) return;
+
+      var localizedLabel = element.getAttribute("data-label-" + lang);
+      if (!localizedLabel) return;
+
+      element.setAttribute("aria-label", localizedLabel);
+      element.setAttribute("title", localizedLabel);
+    });
+  }
+
+  function setHomeSidebarCollapsed(shell, collapsed) {
+    shell.dataset.sidebarCollapsed = collapsed ? "true" : "false";
+
+    var revealBtn = shell.querySelector("[data-home-sidebar-reveal]");
+    var collapseBtn = shell.querySelector("[data-home-sidebar-collapse]");
+
+    if (revealBtn instanceof HTMLButtonElement) {
+      revealBtn.setAttribute("aria-expanded", String(!collapsed));
+      revealBtn.tabIndex = collapsed ? 0 : -1;
+    }
+
+    if (collapseBtn instanceof HTMLButtonElement) {
+      collapseBtn.setAttribute("aria-expanded", String(!collapsed));
+      collapseBtn.tabIndex = collapsed ? -1 : 0;
+    }
+
+    writeHomeSidebarStorage("home_sidebar_collapsed", String(collapsed));
+  }
+
+  function shouldAnimateHomeFilter(options) {
+    if (options && options.animate === false) return false;
+    return !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }
+
+  function isHomeElementVisible(element) {
+    return element instanceof HTMLElement && element.getClientRects().length > 0;
+  }
+
+  function setHomeCardVisible(card, visible) {
+    card.hidden = !visible;
+    card.setAttribute("aria-hidden", String(!visible));
+
+    if ("inert" in card) {
+      card.inert = !visible;
+      return;
+    }
+
+    if (visible) {
+      card.removeAttribute("inert");
+      return;
+    }
+
+    card.setAttribute("inert", "");
+  }
+
+  function setHomeEmptyStateVisible(emptyState, visible) {
+    emptyState.dataset.homeEmptyVisible = visible ? "true" : "false";
+    emptyState.setAttribute("aria-hidden", String(!visible));
+  }
+
+  function getHomeVisibleSections(shell) {
+    return Array.from(shell.querySelectorAll("[data-home-section]")).filter(function(section) {
+      return isHomeElementVisible(section);
+    });
+  }
+
+  function getHomeVisibleCards(section) {
+    return Array.from(section.querySelectorAll("[data-home-post-stack] .post-card")).filter(function(card) {
+      return card instanceof HTMLElement && !card.hidden;
+    });
+  }
+
+  function captureHomeLayout(shell) {
+    var sections = getHomeVisibleSections(shell);
+    var sectionHeights = new Map();
+    var cardRects = new Map();
+
+    sections.forEach(function(section) {
+      if (!(section instanceof HTMLElement)) return;
+
+      sectionHeights.set(section, section.offsetHeight);
+
+      getHomeVisibleCards(section).forEach(function(card) {
+        cardRects.set(card, card.getBoundingClientRect());
+      });
+    });
+
+    return {
+      sections: sections,
+      sectionHeights: sectionHeights,
+      cardRects: cardRects
+    };
+  }
+
+  function animateHomeSectionHeights(beforeLayout, afterLayout) {
+    var sections = beforeLayout.sections.slice();
+
+    afterLayout.sections.forEach(function(section) {
+      if (sections.indexOf(section) === -1) sections.push(section);
+    });
+
+    sections.forEach(function(section) {
+      if (!(section instanceof HTMLElement)) return;
+
+      var from = beforeLayout.sectionHeights.get(section);
+      var to = afterLayout.sectionHeights.get(section);
+      if (typeof from !== "number" || typeof to !== "number") return;
+      if (Math.abs(from - to) < 1) return;
+
+      var cleaned = false;
+      var cleanup = function() {
+        if (cleaned) return;
+        cleaned = true;
+        section.style.height = "";
+        section.style.overflow = "";
+        section.style.transition = "";
+      };
+
+      section.style.height = from + "px";
+      section.style.overflow = "clip";
+      section.style.transition = "none";
+      section.getBoundingClientRect();
+      section.style.transition = "height " + HOME_FILTER_HEIGHT_DURATION + "ms " + HOME_FILTER_EASING;
+      section.style.height = to + "px";
+
+      section.addEventListener("transitionend", function(event) {
+        if (event.target !== section || event.propertyName !== "height") return;
+        cleanup();
+      }, { once: true });
+
+      window.setTimeout(cleanup, HOME_FILTER_HEIGHT_DURATION + 80);
+    });
+  }
+
+  function animateHomeCardExit(card, rect) {
+    if (!(card instanceof HTMLElement)) return;
+
+    var clone = card.cloneNode(true);
+    if (!(clone instanceof HTMLElement)) return;
+
+    clone.style.position = "fixed";
+    clone.style.top = rect.top + "px";
+    clone.style.left = rect.left + "px";
+    clone.style.width = rect.width + "px";
+    clone.style.height = rect.height + "px";
+    clone.style.margin = "0";
+    clone.style.pointerEvents = "none";
+    clone.style.zIndex = "24";
+    clone.style.transformOrigin = "top center";
+    clone.style.boxSizing = "border-box";
+    document.body.appendChild(clone);
+
+    var animation = clone.animate(
+      [
+        { opacity: 1, transform: "translateY(0) scale(1)" },
+        { opacity: 0, transform: "translateY(-14px) scale(0.97)" }
+      ],
+      {
+        duration: HOME_FILTER_MOVE_DURATION - 40,
+        easing: HOME_FILTER_EASING,
+        fill: "forwards"
+      }
+    );
+
+    var removeClone = function() {
+      clone.remove();
+    };
+
+    animation.finished.then(removeClone).catch(removeClone);
+  }
+
+  function animateHomeCards(beforeLayout, afterLayout) {
+    afterLayout.cardRects.forEach(function(afterRect, card) {
+      if (!(card instanceof HTMLElement)) return;
+
+      var beforeRect = beforeLayout.cardRects.get(card);
+      if (beforeRect) {
+        var deltaX = beforeRect.left - afterRect.left;
+        var deltaY = beforeRect.top - afterRect.top;
+        if (Math.abs(deltaX) < 1 && Math.abs(deltaY) < 1) return;
+
+        card.animate(
+          [
+            { transform: "translate(" + deltaX + "px, " + deltaY + "px)" },
+            { transform: "translate(0, 0)" }
+          ],
+          {
+            duration: HOME_FILTER_MOVE_DURATION,
+            easing: HOME_FILTER_EASING
+          }
+        );
+        return;
+      }
+
+      card.animate(
+        [
+          { opacity: 0, transform: "translateY(14px) scale(0.98)" },
+          { opacity: 1, transform: "translateY(0) scale(1)" }
+        ],
+        {
+          duration: HOME_FILTER_MOVE_DURATION,
+          easing: HOME_FILTER_EASING
+        }
+      );
+    });
+
+    beforeLayout.cardRects.forEach(function(beforeRect, card) {
+      if (afterLayout.cardRects.has(card)) return;
+      animateHomeCardExit(card, beforeRect);
+    });
+  }
+
+  function updateHomeFilterEmptyStates(shell, category) {
+    shell.querySelectorAll("[data-home-section]").forEach(function(section) {
+      if (!(section instanceof HTMLElement)) return;
+
+      var emptyState = section.querySelector("[data-home-empty-filter]");
+      if (!(emptyState instanceof HTMLElement)) return;
+
+      if (!category) {
+        setHomeEmptyStateVisible(emptyState, false);
+        return;
+      }
+
+      var visibleCards = getHomeVisibleCards(section);
+
+      setHomeEmptyStateVisible(emptyState, visibleCards.length === 0);
+    });
+  }
+
+  function applyHomeCategory(shell, category, options) {
+    var nextCategory = category || "";
+    var shouldAnimate = shouldAnimateHomeFilter(options);
+    var beforeLayout = shouldAnimate ? captureHomeLayout(shell) : null;
+    shell.dataset.activeCategory = nextCategory;
+
+    shell.querySelectorAll(".home-category-btn").forEach(function(button) {
+      if (!(button instanceof HTMLButtonElement)) return;
+
+      var isActive = (button.dataset.homeCategory || "") === nextCategory;
+      button.classList.toggle("home-category-btn--active", isActive);
+      button.setAttribute("aria-pressed", String(isActive));
+    });
+
+    shell.querySelectorAll("[data-home-post-stack] .post-card").forEach(function(card) {
+      if (!(card instanceof HTMLElement)) return;
+      setHomeCardVisible(card, !nextCategory || card.dataset.category === nextCategory);
+    });
+
+    updateHomeFilterEmptyStates(shell, nextCategory);
+    writeHomeSidebarStorage("home_active_category", nextCategory);
+
+    if (!beforeLayout) return;
+
+    var afterLayout = captureHomeLayout(shell);
+    animateHomeSectionHeights(beforeLayout, afterLayout);
+    animateHomeCards(beforeLayout, afterLayout);
+  }
+
+  function getHomeSectionForLang(shell, lang) {
+    var sections = shell.querySelectorAll("[data-home-section]");
+
+    for (var index = 0; index < sections.length; index += 1) {
+      var section = sections[index];
+      if (section instanceof HTMLElement && section.dataset.uiLang === lang) {
+        return section;
+      }
+    }
+
+    return null;
+  }
+
+  function syncHomeCategoryForCurrentLang(shell) {
+    var activeCategory = shell.dataset.activeCategory || readHomeSidebarStorage("home_active_category", "");
+    if (!activeCategory) {
+      applyHomeCategory(shell, "", { animate: false });
+      return;
+    }
+
+    var activeSection = getHomeSectionForLang(shell, getHomeUiLang());
+    if (!activeSection) {
+      applyHomeCategory(shell, activeCategory, { animate: false });
+      return;
+    }
+
+    var hasMatchingCard = Array.from(
+      activeSection.querySelectorAll("[data-home-post-stack] .post-card")
+    ).some(function(card) {
+      return card instanceof HTMLElement && card.dataset.category === activeCategory;
+    });
+
+    applyHomeCategory(shell, hasMatchingCard ? activeCategory : "", { animate: false });
+  }
+
+  function hydrateHomeSidebar() {
+    var shell = getHomeShell();
+    if (!(shell instanceof HTMLElement)) return;
+
+    syncHomeSidebarLabels(shell, getHomeUiLang());
+
+    var storedCollapsed = readHomeSidebarStorage("home_sidebar_collapsed", "");
+    var shouldCollapse = storedCollapsed === ""
+      ? isHomeCompactViewport()
+      : storedCollapsed === "true";
+
+    setHomeSidebarCollapsed(shell, shouldCollapse);
+    syncHomeCategoryForCurrentLang(shell);
+  }
+
+  if (!window.__homeSidebarEventsInit) {
+    window.__homeSidebarEventsInit = true;
+
+    document.addEventListener("click", function(event) {
+      var target = event.target;
+      if (!(target instanceof Element)) return;
+
+      var shell = getHomeShell();
+      if (!(shell instanceof HTMLElement)) return;
+
+      var categoryBtn = target.closest(".home-category-btn");
+      if (categoryBtn instanceof HTMLButtonElement && !categoryBtn.disabled) {
+        applyHomeCategory(shell, categoryBtn.dataset.homeCategory || "", { animate: true });
+        return;
+      }
+
+      var collapseBtn = target.closest("[data-home-sidebar-collapse]");
+      if (collapseBtn instanceof HTMLButtonElement) {
+        setHomeSidebarCollapsed(shell, true);
+
+        window.requestAnimationFrame(function() {
+          var revealBtn = shell.querySelector("[data-home-sidebar-reveal]");
+          if (revealBtn instanceof HTMLButtonElement) revealBtn.focus();
+        });
+        return;
+      }
+
+      var revealBtn = target.closest("[data-home-sidebar-reveal]");
+      if (revealBtn instanceof HTMLButtonElement) {
+        setHomeSidebarCollapsed(shell, false);
+
+        window.requestAnimationFrame(function() {
+          var nextFocus = shell.querySelector("[data-home-sidebar-collapse]");
+          if (nextFocus instanceof HTMLButtonElement) nextFocus.focus();
+        });
+      }
+    });
+
+    document.addEventListener("astro:page-load", hydrateHomeSidebar);
+    document.addEventListener("blog-language-sync", function() {
+      var shell = getHomeShell();
+      if (!(shell instanceof HTMLElement)) return;
+
+      syncHomeSidebarLabels(shell, getHomeUiLang());
+      syncHomeCategoryForCurrentLang(shell);
+    });
+  }
+
+  hydrateHomeSidebar();
+</script>
+
+<style>
+  .home-shell {
+    position: relative;
+  }
+
+  .home-layout {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 1rem;
+    align-items: start;
+  }
+
+  .home-sidebar-rail {
+    position: sticky;
+    top: calc(4.5rem + 1rem);
+    align-self: start;
+    width: 18rem;
+    min-width: 0;
+    transition: width 260ms ease;
+  }
+
+  .home-sidebar {
+    position: relative;
+    width: 18rem;
+    padding: 1rem;
+    max-height: calc(100vh - 6.5rem);
+    overflow-x: clip;
+    overflow-y: auto;
+    transition:
+      transform 260ms ease,
+      opacity 220ms ease,
+      box-shadow 220ms ease;
+  }
+
+  .home-shell[data-sidebar-collapsed="true"] .home-sidebar-rail {
+    width: 0;
+  }
+
+  .home-shell[data-sidebar-collapsed="true"] .home-sidebar {
+    transform: translateX(calc(-100% - 1.25rem));
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .home-feed {
+    min-width: 0;
+    display: grid;
+    gap: 1rem;
+  }
+
+  .home-sidebar__header {
+    display: grid;
+    gap: 0.35rem;
+    padding: 0.25rem 0 0.9rem;
+    border-bottom: 1px solid rgba(124, 255, 122, 0.08);
+  }
+
+  .home-sidebar__header .eyebrow {
+    margin: 0;
+  }
+
+  .home-sidebar__section {
+    margin-top: 1rem;
+  }
+
+  .home-sidebar__summary {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.7rem;
+    padding: 0 0.1rem;
+    color: var(--muted);
+    font-family: var(--font-ui);
+    font-size: 0.74rem;
+    letter-spacing: 0.04em;
+  }
+
+  .home-sidebar__summary strong {
+    color: var(--text);
+    font-size: 0.92rem;
+    letter-spacing: 0;
+  }
+
+  .home-sidebar__summary strong span {
+    color: var(--muted);
+    font-size: 0.76rem;
+    font-weight: 600;
+  }
+
+  .home-category-list {
+    display: grid;
+    gap: 0.55rem;
+  }
+
+  .home-category-btn {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.9rem;
+    width: 100%;
+    padding: 0.8rem 0.9rem;
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(124, 255, 122, 0.08);
+    background: rgba(11, 15, 20, 0.62);
+    color: var(--text);
+    text-align: left;
+    cursor: pointer;
+    transition:
+      border-color 180ms ease,
+      background 180ms ease,
+      transform 180ms ease,
+      box-shadow 180ms ease;
+  }
+
+  .home-category-btn:hover:not(:disabled) {
+    transform: translateX(3px);
+    border-color: rgba(124, 255, 122, 0.24);
+    background: rgba(18, 24, 32, 0.8);
+    box-shadow: inset 0 0 0 1px rgba(124, 255, 122, 0.04);
+  }
+
+  .home-category-btn:disabled {
+    opacity: 0.38;
+    cursor: not-allowed;
+  }
+
+  .home-category-btn--active {
+    border-color: rgba(124, 255, 122, 0.34);
+    background:
+      linear-gradient(135deg, rgba(124, 255, 122, 0.12), rgba(124, 255, 122, 0.04)),
+      rgba(18, 24, 32, 0.88);
+    box-shadow:
+      0 0 0 1px rgba(124, 255, 122, 0.08),
+      0 10px 28px rgba(0, 0, 0, 0.18);
+  }
+
+  .home-category-btn__text {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+  }
+
+  .home-category-btn__label {
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    word-break: break-word;
+  }
+
+  .home-category-btn__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.9rem;
+    height: 1.9rem;
+    padding: 0 0.55rem;
+    border-radius: 999px;
+    border: 1px solid rgba(124, 255, 122, 0.1);
+    background: rgba(124, 255, 122, 0.06);
+    color: var(--accent);
+    font-family: var(--font-code);
+    font-size: 0.76rem;
+    font-weight: 700;
+  }
+
+  .home-sidebar__collapse,
+  .home-sidebar__reveal {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(124, 255, 122, 0.18);
+    background: rgba(10, 15, 19, 0.92);
+    color: var(--accent);
+    font-family: var(--font-code);
+    cursor: pointer;
+    transition:
+      transform 180ms ease,
+      border-color 180ms ease,
+      background 180ms ease,
+      color 180ms ease,
+      opacity 180ms ease;
+  }
+
+  .home-sidebar__collapse:hover,
+  .home-sidebar__reveal:hover {
+    transform: translateY(-1px);
+    border-color: rgba(124, 255, 122, 0.42);
+    background: rgba(17, 24, 31, 0.98);
+    color: var(--accent-strong);
+  }
+
+  .home-sidebar__collapse {
+    position: absolute;
+    top: 1rem;
+    right: 0.3rem;
+    width: 2rem;
+    height: 2.8rem;
+    border-radius: 999px;
+    box-shadow: 0 14px 28px rgba(0, 0, 0, 0.32);
+    z-index: 2;
+  }
+
+  .home-sidebar__reveal {
+    position: fixed;
+    top: calc(4.5rem + 1.4rem);
+    left: 0;
+    z-index: 12;
+    width: 2.1rem;
+    height: 3.25rem;
+    padding-left: 0.3rem;
+    border-left: none;
+    border-radius: 0 999px 999px 0;
+    box-shadow: 0 18px 32px rgba(0, 0, 0, 0.34);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-0.3rem);
+  }
+
+  .home-shell[data-sidebar-collapsed="true"] .home-sidebar__reveal {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(0);
+  }
+
+  .home-shell :global([data-home-post-stack] .post-card) {
+    transform-origin: top center;
+    will-change: transform, opacity;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .home-shell :global([data-home-post-stack] .post-card) {
+      will-change: auto;
+    }
+  }
+
+  @media (max-width: 960px) {
+    .home-layout {
+      display: block;
+    }
+
+    .home-sidebar-rail {
+      display: none;
+    }
+
+    .home-sidebar__reveal {
+      display: none;
+    }
+  }
+</style>
