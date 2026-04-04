@@ -61,6 +61,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       </div>
 
       <input type="hidden" id="edit-slug" value="" />
+      <input type="hidden" id="edit-pubdate" value="" />
     </form>
   </div>
 
@@ -225,14 +226,14 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       .replace(/-+/g, "-");
   }
 
-  function buildFrontmatter(title: string, description: string, tags: string[], category: string, thumbnail: string): string {
-    const today = new Date().toISOString().split("T")[0];
+  function buildFrontmatter(title: string, description: string, tags: string[], category: string, thumbnail: string, pubDate?: string): string {
+    const date = pubDate ?? new Date().toISOString().split("T")[0];
     const tagLines = tags.length > 0
       ? "tags:\n" + tags.map((t) => `  - ${t.trim()}`).join("\n")
       : "tags: []";
     const catLine = category ? `\ncategory: ${category}` : "";
     const thumbLine = thumbnail ? `\nthumbnail: ${thumbnail}` : "";
-    return `---\ntitle: "${title}"\ndescription: "${description}"\npubDate: ${today}\n${tagLines}${catLine}${thumbLine}\n---\n\n`;
+    return `---\ntitle: "${title}"\ndescription: "${description}"\npubDate: ${date}\n${tagLines}${catLine}${thumbLine}\n---\n\n`;
   }
 
   async function loadCategories(token: string) {
@@ -272,6 +273,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     const descMatch = fm.match(/^description:\s*"?(.+?)"?\s*$/m);
     const categoryMatch = fm.match(/^category:\s*(.+)\s*$/m);
     const thumbMatch = fm.match(/^thumbnail:\s*(.+)\s*$/m);
+    const pubDateMatch = fm.match(/^pubDate:\s*(.+)\s*$/m);
     const tagsMatch = [...fm.matchAll(/^\s*-\s*(.+)\s*$/gm)].map((m) => m[1]);
 
     (document.getElementById("post-title") as HTMLInputElement).value = titleMatch?.[1] ?? "";
@@ -291,6 +293,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       select.value = catVal;
     }
     (document.getElementById("edit-slug") as HTMLInputElement).value = slug;
+    (document.getElementById("edit-pubdate") as HTMLInputElement).value = pubDateMatch?.[1]?.trim() ?? "";
     (document.getElementById("submit-btn") as HTMLButtonElement).textContent = "수정 & 발행";
     document.title = "글 수정";
   }
@@ -460,9 +463,10 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       const category = (document.getElementById("post-category") as HTMLSelectElement).value;
       const thumbnail = (document.getElementById("post-thumbnail") as HTMLInputElement).value.trim();
       const editSlug = (document.getElementById("edit-slug") as HTMLInputElement).value;
+      const editPubDate = (document.getElementById("edit-pubdate") as HTMLInputElement).value;
       const slug = editSlug || toSlug(title);
       const markdown = editor.getMarkdown();
-      const fileContent = buildFrontmatter(title, description, tags, category, thumbnail) + markdown;
+      const fileContent = buildFrontmatter(title, description, tags, category, thumbnail, editPubDate || undefined) + markdown;
 
       submitBtn.disabled = true;
       submitStatus.textContent = "커밋 중...";
