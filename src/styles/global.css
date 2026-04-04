@@ -30,6 +30,10 @@
   --radius-md: 16px;
   --radius-sm: 999px;
   --content-width: min(1080px, calc(100vw - 1.5rem));
+  --post-card-thumb-width: 11.5rem;
+  --post-card-thumb-height: 7.25rem;
+  --post-card-thumb-width-mobile: 5.5rem;
+  --post-card-thumb-height-mobile: 5.5rem;
   --font-body: "Mona12", "Pretendard", -apple-system, system-ui, "Segoe UI", sans-serif;
   --font-ui: "Mona12", "Pretendard", -apple-system, system-ui, "Segoe UI", sans-serif;
   --font-code: "Mona12", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
@@ -615,29 +619,23 @@ html.nav-open #mobile-overlay { display: block; }
 /* ── 포스트 그리드 ────────────────────────────────────────── */
 .post-stack {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
-}
-
-.post-stack .post-card--featured {
-  grid-column: 1 / -1;
-}
-
-@media (max-width: 640px) {
-  .post-stack {
-    grid-template-columns: 1fr;
-  }
+  grid-template-columns: 1fr;
+  gap: 0.9rem;
 }
 
 /* ── 글래스모피즘 카드 ───────────────────────────────────── */
 .post-card {
   position: relative;
+  display: grid;
+  grid-template-columns: var(--post-card-thumb-width) minmax(0, 1fr);
+  gap: 1.1rem;
+  align-items: start;
   border: 1px solid rgba(124, 255, 122, 0.07);
   border-radius: var(--radius-lg);
   background: rgba(15, 20, 27, 0.55);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  padding: 1.25rem;
+  padding: 1rem;
   transition:
     transform 280ms ease,
     border-color 280ms ease,
@@ -673,12 +671,6 @@ html.nav-open #mobile-overlay { display: block; }
   opacity: 1;
 }
 
-.post-card--featured {
-  padding: 1.5rem;
-  background: rgba(15, 20, 27, 0.65);
-  border-color: rgba(124, 255, 122, 0.1);
-}
-
 /* ── 메타 ─────────────────────────────────────────────────── */
 .post-card__meta,
 .article__meta {
@@ -695,10 +687,14 @@ html.nav-open #mobile-overlay { display: block; }
 /* ── 제목 ─────────────────────────────────────────────────── */
 .post-card h2 {
   font-family: var(--font-body);
-  margin: 0.55rem 0 0.35rem;
-  font-size: clamp(1.15rem, 1rem + 0.6vw, 1.65rem);
-  line-height: 1.2;
+  margin: 0;
+  font-size: clamp(1.1rem, 1rem + 0.45vw, 1.45rem);
+  line-height: 1.16;
   letter-spacing: -0.02em;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .post-card h2 a {
@@ -713,15 +709,11 @@ html.nav-open #mobile-overlay { display: block; }
   background-size: 100% 1px;
 }
 
-.post-card--featured h2 {
-  font-size: clamp(1.4rem, 1.15rem + 1vw, 2.1rem);
-  line-height: 1.15;
-}
-
 /* ── 설명 ─────────────────────────────────────────────────── */
 .post-card p {
   margin: 0;
-  line-height: 1.6;
+  line-height: 1.55;
+  font-size: 0.92rem;
 }
 
 /* ── 태그 ─────────────────────────────────────────────────── */
@@ -729,7 +721,7 @@ html.nav-open #mobile-overlay { display: block; }
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
-  margin-top: 0.85rem;
+  margin-top: 0;
 }
 
 .tag-list li {
@@ -874,5 +866,28 @@ html.nav-open #mobile-overlay { display: block; }
   .hero-terminal,
   .post-card {
     padding-inline: 0.95rem;
+  }
+
+  .post-card {
+    grid-template-columns: var(--post-card-thumb-width-mobile) minmax(0, 1fr);
+    gap: 0.8rem;
+    align-items: start;
+  }
+
+  .post-card h2 {
+    font-size: 1.02rem;
+  }
+
+  .post-card p {
+    font-size: 0.84rem;
+  }
+
+  .tag-list {
+    gap: 0.3rem;
+  }
+
+  .tag-list li {
+    padding: 0.18rem 0.5rem;
+    font-size: 0.68rem;
   }
 }

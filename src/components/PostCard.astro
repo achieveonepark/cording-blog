@@ -1,36 +1,32 @@
 ---
 import type { CollectionEntry } from "astro:content";
-import { formatDate, getReadingTime, getPostLang } from "../lib/blog";
+import { getPostLang } from "../lib/blog";
 
 interface Props {
   post: CollectionEntry<"blog">;
-  featured?: boolean;
 }
 
-const { post, featured = false } = Astro.props;
+const { post } = Astro.props;
 const lang = getPostLang(post);
 ---
 
-<article class:list={["post-card", { "post-card--featured": featured }]} data-category={post.data.category ?? ""} data-lang={lang}>
-  {post.data.thumbnail && (
-    <a href={`/posts/${post.id}/`} class="post-card__thumb-link">
-      <img class="post-card__thumb" src={post.data.thumbnail} alt="" loading="lazy" />
-    </a>
-  )}
+<article class="post-card" data-category={post.data.category ?? ""} data-lang={lang}>
+  <div class="post-card__media">
+    {post.data.thumbnail ? (
+      <a href={`/posts/${post.id}/`} class="post-card__thumb-link" aria-hidden="true" tabindex="-1">
+        <img class="post-card__thumb" src={post.data.thumbnail} alt="" loading="lazy" />
+      </a>
+    ) : (
+      <div class="post-card__thumb-link post-card__thumb-link--empty" aria-hidden="true"></div>
+    )}
+  </div>
 
   <div class="post-card__body">
-    <div class="post-card__meta">
-      <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate, lang)}</time>
-      <span class="post-card__sep" aria-hidden="true">/</span>
-      <span>{getReadingTime(post, lang)}</span>
-      {post.data.category && <span class="post-category">{post.data.category}</span>}
-    </div>
-
     <h2>
       <a href={`/posts/${post.id}/`}>{post.data.title}</a>
     </h2>
 
-    {post.data.description && <p>{post.data.description}</p>}
+    {post.data.description && <p class="post-card__description">{post.data.description}</p>}
 
     {post.data.tags.length > 0 && (
       <ul class="tag-list" aria-label={lang === "en" ? "Post tags" : "글 태그"}>
@@ -41,17 +37,32 @@ const lang = getPostLang(post);
 </article>
 
 <style>
-  /* ── 썸네일 ─────────────────────────────────────────────── */
+  .post-card__media {
+    width: var(--post-card-thumb-width);
+    height: var(--post-card-thumb-height);
+    min-width: 0;
+    flex: none;
+  }
+
   .post-card__thumb-link {
     display: block;
     overflow: hidden;
-    border-radius: 8px;
-    flex-shrink: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: var(--radius-md);
+    background: rgba(10, 15, 19, 0.92);
+  }
+
+  .post-card__thumb-link--empty {
+    border: 1px dashed rgba(124, 255, 122, 0.12);
+    background:
+      linear-gradient(135deg, rgba(124, 255, 122, 0.08), transparent 70%),
+      rgba(10, 15, 19, 0.78);
   }
 
   .post-card__thumb {
     width: 100%;
-    aspect-ratio: 16 / 9;
+    height: 100%;
     object-fit: cover;
     display: block;
     transition: transform 400ms ease, filter 400ms ease;
@@ -63,52 +74,39 @@ const lang = getPostLang(post);
     filter: brightness(0.95) saturate(1);
   }
 
-  /* ── Featured: 가로 레이아웃 ────────────────────────────── */
-  .post-card--featured {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
-    align-items: center;
+  .post-card__body {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.65rem;
   }
 
-  .post-card--featured .post-card__thumb-link {
-    border-radius: 10px;
+  .post-card__body h2 {
+    margin: 0;
   }
 
-  .post-card--featured .post-card__thumb {
-    aspect-ratio: 4 / 3;
+  .post-card__description {
+    display: -webkit-box;
+    margin: 0;
+    overflow: hidden;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    line-height: 1.6;
   }
 
-  @media (max-width: 640px) {
-    .post-card--featured {
-      grid-template-columns: 1fr;
-      gap: 1rem;
+  .post-card__body .tag-list {
+    margin-top: 0;
+  }
+
+  @media (max-width: 720px) {
+    .post-card__media {
+      width: var(--post-card-thumb-width-mobile);
+      height: var(--post-card-thumb-height-mobile);
     }
-  }
 
-  /* ── 일반 카드: 썸네일 위에 ─────────────────────────────── */
-  .post-card:not(.post-card--featured) .post-card__thumb-link {
-    margin-bottom: 0.85rem;
-  }
-
-  /* ── 메타 구분자 ────────────────────────────────────────── */
-  .post-card__sep {
-    color: rgba(124, 255, 122, 0.2);
-    font-weight: 300;
-  }
-
-  /* ── 카테고리 뱃지 ──────────────────────────────────────── */
-  .post-category {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.12rem 0.55rem;
-    border-radius: 999px;
-    background: rgba(124, 255, 122, 0.08);
-    border: 1px solid rgba(124, 255, 122, 0.18);
-    color: #7cff7a;
-    font-size: 0.7rem;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    .post-card__body {
+      gap: 0.45rem;
+    }
   }
 </style>
