@@ -9,7 +9,7 @@ tags:
   - Jenkins
   - Fastlane
 category: R&D
-thumbnail: /images/1775345275634.png
+thumbnail: /images/1775347507127.png
 ---
 
 ## Xcode
