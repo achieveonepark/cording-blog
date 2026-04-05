@@ -24,16 +24,16 @@ thumbnail: /images/1775359650805.png
 
 기본적인 골조는 아래와 같이 잡아달라고 했다.
 
-- 데이터 관리는 DI 형식인 `VContainer`로
-- 데이터 테이블은 `Google Sheet 연동`, 런타임에선 `MemoryPack을 이용`하여 로드하도록
-- `Addressables`는 최대한 사용하기 쉽게
-- 사용기 1의 Localization까지 포함
-- `UIToolkit`으로 GUI 구현, `SettingsProvider`를 적극 활용하도록
-- 문서는 `Gitbook`으로 구현
+* 데이터 관리는 DI 형식인 `VContainer`로
+* 데이터 테이블은 `Google Sheet 연동`, 런타임에선 `MemoryPack을 이용`하여 로드하도록
+* `Addressables`는 최대한 사용하기 쉽게
+* 사용기 1의 Localization까지 포함
+* `UIToolkit`으로 GUI 구현, `SettingsProvider`를 적극 활용하도록
+* 문서는 `Gitbook`으로 구현
 
 요청하여 나온 결과물.
 
-## [AchEngine 바로가기](https://os.somiri.dev/AchEngine/guide/)
+## [AchEngine 바로가기](https://www.somiri.dev/AchEngine/guide/)
 
 이런 저런 기능들 모두 사용해봤는데, 처음에 쬐끔만 헤맸다 뿐 다 사용할 만할 정도로 검증이 되었다. 또한 문서도 엄청 잘써준다...
 
