@@ -7,7 +7,7 @@ tags:
   - Localization
   - AI
 category: AI
-thumbnail: /images/1774959561563.png
+thumbnail: /images/1775347988244.png
 ---
 
 Claude를 Max까지는 너무 비싸고, **Pro**로 사용해보고 있다.
