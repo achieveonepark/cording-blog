@@ -6,7 +6,7 @@ tags:
   - Unity
   - Build
 category: R&D
-thumbnail: /images/1774359786310.png
+thumbnail: /images/1775359042281.png
 ---
 
 # 뭔데요...?
