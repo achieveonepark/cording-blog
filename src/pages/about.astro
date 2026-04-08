@@ -1,6 +1,7 @@
 ---
 import Footer from "../components/Footer.astro";
 import Header from "../components/Header.astro";
+import BackButton from "../components/BackButton.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { site } from "../config/site";
 import {
@@ -23,6 +24,7 @@ const tagCountsByLang = {
 
 <BaseLayout title="About" description="About the author and this blog.">
   <Header />
+  <BackButton href="/" />
 
   <main class="shell app-shell">
     <section class="app-panel about-panel">

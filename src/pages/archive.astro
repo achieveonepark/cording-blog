@@ -1,6 +1,7 @@
 ---
 import Footer from "../components/Footer.astro";
 import Header from "../components/Header.astro";
+import BackButton from "../components/BackButton.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import {
   BLOG_LANGS,
@@ -50,6 +51,7 @@ const monthNames = {
 
 <BaseLayout title="Archive" description="Monthly post archives.">
   <Header />
+  <BackButton href="/" />
 
   <main class="shell app-shell">
     <section class="app-panel">

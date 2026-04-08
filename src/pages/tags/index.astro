@@ -1,6 +1,7 @@
 ---
 import Footer from "../../components/Footer.astro";
 import Header from "../../components/Header.astro";
+import BackButton from "../../components/BackButton.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import {
   BLOG_LANGS,
@@ -32,6 +33,7 @@ const tagsByLang = BLOG_LANGS.reduce((acc, lang) => {
 
 <BaseLayout title="Tags" description="Browse tags by language.">
   <Header />
+  <BackButton href="/" />
 
   <main class="shell app-shell">
     <section class="app-panel tag-game-panel">
@@ -51,6 +53,12 @@ const tagsByLang = BLOG_LANGS.reduce((acc, lang) => {
       </div>
 
       <div id="tag-game-container"></div>
+
+      <p class="tag-hint">
+        <kbd>Ctrl</kbd>
+        <span data-ui-lang="ko">키를 누르면 바람이 붑니다</span>
+        <span data-ui-lang="en">Press to blow wind</span>
+      </p>
     </section>
   </main>
 
@@ -69,31 +77,36 @@ const tagsByLang = BLOG_LANGS.reduce((acc, lang) => {
     var tagDataEl = document.getElementById("tag-data");
     if (!tagDataEl) return;
     var allTagData = JSON.parse(tagDataEl.textContent || "{}");
+    var game = null;
+    var sceneBalls = [];
+    var sceneRef = null;
 
     function getCurrentLang() {
       return document.documentElement.dataset.blogLang === "en" ? "en" : "ko";
     }
 
     function getTagData() {
-      var lang = getCurrentLang();
-      return allTagData[lang] || [];
+      return allTagData[getCurrentLang()] || [];
     }
-
-    var game = null;
 
     function createGame() {
       var container = document.getElementById("tag-game-container");
       if (!container) return;
 
-      var w = container.offsetWidth || 600;
-      var h = Math.max(420, Math.min(600, window.innerHeight * 0.55));
-
       if (game) {
         game.destroy(true);
         game = null;
+        sceneBalls = [];
+        sceneRef = null;
       }
 
-      var config = {
+      // clear container
+      container.innerHTML = "";
+
+      var w = container.offsetWidth || 600;
+      var h = Math.max(420, Math.min(600, window.innerHeight * 0.55));
+
+      game = new Phaser.Game({
         type: Phaser.CANVAS,
         parent: "tag-game-container",
         width: w,
@@ -101,20 +114,14 @@ const tagsByLang = BLOG_LANGS.reduce((acc, lang) => {
         transparent: true,
         physics: {
           default: "matter",
-          matter: {
-            gravity: { x: 0, y: 0.6 },
-            debug: false
-          }
+          matter: { gravity: { x: 0, y: 0.6 }, debug: false }
         },
-        scene: {
-          create: createScene
-        }
-      };
-
-      game = new Phaser.Game(config);
+        scene: { create: onCreateScene }
+      });
     }
 
-    function createScene() {
+    function onCreateScene() {
+      sceneRef = this;
       var scene = this;
       var tags = getTagData();
       if (tags.length === 0) return;
@@ -129,14 +136,14 @@ const tagsByLang = BLOG_LANGS.reduce((acc, lang) => {
 
       // Walls
       var wallOpts = { isStatic: true, restitution: 0.5, friction: 0.05 };
-      scene.matter.add.rectangle(w / 2, h + 25, w + 100, 50, wallOpts); // bottom
-      scene.matter.add.rectangle(w / 2, -25, w + 100, 50, wallOpts);    // top
-      scene.matter.add.rectangle(-25, h / 2, 50, h + 100, wallOpts);    // left
-      scene.matter.add.rectangle(w + 25, h / 2, 50, h + 100, wallOpts); // right
+      scene.matter.add.rectangle(w / 2, h + 25, w + 100, 50, wallOpts);
+      scene.matter.add.rectangle(w / 2, -25, w + 100, 50, wallOpts);
+      scene.matter.add.rectangle(-25, h / 2, 50, h + 100, wallOpts);
+      scene.matter.add.rectangle(w + 25, h / 2, 50, h + 100, wallOpts);
 
       var minR = 28;
       var maxR = 70;
-      var balls = [];
+      sceneBalls = [];
 
       var colors = [
         0x00ff41, 0x00cc33, 0x33ff66, 0x66ff99,
@@ -152,7 +159,6 @@ const tagsByLang = BLOG_LANGS.reduce((acc, lang) => {
 
         var x = Phaser.Math.Between(r + 20, w - r - 20);
         var y = Phaser.Math.Between(r + 20, h / 2);
-
         var color = colors[i % colors.length];
 
         var ball = scene.matter.add.circle(x, y, r, {
@@ -163,25 +169,18 @@ const tagsByLang = BLOG_LANGS.reduce((acc, lang) => {
           label: "tag-ball"
         });
 
-        // random initial velocity
         scene.matter.body.setVelocity(ball, {
           x: Phaser.Math.Between(-3, 3),
           y: Phaser.Math.Between(-2, 2)
         });
 
         var gfx = scene.add.graphics();
-
-        // glow
         gfx.fillStyle(color, 0.12);
         gfx.fillCircle(0, 0, r + 6);
-        // border
         gfx.lineStyle(1.5, color, 0.5);
         gfx.strokeCircle(0, 0, r);
-        // fill
         gfx.fillStyle(color, 0.15);
         gfx.fillCircle(0, 0, r);
-
-        // inner highlight
         gfx.fillStyle(0xffffff, 0.06);
         gfx.fillCircle(-r * 0.2, -r * 0.25, r * 0.5);
 
@@ -206,50 +205,39 @@ const tagsByLang = BLOG_LANGS.reduce((acc, lang) => {
 
         var containerObj = scene.add.container(x, y, [gfx, label, countLabel]);
 
-        balls.push({
+        sceneBalls.push({
           body: ball,
           container: containerObj,
           radius: r,
           tag: tag,
-          gfx: gfx,
           color: color
         });
       }
 
       // Update positions
       scene.events.on("update", function () {
-        for (var i = 0; i < balls.length; i++) {
-          var b = balls[i];
+        for (var i = 0; i < sceneBalls.length; i++) {
+          var b = sceneBalls[i];
           b.container.setPosition(b.body.position.x, b.body.position.y);
           b.container.setRotation(b.body.angle);
         }
       });
 
-      // Click / tap
+      // Click
       scene.input.on("pointerdown", function (pointer) {
-        for (var i = 0; i < balls.length; i++) {
-          var b = balls[i];
+        for (var i = 0; i < sceneBalls.length; i++) {
+          var b = sceneBalls[i];
           var dx = pointer.x - b.body.position.x;
           var dy = pointer.y - b.body.position.y;
-          var dist = Math.sqrt(dx * dx + dy * dy);
-
-          if (dist < b.radius) {
-            // flash effect
+          if (Math.sqrt(dx * dx + dy * dy) < b.radius) {
             var flash = scene.add.graphics();
             flash.fillStyle(b.color, 0.35);
             flash.fillCircle(0, 0, b.radius + 8);
             flash.setPosition(b.body.position.x, b.body.position.y);
-
             scene.tweens.add({
-              targets: flash,
-              alpha: 0,
-              scaleX: 1.4,
-              scaleY: 1.4,
-              duration: 300,
-              onComplete: function () { flash.destroy(); }
+              targets: flash, alpha: 0, scaleX: 1.4, scaleY: 1.4,
+              duration: 300, onComplete: function () { flash.destroy(); }
             });
-
-            // navigate
             var encodedTag = encodeURIComponent(b.tag);
             setTimeout(function () {
               window.location.href = "/tags/" + encodedTag + "/";
@@ -262,50 +250,64 @@ const tagsByLang = BLOG_LANGS.reduce((acc, lang) => {
       // Hover cursor
       scene.input.on("pointermove", function (pointer) {
         var hovering = false;
-        for (var i = 0; i < balls.length; i++) {
-          var b = balls[i];
+        for (var i = 0; i < sceneBalls.length; i++) {
+          var b = sceneBalls[i];
           var dx = pointer.x - b.body.position.x;
           var dy = pointer.y - b.body.position.y;
-          if (Math.sqrt(dx * dx + dy * dy) < b.radius) {
-            hovering = true;
-            break;
-          }
+          if (Math.sqrt(dx * dx + dy * dy) < b.radius) { hovering = true; break; }
         }
         scene.game.canvas.style.cursor = hovering ? "pointer" : "default";
       });
 
-      // mouse drag to push balls
+      // Drag to push
       var isDragging = false;
       scene.input.on("pointerdown", function () { isDragging = true; });
       scene.input.on("pointerup", function () { isDragging = false; });
       scene.input.on("pointermove", function (pointer) {
         if (!isDragging) return;
-        for (var i = 0; i < balls.length; i++) {
-          var b = balls[i];
+        for (var i = 0; i < sceneBalls.length; i++) {
+          var b = sceneBalls[i];
           var dx = pointer.x - b.body.position.x;
           var dy = pointer.y - b.body.position.y;
-          var dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < b.radius + 20) {
-            var force = 0.003;
+          if (Math.sqrt(dx * dx + dy * dy) < b.radius + 20) {
             scene.matter.body.applyForce(b.body, b.body.position, {
-              x: (pointer.x - pointer.prevPosition.x) * force,
-              y: (pointer.y - pointer.prevPosition.y) * force
+              x: (pointer.x - pointer.prevPosition.x) * 0.003,
+              y: (pointer.y - pointer.prevPosition.y) * 0.003
             });
           }
         }
       });
     }
 
-    // Init
-    if (document.readyState === "complete") {
-      createGame();
-    } else {
-      window.addEventListener("load", createGame);
+    // Wind on Ctrl key
+    function applyWind() {
+      if (!sceneRef || sceneBalls.length === 0) return;
+      for (var i = 0; i < sceneBalls.length; i++) {
+        var b = sceneBalls[i];
+        var forceX = (Math.random() - 0.5) * 0.08;
+        var forceY = -(Math.random() * 0.06 + 0.03);
+        sceneRef.matter.body.applyForce(b.body, b.body.position, { x: forceX, y: forceY });
+      }
     }
 
-    // Re-create on language change
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Control" && !e.repeat) {
+        applyWind();
+      }
+    });
+
+    // Init - use setTimeout to ensure DOM is ready on first navigation
+    function tryInit() {
+      var container = document.getElementById("tag-game-container");
+      if (container) createGame();
+    }
+
+    tryInit();
+    setTimeout(tryInit, 100);
+
+    // Language change
     document.addEventListener("blog-language-sync", function () {
-      createGame();
+      setTimeout(createGame, 50);
     });
 
     // Resize
@@ -317,16 +319,15 @@ const tagsByLang = BLOG_LANGS.reduce((acc, lang) => {
 
     // Astro page transitions
     document.addEventListener("astro:page-load", function () {
-      var container = document.getElementById("tag-game-container");
-      if (container && !container.querySelector("canvas")) {
-        createGame();
-      }
+      setTimeout(tryInit, 50);
     });
 
     document.addEventListener("astro:before-swap", function () {
       if (game) {
         game.destroy(true);
         game = null;
+        sceneBalls = [];
+        sceneRef = null;
       }
     });
   })();
@@ -335,7 +336,6 @@ const tagsByLang = BLOG_LANGS.reduce((acc, lang) => {
 
 <style>
   .tag-game-panel {
-    max-width: 960px;
     margin: 0 auto;
   }
 
@@ -351,5 +351,26 @@ const tagsByLang = BLOG_LANGS.reduce((acc, lang) => {
     display: block;
     width: 100% !important;
     height: auto !important;
+  }
+
+  .tag-hint {
+    margin-top: 0.8rem;
+    font-size: 0.72rem;
+    color: var(--muted);
+    opacity: 0.6;
+    text-align: center;
+  }
+
+  .tag-hint kbd {
+    display: inline-block;
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    border: 1px solid rgba(124, 255, 122, 0.2);
+    background: rgba(124, 255, 122, 0.08);
+    color: var(--accent);
+    font-family: var(--font-code);
+    font-size: 0.68rem;
+    font-weight: 700;
+    margin-right: 0.3rem;
   }
 </style>
