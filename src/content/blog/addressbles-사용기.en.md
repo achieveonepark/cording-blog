@@ -8,6 +8,7 @@ tags:
   - Addressables
   - Resource
 category: R&D
+thumbnail: /images/1775359380524.png
 ---
 
 # Overview
