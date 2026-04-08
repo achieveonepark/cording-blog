@@ -152,9 +152,9 @@ const gameDataByLang = BLOG_LANGS.reduce((acc, lang) => {
       if (game) { game.destroy(true); game = null; }
       container.innerHTML = "";
 
-      var rect = container.getBoundingClientRect();
-      var w = Math.floor(rect.width) || 900;
-      var h = Math.max(600, Math.min(800, window.innerHeight * 0.72));
+      var w = container.offsetWidth || container.parentElement.offsetWidth || Math.floor(window.innerWidth * 0.92);
+      if (w < 100) w = Math.floor(window.innerWidth * 0.92);
+      var h = Math.max(500, Math.min(800, window.innerHeight * 0.72));
 
       game = new Phaser.Game({
         type: Phaser.CANVAS,
@@ -580,18 +580,22 @@ const gameDataByLang = BLOG_LANGS.reduce((acc, lang) => {
   .archive-game-left {
     flex: 1;
     min-width: 0;
+    width: 100%;
   }
 
   #archive-game-container {
     width: 100%;
+    max-width: 100%;
     border-radius: var(--radius-md);
     border: 1px solid rgba(124, 255, 122, 0.08);
     overflow: hidden;
+    box-sizing: border-box;
   }
 
   #archive-game-container canvas {
     display: block;
     width: 100% !important;
+    height: auto !important;
   }
 
   .archive-game-hint {
@@ -704,8 +708,16 @@ const gameDataByLang = BLOG_LANGS.reduce((acc, lang) => {
   .archive-hint-mobile { display: none; }
 
   @media (max-width: 860px) {
+    .archive-shell {
+      width: calc(100vw - 1rem);
+    }
+
     .archive-game-layout {
       flex-direction: column;
+    }
+
+    .archive-game-left {
+      width: 100%;
     }
 
     .archive-game-sidebar {
