@@ -7,7 +7,6 @@ import {
   BLOG_LANGS,
   type BlogLang,
   filterPostsByLang,
-  formatDate,
   getPublishedPosts
 } from "../lib/blog";
 
@@ -81,98 +80,45 @@ const gameDataByLang = BLOG_LANGS.reduce((acc, lang) => {
   <BackButton href="/" />
 
   <main class="archive-shell app-shell">
-    <!-- View toggle -->
-    <div class="archive-toggle">
-      <button class="archive-toggle__btn archive-toggle__btn--active" data-archive-mode="list">
-        <svg viewBox="0 0 24 24" width="16" height="16"><path d="M3 4h18M3 12h18M3 20h18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
-        <span data-ui-lang="ko">목록</span>
-        <span data-ui-lang="en">List</span>
-      </button>
-      <button class="archive-toggle__btn" data-archive-mode="game">
-        <svg viewBox="0 0 24 24" width="16" height="16"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4zM3 6h18M16 10a4 4 0 01-8 0" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        <span data-ui-lang="ko">탐험</span>
-        <span data-ui-lang="en">Explore</span>
-      </button>
-    </div>
-
-    <!-- List view -->
-    <section class="app-panel archive-list-view" data-archive-view="list">
-      {BLOG_LANGS.map((lang) => {
-        const langPosts = postsByLang[lang];
-        const { archiveMap, years } = archiveByLang[lang];
-
-        return (
-          <div data-ui-lang={lang}>
-            <div class="section-heading">
-              <p class="eyebrow">{lang === "en" ? "Archive" : "아카이브"}</p>
-              <h1>{lang === "en" ? "Monthly Archive" : "월별 아카이브"}</h1>
-              <p>
-                {lang === "en"
-                  ? `${langPosts.length} posts across ${years.length} years`
-                  : `총 ${langPosts.length}개의 글 / ${years.length}개 연도`}
-              </p>
-            </div>
-
-            {years.map((year) => {
-              const yearMap = archiveMap.get(year)!;
-              const months = [...yearMap.keys()].sort((a, b) => b - a);
-
-              return (
-                <div class="year-block">
-                  <h2 class="year-label">{year}</h2>
-                  {months.map((month) => {
-                    const monthPosts = yearMap.get(month)!;
-                    return (
-                      <div class="month-block">
-                        <h3 class="month-label">
-                          <span class="month-name">{monthNames[lang][month]}</span>
-                          <span class="month-count">{monthPosts.length}</span>
-                        </h3>
-                        <ul class="archive-posts">
-                          {monthPosts.map((post) => (
-                            <li class="archive-post">
-                              <time class="archive-post__date">{formatDate(post.data.pubDate, lang)}</time>
-                              <a href={`/posts/${post.id}/`} class="archive-post__title">
-                                {post.data.title}
-                              </a>
-                              {post.data.category && (
-                                <span class="archive-post__cat">{post.data.category}</span>
-                              )}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    );
-                  })}
-                </div>
-              );
-            })}
-          </div>
-        );
-      })}
-    </section>
-
     <!-- Game view -->
-    <section class="app-panel archive-game-view" data-archive-view="game" style="display:none">
-      <div id="archive-game-container"></div>
-      <div class="archive-game-hint">
-        <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>
-        <span data-ui-lang="ko">이동 / 건물에 다가가면 포스팅이 보입니다</span>
-        <span data-ui-lang="en">Move / Approach buildings to see posts</span>
+    <section class="archive-game-view">
+      <div class="archive-game-layout">
+        <div class="archive-game-left app-panel">
+          <div id="archive-game-container"></div>
+          <div class="archive-game-hint">
+            <span class="archive-hint-desktop">
+              <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>
+              <span data-ui-lang="ko">이동</span>
+              <span data-ui-lang="en">Move</span>
+            </span>
+            <span class="archive-hint-mobile">
+              <span data-ui-lang="ko">드래그하여 이동</span>
+              <span data-ui-lang="en">Drag to move</span>
+            </span>
+            <span data-ui-lang="ko"> / 건물에 다가가면 포스팅이 보입니다</span>
+            <span data-ui-lang="en"> / Approach buildings to see posts</span>
+          </div>
+        </div>
+
+        <div class="archive-game-sidebar">
+          <div class="archive-sidebar-panel" id="archive-sidebar">
+            <div class="archive-sidebar__empty" id="archive-sidebar-empty">
+              <div class="archive-sidebar__icon">🏢</div>
+              <p data-ui-lang="ko">건물에 다가가면<br/>포스팅 정보가 여기에 표시됩니다</p>
+              <p data-ui-lang="en">Approach a building<br/>to see post info here</p>
+            </div>
+            <div class="archive-sidebar__content" id="archive-sidebar-content" style="display:none">
+              <span class="archive-sidebar__cat" id="archive-popup-cat"></span>
+              <h3 id="archive-popup-title"></h3>
+              <a id="archive-popup-link" href="/" class="archive-sidebar__link">
+                <span data-ui-lang="ko">읽으러 가기 →</span>
+                <span data-ui-lang="en">Read post →</span>
+              </a>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
-
-    <!-- Post popup -->
-    <div id="archive-popup" class="archive-popup" style="display:none">
-      <div class="archive-popup__inner">
-        <span class="archive-popup__cat" id="archive-popup-cat"></span>
-        <h3 id="archive-popup-title"></h3>
-        <a id="archive-popup-link" href="/" class="archive-popup__link">
-          <span data-ui-lang="ko">읽으러 가기 →</span>
-          <span data-ui-lang="en">Read post →</span>
-        </a>
-      </div>
-    </div>
   </main>
 
   <Footer />
@@ -196,21 +142,11 @@ const gameDataByLang = BLOG_LANGS.reduce((acc, lang) => {
       return document.documentElement.dataset.blogLang === "en" ? "en" : "ko";
     }
 
-    // ── Toggle ──
-    document.addEventListener("click", function (e) {
-      var btn = e.target.closest("[data-archive-mode]");
-      if (!btn) return;
-      var mode = btn.dataset.archiveMode;
-      document.querySelectorAll("[data-archive-mode]").forEach(function (b) {
-        b.classList.toggle("archive-toggle__btn--active", b.dataset.archiveMode === mode);
-      });
-      document.querySelectorAll("[data-archive-view]").forEach(function (v) {
-        v.style.display = v.dataset.archiveView === mode ? "" : "none";
-      });
-      if (mode === "game") { setTimeout(initGame, 50); }
-    });
-
     function initGame() {
+      if (typeof Phaser === "undefined") {
+        setTimeout(initGame, 100);
+        return;
+      }
       var container = document.getElementById("archive-game-container");
       if (!container) return;
       if (game) { game.destroy(true); game = null; }
@@ -233,6 +169,7 @@ const gameDataByLang = BLOG_LANGS.reduce((acc, lang) => {
     var player, cursors, keys, cam;
     var buildings = [], postBoxes = [];
     var activeBuilding = null, nearPost = null;
+    var touchVX = 0, touchVY = 0, touchActive = false;
     var BW = 320, BH = 60, BOX_H = 36, BOX_GAP = 6, ROOF = 44;
     var GAP_X = 380, GAP_Y = 80, COLS = 2, PAD = 120;
 
@@ -433,6 +370,35 @@ const gameDataByLang = BLOG_LANGS.reduce((acc, lang) => {
           }
         }
       });
+
+      // Touch drag to move (mobile)
+      var touchStartX = 0, touchStartY = 0, isTouchDrag = false;
+      scene.input.on("pointerdown", function (pointer) {
+        touchStartX = pointer.x;
+        touchStartY = pointer.y;
+        isTouchDrag = false;
+        touchActive = true;
+        touchVX = 0;
+        touchVY = 0;
+      });
+      scene.input.on("pointermove", function (pointer) {
+        if (!pointer.isDown || !touchActive) return;
+        var dx = pointer.x - touchStartX;
+        var dy = pointer.y - touchStartY;
+        if (Math.abs(dx) > 8 || Math.abs(dy) > 8) isTouchDrag = true;
+        if (isTouchDrag) {
+          var len = Math.sqrt(dx * dx + dy * dy);
+          var maxD = 60;
+          var ratio = Math.min(len / maxD, 1);
+          touchVX = (dx / len) * ratio;
+          touchVY = (dy / len) * ratio;
+        }
+      });
+      scene.input.on("pointerup", function () {
+        touchActive = false;
+        touchVX = 0;
+        touchVY = 0;
+      });
     }
 
     function drawBuilding(gfx, x, y, w, h, active) {
@@ -483,11 +449,17 @@ const gameDataByLang = BLOG_LANGS.reduce((acc, lang) => {
       else if (keys.D.isDown || cursors.right.isDown) vx = speed;
       if (keys.W.isDown || cursors.up.isDown) vy = -speed;
       else if (keys.S.isDown || cursors.down.isDown) vy = speed;
+      // Touch input
+      if (vx === 0 && vy === 0 && touchActive) {
+        vx = touchVX * speed;
+        vy = touchVY * speed;
+      }
       if (vx !== 0 && vy !== 0) { vx *= 0.707; vy *= 0.707; }
       player.body.setVelocity(vx, vy);
 
       var px = player.x, py = player.y;
-      var popup = document.getElementById("archive-popup");
+      var sidebarEmpty = document.getElementById("archive-sidebar-empty");
+      var sidebarContent = document.getElementById("archive-sidebar-content");
       var closestBuilding = null;
       var closestDist = Infinity;
 
@@ -554,10 +526,12 @@ const gameDataByLang = BLOG_LANGS.reduce((acc, lang) => {
         if (titleEl) titleEl.textContent = foundPost.title;
         if (catEl) { catEl.textContent = foundPost.category || ""; catEl.style.display = foundPost.category ? "" : "none"; }
         if (linkEl) linkEl.href = "/posts/" + foundPost.id + "/";
-        if (popup) popup.style.display = "flex";
+        if (sidebarContent) sidebarContent.style.display = "";
+        if (sidebarEmpty) sidebarEmpty.style.display = "none";
       } else if (!foundPost && nearPost) {
         nearPost = null;
-        if (popup) popup.style.display = "none";
+        if (sidebarContent) sidebarContent.style.display = "none";
+        if (sidebarEmpty) sidebarEmpty.style.display = "";
       }
 
       // Cursor
@@ -576,13 +550,15 @@ const gameDataByLang = BLOG_LANGS.reduce((acc, lang) => {
       }
     }
 
+    // Auto-init
+    setTimeout(initGame, 50);
+
     document.addEventListener("astro:before-swap", function () {
       if (game) { game.destroy(true); game = null; }
     });
     document.addEventListener("astro:page-load", function () {
       var c = document.getElementById("archive-game-container");
-      var gv = document.querySelector('[data-archive-view="game"]');
-      if (c && gv && gv.style.display !== "none") setTimeout(initGame, 50);
+      if (c) setTimeout(initGame, 50);
     });
   })();
   </script>
@@ -594,138 +570,18 @@ const gameDataByLang = BLOG_LANGS.reduce((acc, lang) => {
     margin: 0 auto;
   }
 
-  /* ── Toggle ── */
-  .archive-toggle {
-    display: flex;
-    gap: 0.4rem;
-    justify-content: flex-end;
-    margin-bottom: 0;
-  }
-
-  .archive-toggle__btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.4rem 0.9rem;
-    border-radius: 999px;
-    border: 1px solid rgba(124, 255, 122, 0.12);
-    background: transparent;
-    color: var(--muted);
-    font-family: var(--font-ui);
-    font-size: 0.78rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 150ms ease;
-  }
-
-  .archive-toggle__btn:hover {
-    border-color: rgba(124, 255, 122, 0.3);
-    color: var(--accent);
-  }
-
-  .archive-toggle__btn--active {
-    border-color: rgba(124, 255, 122, 0.35);
-    background: rgba(124, 255, 122, 0.1);
-    color: var(--accent);
-  }
-
-  /* ── List view ── */
-  .year-block { margin-bottom: 2.5rem; }
-
-  .year-label {
-    font-size: 1.4rem;
-    font-weight: 900;
-    font-family: var(--font-code);
-    color: var(--accent);
-    margin: 0 0 1rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid var(--border);
-    letter-spacing: -0.02em;
-  }
-
-  .month-block {
-    margin-bottom: 1.25rem;
-    padding-left: 1rem;
-    border-left: 2px solid var(--border);
-  }
-
-  .month-label {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin: 0 0 0.6rem;
-  }
-
-  .month-name {
-    font-size: 0.76rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-
-  .month-count {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 1.3rem;
-    height: 1.3rem;
-    padding: 0 0.3rem;
-    border-radius: 999px;
-    background: var(--accent-soft);
-    color: var(--accent);
-    font-size: 0.65rem;
-    font-weight: 700;
-  }
-
-  .archive-posts {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-  }
-
-  .archive-post {
-    display: flex;
-    align-items: center;
-    gap: 0.85rem;
-    flex-wrap: wrap;
-  }
-
-  .archive-post__date {
-    flex-shrink: 0;
-    font-size: 0.72rem;
-    font-family: var(--font-code);
-    color: var(--muted);
-    min-width: 6rem;
-  }
-
-  .archive-post__title {
-    font-size: 0.88rem;
-    font-weight: 500;
-    color: var(--text);
-    text-decoration: none;
-    transition: color 150ms;
-  }
-
-  .archive-post__title:hover { color: var(--accent); }
-
-  .archive-post__cat {
-    flex-shrink: 0;
-    padding: 0.1rem 0.45rem;
-    border-radius: 999px;
-    background: var(--accent-soft);
-    border: 1px solid var(--border);
-    color: var(--accent);
-    font-size: 0.65rem;
-    font-weight: 600;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-  }
-
   /* ── Game view ── */
+  .archive-game-layout {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .archive-game-left {
+    flex: 1;
+    min-width: 0;
+  }
+
   #archive-game-container {
     width: 100%;
     border-radius: var(--radius-md);
@@ -759,50 +615,77 @@ const gameDataByLang = BLOG_LANGS.reduce((acc, lang) => {
     margin: 0 0.1rem;
   }
 
-  /* ── Post popup ── */
-  .archive-popup {
-    display: none;
-    position: fixed;
-    bottom: 2rem;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 50;
-    pointer-events: auto;
+  /* ── Sidebar ── */
+  .archive-game-sidebar {
+    flex-shrink: 0;
+    width: 280px;
+    position: sticky;
+    top: 5rem;
   }
 
-  .archive-popup__inner {
-    padding: 1rem 1.5rem;
-    border-radius: var(--radius-md);
-    border: 1px solid rgba(124, 255, 122, 0.25);
-    background: rgba(8, 14, 18, 0.95);
-    backdrop-filter: blur(16px);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+  .archive-sidebar-panel {
+    border: 1px solid rgba(124, 255, 122, 0.12);
+    border-radius: var(--radius-xl);
+    background:
+      linear-gradient(180deg, rgba(33, 41, 50, 0.96), rgba(22, 28, 35, 0.97)),
+      var(--panel);
+    box-shadow: var(--shadow-panel);
+    padding: 1.5rem 1.2rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .archive-sidebar-panel::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(124, 255, 122, 0.4), transparent);
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  .archive-sidebar__empty {
     text-align: center;
-    max-width: 400px;
+    padding: 1.5rem 0;
   }
 
-  .archive-popup__cat {
+  .archive-sidebar__icon {
+    font-size: 2rem;
+    margin-bottom: 0.8rem;
+    opacity: 0.5;
+  }
+
+  .archive-sidebar__empty p {
+    font-size: 0.8rem;
+    color: var(--muted);
+    opacity: 0.6;
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  .archive-sidebar__cat {
     display: inline-block;
     font-size: 0.65rem;
     font-weight: 700;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--muted);
-    margin-bottom: 0.3rem;
+    margin-bottom: 0.4rem;
   }
 
-  .archive-popup__inner h3 {
+  .archive-sidebar__content h3 {
     font-size: 0.95rem;
     font-weight: 700;
     color: var(--text);
-    margin: 0 0 0.6rem;
-    line-height: 1.4;
+    margin: 0 0 1rem;
+    line-height: 1.5;
   }
 
-  .archive-popup__link {
+  .archive-sidebar__link {
     display: inline-flex;
     align-items: center;
-    padding: 0.35rem 0.9rem;
+    padding: 0.45rem 1rem;
     border-radius: 999px;
     border: 1px solid rgba(124, 255, 122, 0.3);
     background: rgba(124, 255, 122, 0.1);
@@ -813,16 +696,25 @@ const gameDataByLang = BLOG_LANGS.reduce((acc, lang) => {
     transition: all 150ms;
   }
 
-  .archive-popup__link:hover {
+  .archive-sidebar__link:hover {
     background: rgba(124, 255, 122, 0.2);
     border-color: rgba(124, 255, 122, 0.5);
   }
 
-  @media (max-width: 560px) {
-    .archive-post {
+  .archive-hint-mobile { display: none; }
+
+  @media (max-width: 860px) {
+    .archive-game-layout {
       flex-direction: column;
-      align-items: flex-start;
-      gap: 0.2rem;
     }
+
+    .archive-game-sidebar {
+      width: 100%;
+      position: static;
+    }
+
+    .archive-hint-desktop { display: none; }
+    .archive-hint-mobile { display: inline; }
   }
+
 </style>
