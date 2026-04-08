@@ -6,6 +6,7 @@ pubDate: 2026-03-28
 tags:
   - Unity
 category: Thinking
+thumbnail: /images/1775345989263.jpeg
 ---
 
 Unity 6 is trying to introduce quite a lot of change, while also creating a lot of confusion around versioning at the same time...

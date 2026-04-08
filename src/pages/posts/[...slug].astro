@@ -31,9 +31,41 @@ const translation = await findTranslation(post);
 const articleEyebrow = post.data.category?.trim() || (currentLang === "en" ? "Post" : "글");
 
 const postUrl = `${Astro.site?.toString().replace(/\/$/, "") ?? "https://blog.somiri.dev"}/posts/${post.id}/`;
+const siteUrl = Astro.site?.toString().replace(/\/$/, "") ?? "https://blog.somiri.dev";
+const ogImage = post.data.thumbnail
+  ? (post.data.thumbnail.startsWith("http") ? post.data.thumbnail : `${siteUrl}${post.data.thumbnail}`)
+  : `${siteUrl}/og-default.png`;
+
+const jsonLd = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": post.data.title,
+  "description": post.data.description,
+  "image": ogImage,
+  "datePublished": post.data.pubDate.toISOString(),
+  "author": {
+    "@type": "Person",
+    "name": "Somiri",
+    "url": siteUrl
+  },
+  "publisher": {
+    "@type": "Person",
+    "name": "Somiri",
+    "url": siteUrl
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": postUrl
+  },
+  "url": postUrl,
+  "inLanguage": currentLang === "en" ? "en" : "ko",
+  ...(post.data.tags.length > 0 ? { "keywords": post.data.tags.join(", ") } : {}),
+  ...(post.data.category ? { "articleSection": post.data.category } : {})
+});
 ---
 
 <BaseLayout title={post.data.title} description={post.data.description} image={post.data.thumbnail}>
+  <script type="application/ld+json" set:html={jsonLd} />
   <ReadingProgress />
   <CodeCopy />
   <Header />

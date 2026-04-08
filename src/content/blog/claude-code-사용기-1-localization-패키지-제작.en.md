@@ -8,7 +8,7 @@ tags:
   - Localization
   - AI
 category: Thinking
-thumbnail: /images/1774959561563.png
+thumbnail: /images/1775347988244.png
 ---
 
 Using Claude all the way up to Max is just too expensive, so I've been trying it with the **Pro** plan.

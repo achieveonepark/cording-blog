@@ -8,6 +8,7 @@ tags:
   - Facebook SDK
   - Troubleshooting
 category: Troubleshooting
+thumbnail: /images/1775358466621.png
 ---
 
 When installing `Facebook SDK 17.0.1` on versions below `Xcode 15.3`, the build succeeds but a crash occurs at runtime.
