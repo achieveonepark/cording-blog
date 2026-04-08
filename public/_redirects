@@ -1,1 +1,3 @@
 https://cording-blog.pages.dev/* https://blog.somiri.dev/:splat 301
+/posts/ / 301
+/posts https://blog.somiri.dev/ 301
