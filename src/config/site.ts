@@ -1,6 +1,6 @@
 export const site = {
   title: "Somblog",
-  description: "작업 기록, 실험, 회고를 차분하게 쌓아가는 Astro 블로그.",
+  description: "Unity, Android, iOS, CI/CD, ASP.NET. 그리고 그 외 신기능이 궁금해서 경험을 기록하기 위한 블로그!",
   url: "https://blog.somiri.dev",
   author: "parkachieveone",
   locale: "ko-KR"
