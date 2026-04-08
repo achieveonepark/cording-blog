@@ -35,7 +35,7 @@ const tagsByLang = BLOG_LANGS.reduce((acc, lang) => {
   <Header />
   <BackButton href="/" />
 
-  <main class="shell app-shell">
+  <main class="tag-game-shell app-shell">
     <section class="app-panel tag-game-panel">
       <div class="section-heading">
         <p class="eyebrow">
@@ -105,7 +105,7 @@ const tagsByLang = BLOG_LANGS.reduce((acc, lang) => {
 
       var rect = container.getBoundingClientRect();
       var w = Math.floor(rect.width) || 600;
-      var h = Math.max(500, Math.min(700, window.innerHeight * 0.65));
+      var h = Math.max(550, Math.min(800, window.innerHeight * 0.72));
 
       game = new Phaser.Game({
         type: Phaser.CANVAS,
@@ -336,6 +336,11 @@ const tagsByLang = BLOG_LANGS.reduce((acc, lang) => {
 </BaseLayout>
 
 <style>
+  .tag-game-shell {
+    width: min(1400px, calc(100vw - 1.5rem));
+    margin: 0 auto;
+  }
+
   .tag-game-panel {
     margin: 0 auto;
   }
@@ -350,6 +355,7 @@ const tagsByLang = BLOG_LANGS.reduce((acc, lang) => {
 
   #tag-game-container canvas {
     display: block;
+    width: 100% !important;
   }
 
   .tag-hint {
