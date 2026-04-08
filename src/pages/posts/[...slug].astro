@@ -76,7 +76,7 @@ const jsonLd = JSON.stringify({
       <!-- 왼쪽: 뒤로가기 버튼 -->
       <aside class="back-col">
         <div class="back-sticky">
-          <a href="/posts" class="back-btn" aria-label={currentLang === "en" ? "Back to all posts" : "모든 글로 돌아가기"} data-pagefind-ignore>
+          <a href="/" class="back-btn" aria-label={currentLang === "en" ? "Back to all posts" : "모든 글로 돌아가기"} data-pagefind-ignore>
             <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
               <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
@@ -226,7 +226,7 @@ const jsonLd = JSON.stringify({
         },
         body: JSON.stringify({ message: `chore: delete post - ${postSlug}`, sha: file.sha, branch: BRANCH }),
       });
-      window.location.href = "/posts";
+      window.location.href = "/";
     });
   }
 

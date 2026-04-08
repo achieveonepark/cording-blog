@@ -8,7 +8,6 @@ export const site = {
 
 export const navigation = [
   { href: "/", label: { ko: "홈", en: "Home" } },
-  { href: "/posts", label: { ko: "글", en: "Posts" } },
   { href: "/tags", label: { ko: "태그", en: "Tags" } },
   { href: "/archive", label: { ko: "아카이브", en: "Archive" } },
   { href: "/about", label: { ko: "소개", en: "About" } },
