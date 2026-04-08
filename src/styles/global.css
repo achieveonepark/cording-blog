@@ -839,9 +839,12 @@ html.nav-open #mobile-overlay { display: block; }
 
 .prose code {
   font-family: var(--font-code);
-  padding: 0.08rem 0.35rem;
-  border-radius: 0.45rem;
-  background: rgba(124, 255, 122, 0.08);
+  font-size: 0.88em;
+  padding: 0.15rem 0.45rem;
+  border-radius: 0.35rem;
+  background: rgba(124, 255, 122, 0.13);
+  border: 1px solid rgba(124, 255, 122, 0.12);
+  color: #b8ffb6;
 }
 
 .prose pre {
