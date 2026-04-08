@@ -1,11 +1,13 @@
 ---
 import Footer from "../components/Footer.astro";
 import Header from "../components/Header.astro";
+import BackButton from "../components/BackButton.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 ---
 
 <BaseLayout title="개인정보처리방침" description="Somblog 개인정보처리방침">
   <Header />
+  <BackButton href="/" />
 
   <main class="shell app-shell">
     <section class="app-panel privacy-panel">

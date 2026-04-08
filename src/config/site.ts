@@ -20,7 +20,7 @@ export const externalLinks = [
     kind: "github"
   },
   {
-    href: "https://os.somiri.dev",
+    href: "https://www.somiri.dev",
     label: "OS",
     kind: "os"
   },

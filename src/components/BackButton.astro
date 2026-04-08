@@ -1,0 +1,54 @@
+---
+interface Props {
+  href?: string;
+  lang?: string;
+}
+
+const { href = "/", lang = "ko" } = Astro.props;
+---
+
+<aside class="back-float">
+  <div class="back-float__sticky">
+    <a href={href} class="back-float__btn" aria-label={lang === "en" ? "Go back" : "뒤로가기"}>
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+        <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </a>
+  </div>
+</aside>
+
+<style>
+  .back-float {
+    position: fixed;
+    top: 50%;
+    left: 1.2rem;
+    z-index: 20;
+    transform: translateY(-50%);
+  }
+
+  .back-float__btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid rgba(124, 255, 122, 0.2);
+    background: rgba(10, 15, 19, 0.8);
+    color: rgba(124, 255, 122, 0.6);
+    text-decoration: none;
+    transition: color 150ms, background 150ms, border-color 150ms;
+  }
+
+  .back-float__btn:hover {
+    color: #7cff7a;
+    background: rgba(124, 255, 122, 0.1);
+    border-color: rgba(124, 255, 122, 0.45);
+  }
+
+  @media (max-width: 920px) {
+    .back-float {
+      display: none;
+    }
+  }
+</style>
