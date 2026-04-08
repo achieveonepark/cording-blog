@@ -54,7 +54,7 @@ const gameDataByLang = BLOG_LANGS.reduce((acc, lang) => {
 
   for (const year of years) {
     const yearMap = archiveMap.get(year)!;
-    const months = [...yearMap.keys()].sort((a, b) => a - b);
+    const months = [...yearMap.keys()].sort((a, b) => b - a);
     for (const month of months) {
       const monthPosts = yearMap.get(month)!;
       buildings.push({
