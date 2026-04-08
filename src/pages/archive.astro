@@ -207,9 +207,7 @@ const gameDataByLang = BLOG_LANGS.reduce((acc, lang) => {
       document.querySelectorAll("[data-archive-view]").forEach(function (v) {
         v.style.display = v.dataset.archiveView === mode ? "" : "none";
       });
-      if (mode === "game") {
-        setTimeout(initGame, 50);
-      }
+      if (mode === "game") { setTimeout(initGame, 50); }
     });
 
     function initGame() {
@@ -219,200 +217,217 @@ const gameDataByLang = BLOG_LANGS.reduce((acc, lang) => {
       container.innerHTML = "";
 
       var rect = container.getBoundingClientRect();
-      var w = Math.floor(rect.width) || 800;
-      var h = Math.max(550, Math.min(750, window.innerHeight * 0.68));
+      var w = Math.floor(rect.width) || 900;
+      var h = Math.max(600, Math.min(800, window.innerHeight * 0.72));
 
       game = new Phaser.Game({
         type: Phaser.CANVAS,
         parent: "archive-game-container",
-        width: w,
-        height: h,
+        width: w, height: h,
         transparent: true,
         physics: { default: "arcade", arcade: { debug: false } },
-        scene: { preload: preloadScene, create: createScene, update: updateScene }
+        scene: { create: createScene, update: updateScene }
       });
     }
 
-    // ── Game state ──
-    var player, cursors, keys;
-    var buildings = [];
-    var postBoxes = [];
-    var activeBuilding = null;
-    var nearPost = null;
-    var playerGfx, playerLabel;
-    var cam;
-    var TILE = 64;
-    var BUILDING_W = 180;
-    var BUILDING_H = 140;
-    var GAP_X = 220;
-    var GAP_Y = 200;
-    var COLS = 3;
-
-    function preloadScene() {}
+    var player, cursors, keys, cam;
+    var buildings = [], postBoxes = [];
+    var activeBuilding = null, nearPost = null;
+    var BW = 320, BH = 60, BOX_H = 36, BOX_GAP = 6, ROOF = 44;
+    var GAP_X = 380, GAP_Y = 80, COLS = 2, PAD = 120;
 
     function createScene() {
       var scene = this;
       var data = allData[getLang()] || [];
       if (data.length === 0) return;
 
-      var worldW = COLS * GAP_X + 300;
+      // Calculate building heights dynamically
+      var maxPosts = 1;
+      for (var i = 0; i < data.length; i++) {
+        if (data[i].posts.length > maxPosts) maxPosts = data[i].posts.length;
+      }
+
+      // Layout: calculate per-building heights
+      var bHeights = [];
+      for (var i = 0; i < data.length; i++) {
+        bHeights.push(ROOF + data[i].posts.length * (BOX_H + BOX_GAP) + 20);
+      }
+
+      // Calculate row heights (max of each row)
       var rows = Math.ceil(data.length / COLS);
-      var worldH = rows * GAP_Y + 400;
+      var rowHeights = [];
+      for (var r = 0; r < rows; r++) {
+        var maxH = 0;
+        for (var c = 0; c < COLS; c++) {
+          var idx = r * COLS + c;
+          if (idx < data.length && bHeights[idx] > maxH) maxH = bHeights[idx];
+        }
+        rowHeights.push(maxH);
+      }
+
+      var worldW = COLS * GAP_X + PAD * 2;
+      var worldH = PAD * 2 + 80;
+      for (var r = 0; r < rows; r++) worldH += rowHeights[r] + GAP_Y;
 
       scene.cameras.main.setBounds(0, 0, worldW, worldH);
       scene.physics.world.setBounds(0, 0, worldW, worldH);
 
-      // Ground tiles
-      var groundGfx = scene.add.graphics();
-      groundGfx.fillStyle(0x0a1210, 1);
-      groundGfx.fillRect(0, 0, worldW, worldH);
+      // Ground
+      var ground = scene.add.graphics();
+      ground.fillStyle(0x060e0a, 1);
+      ground.fillRect(0, 0, worldW, worldH);
 
-      // Grid lines
-      for (var gx = 0; gx < worldW; gx += TILE) {
-        groundGfx.lineStyle(1, 0x00ff41, 0.04);
-        groundGfx.lineBetween(gx, 0, gx, worldH);
+      // Subtle grid
+      for (var gx = 0; gx < worldW; gx += 48) {
+        ground.lineStyle(1, 0x00ff41, 0.025);
+        ground.lineBetween(gx, 0, gx, worldH);
       }
-      for (var gy = 0; gy < worldH; gy += TILE) {
-        groundGfx.lineStyle(1, 0x00ff41, 0.04);
-        groundGfx.lineBetween(0, gy, worldW, gy);
+      for (var gy = 0; gy < worldH; gy += 48) {
+        ground.lineStyle(1, 0x00ff41, 0.025);
+        ground.lineBetween(0, gy, worldW, gy);
       }
 
-      // Buildings
+      // Road between columns
+      var roadX = PAD + BW + (GAP_X - BW) / 2 - 20;
+      ground.fillStyle(0x0a1a10, 1);
+      ground.fillRect(roadX, 0, 40, worldH);
+      ground.lineStyle(1, 0x00ff41, 0.06);
+      for (var ry = 0; ry < worldH; ry += 30) {
+        ground.lineBetween(roadX + 20, ry, roadX + 20, ry + 15);
+      }
+
       buildings = [];
       postBoxes = [];
 
-      for (var i = 0; i < data.length; i++) {
-        var col = i % COLS;
-        var row = Math.floor(i / COLS);
-        var bx = 150 + col * GAP_X;
-        var by = 150 + row * GAP_Y;
-        var bData = data[i];
+      var curY = PAD + 60;
+      for (var r = 0; r < rows; r++) {
+        for (var c = 0; c < COLS; c++) {
+          var idx = r * COLS + c;
+          if (idx >= data.length) continue;
 
-        // Building body
-        var bg = scene.add.graphics();
-        bg.fillStyle(0x0d1f15, 1);
-        bg.fillRoundedRect(bx, by, BUILDING_W, BUILDING_H, 8);
-        bg.lineStyle(1.5, 0x00cc33, 0.5);
-        bg.strokeRoundedRect(bx, by, BUILDING_W, BUILDING_H, 8);
+          var bData = data[idx];
+          var bx = PAD + c * GAP_X;
+          var by = curY;
+          var bh = bHeights[idx];
 
-        // Roof accent
-        bg.fillStyle(0x00ff41, 0.08);
-        bg.fillRoundedRect(bx, by, BUILDING_W, 28, { tl: 8, tr: 8, bl: 0, br: 0 });
+          var bg = scene.add.graphics();
+          drawBuilding(bg, bx, by, BW, bh, false);
 
-        // Door
-        var doorX = bx + BUILDING_W / 2 - 12;
-        var doorY = by + BUILDING_H - 30;
-        bg.fillStyle(0x00ff41, 0.15);
-        bg.fillRect(doorX, doorY, 24, 30);
-        bg.lineStyle(1, 0x00ff41, 0.3);
-        bg.strokeRect(doorX, doorY, 24, 30);
+          // Roof label
+          var labelText = scene.add.text(bx + BW / 2, by + ROOF / 2, bData.label, {
+            fontFamily: "'A2z', monospace",
+            fontSize: "16px",
+            fontStyle: "bold",
+            color: "#00ff41",
+            align: "center"
+          }).setOrigin(0.5).setDepth(2);
 
-        // Label
-        var labelText = scene.add.text(bx + BUILDING_W / 2, by + 14, bData.label, {
-          fontFamily: "'A2z', sans-serif",
-          fontSize: "13px",
-          fontStyle: "bold",
-          color: "#00ff41",
-          align: "center"
-        }).setOrigin(0.5);
-
-        // Post count
-        var countText = scene.add.text(bx + BUILDING_W / 2, by + BUILDING_H / 2 + 5, bData.posts.length + (getLang() === "en" ? " posts" : "개"), {
-          fontFamily: "'A2z', sans-serif",
-          fontSize: "11px",
-          color: "#97a2ad",
-          align: "center"
-        }).setOrigin(0.5);
-
-        // Post boxes (hidden initially)
-        var pBoxes = [];
-        for (var j = 0; j < bData.posts.length; j++) {
-          var px = bx + 15;
-          var py = by + 38 + j * 24;
-
-          var boxGfx = scene.add.graphics();
-          boxGfx.fillStyle(0x00ff41, 0.1);
-          boxGfx.fillRoundedRect(px, py, BUILDING_W - 30, 20, 4);
-          boxGfx.lineStyle(1, 0x00ff41, 0.25);
-          boxGfx.strokeRoundedRect(px, py, BUILDING_W - 30, 20, 4);
-          boxGfx.setVisible(false);
-
-          var boxText = scene.add.text(px + 6, py + 3, bData.posts[j].title, {
+          // Post count (shown when closed)
+          var countStr = bData.posts.length + (getLang() === "en" ? " posts" : "개의 글");
+          var countText = scene.add.text(bx + BW / 2, by + ROOF + 16, countStr, {
             fontFamily: "'A2z', sans-serif",
-            fontSize: "10px",
-            color: "#b8ffb6",
-            align: "left"
-          }).setOrigin(0, 0);
-          boxText.setVisible(false);
-          boxText.setCrop(0, 0, BUILDING_W - 42, 18);
+            fontSize: "13px",
+            color: "#5a8a5a",
+            align: "center"
+          }).setOrigin(0.5).setDepth(2);
 
-          pBoxes.push({
-            gfx: boxGfx,
-            text: boxText,
-            x: px,
-            y: py,
-            w: BUILDING_W - 30,
-            h: 20,
-            postData: bData.posts[j]
+          // Post boxes
+          var pBoxes = [];
+          for (var j = 0; j < bData.posts.length; j++) {
+            var px = bx + 14;
+            var py = by + ROOF + 8 + j * (BOX_H + BOX_GAP);
+            var pw = BW - 28;
+
+            var boxGfx = scene.add.graphics();
+            boxGfx.fillStyle(0x0a1f12, 1);
+            boxGfx.fillRoundedRect(px, py, pw, BOX_H, 6);
+            boxGfx.lineStyle(1, 0x00cc33, 0.3);
+            boxGfx.strokeRoundedRect(px, py, pw, BOX_H, 6);
+            boxGfx.setVisible(false).setDepth(3);
+
+            // Category badge
+            var catStr = bData.posts[j].category || "";
+            var catText = scene.add.text(px + 10, py + 6, catStr.toUpperCase(), {
+              fontFamily: "'A2z', sans-serif",
+              fontSize: "8px",
+              fontStyle: "bold",
+              color: "#00aa33",
+              letterSpacing: 1
+            }).setVisible(false).setDepth(4);
+
+            var titleText = scene.add.text(px + 10, py + 17, bData.posts[j].title, {
+              fontFamily: "'A2z', sans-serif",
+              fontSize: "12px",
+              fontStyle: "bold",
+              color: "#d0ffd0",
+              wordWrap: { width: pw - 20 }
+            }).setVisible(false).setDepth(4);
+            // Crop to box
+            titleText.setCrop(0, 0, pw - 20, 18);
+
+            pBoxes.push({
+              gfx: boxGfx, catText: catText, titleText: titleText,
+              x: px, y: py, w: pw, h: BOX_H,
+              postData: bData.posts[j]
+            });
+          }
+
+          postBoxes.push(pBoxes);
+          buildings.push({
+            x: bx, y: by, w: BW, h: bh,
+            data: bData, bg: bg,
+            label: labelText, count: countText,
+            postBoxesIdx: idx, open: false
           });
         }
-
-        postBoxes.push(pBoxes);
-
-        buildings.push({
-          x: bx,
-          y: by,
-          w: BUILDING_W,
-          h: BUILDING_H,
-          data: bData,
-          bg: bg,
-          label: labelText,
-          count: countText,
-          postBoxesIdx: i,
-          open: false
-        });
+        curY += rowHeights[r] + GAP_Y;
       }
 
-      // Player
-      var startX = 150 + Math.floor(COLS / 2) * GAP_X + BUILDING_W / 2;
-      var startY = 100;
+      // ── Player ──
+      var startX = worldW / 2;
+      var startY = PAD;
 
-      playerGfx = scene.add.graphics();
-      drawPlayer(playerGfx, 0x00ff41);
+      var playerGfx = scene.add.graphics();
+      // Shadow
+      playerGfx.fillStyle(0x000000, 0.3);
+      playerGfx.fillEllipse(0, 8, 22, 8);
+      // Body
+      playerGfx.fillStyle(0x00ff41, 0.9);
+      playerGfx.fillRoundedRect(-8, -12, 16, 20, 4);
+      // Head
+      playerGfx.fillStyle(0x00ff41, 1);
+      playerGfx.fillCircle(0, -16, 8);
+      // Eyes
+      playerGfx.fillStyle(0x001200, 1);
+      playerGfx.fillCircle(-3, -17, 2);
+      playerGfx.fillCircle(3, -17, 2);
+      // Eye highlights
+      playerGfx.fillStyle(0xffffff, 0.8);
+      playerGfx.fillCircle(-2, -18, 0.8);
+      playerGfx.fillCircle(4, -18, 0.8);
 
-      playerLabel = scene.add.text(0, -20, getLang() === "en" ? "You" : "나", {
-        fontFamily: "'A2z', sans-serif",
-        fontSize: "9px",
-        color: "#7cff7a",
-        align: "center"
-      }).setOrigin(0.5);
-
-      var playerContainer = scene.add.container(startX, startY, [playerGfx, playerLabel]);
+      var playerContainer = scene.add.container(startX, startY, [playerGfx]);
+      playerContainer.setDepth(10);
       scene.physics.add.existing(playerContainer);
       playerContainer.body.setCollideWorldBounds(true);
-      playerContainer.body.setSize(20, 20);
-      playerContainer.body.setOffset(-10, -10);
+      playerContainer.body.setSize(16, 16);
+      playerContainer.body.setOffset(-8, -8);
       player = playerContainer;
 
-      // Camera
       cam = scene.cameras.main;
-      cam.startFollow(player, true, 0.08, 0.08);
-      cam.setZoom(1);
+      cam.startFollow(player, true, 0.1, 0.1);
 
-      // Controls
       cursors = scene.input.keyboard.createCursorKeys();
       keys = scene.input.keyboard.addKeys("W,A,S,D");
 
-      // Click handler for post boxes
+      // Click post boxes
       scene.input.on("pointerdown", function (pointer) {
         if (!activeBuilding) return;
-        var worldPoint = cam.getWorldPoint(pointer.x, pointer.y);
+        var wp = cam.getWorldPoint(pointer.x, pointer.y);
         var pBoxes = postBoxes[activeBuilding.postBoxesIdx];
         for (var k = 0; k < pBoxes.length; k++) {
           var pb = pBoxes[k];
-          if (pb.gfx.visible &&
-              worldPoint.x >= pb.x && worldPoint.x <= pb.x + pb.w &&
-              worldPoint.y >= pb.y && worldPoint.y <= pb.y + pb.h) {
+          if (pb.gfx.visible && wp.x >= pb.x && wp.x <= pb.x + pb.w && wp.y >= pb.y && wp.y <= pb.y + pb.h) {
             window.location.href = "/posts/" + pb.postData.id + "/";
             return;
           }
@@ -420,131 +435,114 @@ const gameDataByLang = BLOG_LANGS.reduce((acc, lang) => {
       });
     }
 
-    function drawPlayer(gfx, color) {
-      // Body
-      gfx.fillStyle(color, 0.8);
-      gfx.fillCircle(0, 0, 10);
-      // Inner
-      gfx.fillStyle(0x001800, 0.6);
-      gfx.fillCircle(0, 0, 6);
-      // Eyes
-      gfx.fillStyle(color, 1);
-      gfx.fillCircle(-3, -2, 2);
-      gfx.fillCircle(3, -2, 2);
-      // Glow
-      gfx.lineStyle(1.5, color, 0.4);
-      gfx.strokeCircle(0, 0, 13);
+    function drawBuilding(gfx, x, y, w, h, active) {
+      gfx.clear();
+      // Shadow
+      gfx.fillStyle(0x000000, 0.25);
+      gfx.fillRoundedRect(x + 4, y + 4, w, h, 10);
+      // Main body
+      gfx.fillStyle(active ? 0x0f2a18 : 0x0a1a10, 1);
+      gfx.fillRoundedRect(x, y, w, h, 10);
+      // Border
+      gfx.lineStyle(active ? 2 : 1.2, active ? 0x00ff41 : 0x00aa33, active ? 0.8 : 0.4);
+      gfx.strokeRoundedRect(x, y, w, h, 10);
+      // Roof bar
+      gfx.fillStyle(0x00ff41, active ? 0.2 : 0.08);
+      gfx.fillRoundedRect(x, y, w, ROOF, { tl: 10, tr: 10, bl: 0, br: 0 });
+      // Roof bottom line
+      gfx.lineStyle(1, 0x00ff41, active ? 0.3 : 0.1);
+      gfx.lineBetween(x + 8, y + ROOF, x + w - 8, y + ROOF);
+      // Corner decorations
+      var cs = 6;
+      gfx.lineStyle(1.5, 0x00ff41, active ? 0.5 : 0.15);
+      // top-left
+      gfx.lineBetween(x + 3, y + cs + 10, x + 3, y + 14);
+      gfx.lineBetween(x + 3, y + 14, x + cs + 3, y + 14);
+      // top-right
+      gfx.lineBetween(x + w - 3, y + cs + 10, x + w - 3, y + 14);
+      gfx.lineBetween(x + w - 3, y + 14, x + w - cs - 3, y + 14);
+      // bottom-left
+      gfx.lineBetween(x + 3, y + h - cs - 4, x + 3, y + h - 4);
+      gfx.lineBetween(x + 3, y + h - 4, x + cs + 3, y + h - 4);
+      // bottom-right
+      gfx.lineBetween(x + w - 3, y + h - cs - 4, x + w - 3, y + h - 4);
+      gfx.lineBetween(x + w - 3, y + h - 4, x + w - cs - 3, y + h - 4);
+      if (active) {
+        // Glow effect
+        gfx.lineStyle(4, 0x00ff41, 0.06);
+        gfx.strokeRoundedRect(x - 3, y - 3, w + 6, h + 6, 12);
+      }
     }
 
     function updateScene() {
       if (!player) return;
 
-      var speed = 200;
+      var speed = 220;
       var vx = 0, vy = 0;
-
       if (keys.A.isDown || cursors.left.isDown) vx = -speed;
       else if (keys.D.isDown || cursors.right.isDown) vx = speed;
       if (keys.W.isDown || cursors.up.isDown) vy = -speed;
       else if (keys.S.isDown || cursors.down.isDown) vy = speed;
-
-      // Diagonal normalization
-      if (vx !== 0 && vy !== 0) {
-        vx *= 0.707;
-        vy *= 0.707;
-      }
-
+      if (vx !== 0 && vy !== 0) { vx *= 0.707; vy *= 0.707; }
       player.body.setVelocity(vx, vy);
 
-      // Check proximity to buildings
-      var px = player.x;
-      var py = player.y;
+      var px = player.x, py = player.y;
       var popup = document.getElementById("archive-popup");
       var closestBuilding = null;
       var closestDist = Infinity;
 
       for (var i = 0; i < buildings.length; i++) {
         var b = buildings[i];
+        // Check if player is near building
         var cx = b.x + b.w / 2;
         var cy = b.y + b.h / 2;
-        var dx = px - cx;
-        var dy = py - cy;
+        var dx = px - cx, dy = py - cy;
         var dist = Math.sqrt(dx * dx + dy * dy);
+        var threshold = Math.max(b.w, b.h) * 0.7;
 
-        if (dist < 140) {
-          if (dist < closestDist) {
-            closestDist = dist;
-            closestBuilding = b;
-          }
+        if (dist < threshold && dist < closestDist) {
+          closestDist = dist;
+          closestBuilding = b;
         }
       }
 
-      // Open/close buildings
       for (var i = 0; i < buildings.length; i++) {
         var b = buildings[i];
         var shouldOpen = b === closestBuilding;
         if (shouldOpen && !b.open) {
           b.open = true;
           b.count.setVisible(false);
+          drawBuilding(b.bg, b.x, b.y, b.w, b.h, true);
           var pBoxes = postBoxes[b.postBoxesIdx];
           for (var j = 0; j < pBoxes.length; j++) {
             pBoxes[j].gfx.setVisible(true);
-            pBoxes[j].text.setVisible(true);
+            pBoxes[j].catText.setVisible(true);
+            pBoxes[j].titleText.setVisible(true);
           }
-          // Highlight building
-          b.bg.clear();
-          b.bg.fillStyle(0x0d2f1a, 1);
-          b.bg.fillRoundedRect(b.x, b.y, b.w, b.h, 8);
-          b.bg.lineStyle(2, 0x00ff41, 0.7);
-          b.bg.strokeRoundedRect(b.x, b.y, b.w, b.h, 8);
-          b.bg.fillStyle(0x00ff41, 0.15);
-          b.bg.fillRoundedRect(b.x, b.y, b.w, 28, { tl: 8, tr: 8, bl: 0, br: 0 });
-          var doorX = b.x + b.w / 2 - 12;
-          var doorY = b.y + b.h - 30;
-          b.bg.fillStyle(0x00ff41, 0.25);
-          b.bg.fillRect(doorX, doorY, 24, 30);
-          b.bg.lineStyle(1, 0x00ff41, 0.5);
-          b.bg.strokeRect(doorX, doorY, 24, 30);
         } else if (!shouldOpen && b.open) {
           b.open = false;
           b.count.setVisible(true);
+          drawBuilding(b.bg, b.x, b.y, b.w, b.h, false);
           var pBoxes = postBoxes[b.postBoxesIdx];
           for (var j = 0; j < pBoxes.length; j++) {
             pBoxes[j].gfx.setVisible(false);
-            pBoxes[j].text.setVisible(false);
+            pBoxes[j].catText.setVisible(false);
+            pBoxes[j].titleText.setVisible(false);
           }
-          // Reset building
-          b.bg.clear();
-          b.bg.fillStyle(0x0d1f15, 1);
-          b.bg.fillRoundedRect(b.x, b.y, b.w, b.h, 8);
-          b.bg.lineStyle(1.5, 0x00cc33, 0.5);
-          b.bg.strokeRoundedRect(b.x, b.y, b.w, b.h, 8);
-          b.bg.fillStyle(0x00ff41, 0.08);
-          b.bg.fillRoundedRect(b.x, b.y, b.w, 28, { tl: 8, tr: 8, bl: 0, br: 0 });
-          var doorX = b.x + b.w / 2 - 12;
-          var doorY = b.y + b.h - 30;
-          b.bg.fillStyle(0x00ff41, 0.15);
-          b.bg.fillRect(doorX, doorY, 24, 30);
-          b.bg.lineStyle(1, 0x00ff41, 0.3);
-          b.bg.strokeRect(doorX, doorY, 24, 30);
         }
       }
-
       activeBuilding = closestBuilding;
 
-      // Check proximity to post boxes for popup
+      // Popup for nearest post
       var foundPost = null;
       if (activeBuilding) {
         var pBoxes = postBoxes[activeBuilding.postBoxesIdx];
+        var bestDist = Infinity;
         for (var k = 0; k < pBoxes.length; k++) {
           var pb = pBoxes[k];
-          var bcx = pb.x + pb.w / 2;
-          var bcy = pb.y + pb.h / 2;
-          var ddx = px - bcx;
-          var ddy = py - bcy;
-          if (Math.sqrt(ddx * ddx + ddy * ddy) < 50) {
-            foundPost = pb.postData;
-            break;
-          }
+          var bcx = pb.x + pb.w / 2, bcy = pb.y + pb.h / 2;
+          var d = Math.sqrt((px - bcx) * (px - bcx) + (py - bcy) * (py - bcy));
+          if (d < 80 && d < bestDist) { bestDist = d; foundPost = pb.postData; }
         }
       }
 
@@ -554,7 +552,7 @@ const gameDataByLang = BLOG_LANGS.reduce((acc, lang) => {
         var catEl = document.getElementById("archive-popup-cat");
         var linkEl = document.getElementById("archive-popup-link");
         if (titleEl) titleEl.textContent = foundPost.title;
-        if (catEl) catEl.textContent = foundPost.category || "";
+        if (catEl) { catEl.textContent = foundPost.category || ""; catEl.style.display = foundPost.category ? "" : "none"; }
         if (linkEl) linkEl.href = "/posts/" + foundPost.id + "/";
         if (popup) popup.style.display = "flex";
       } else if (!foundPost && nearPost) {
@@ -562,36 +560,29 @@ const gameDataByLang = BLOG_LANGS.reduce((acc, lang) => {
         if (popup) popup.style.display = "none";
       }
 
-      // Canvas cursor
+      // Cursor
       if (this.game && this.game.canvas) {
         var hovering = false;
         if (activeBuilding) {
+          var ptr = this.input.activePointer;
+          var wp = cam.getWorldPoint(ptr.x, ptr.y);
           var pBoxes = postBoxes[activeBuilding.postBoxesIdx];
-          var pointer = this.input.activePointer;
-          var wp = cam.getWorldPoint(pointer.x, pointer.y);
           for (var k = 0; k < pBoxes.length; k++) {
             var pb = pBoxes[k];
-            if (pb.gfx.visible && wp.x >= pb.x && wp.x <= pb.x + pb.w && wp.y >= pb.y && wp.y <= pb.y + pb.h) {
-              hovering = true;
-              break;
-            }
+            if (pb.gfx.visible && wp.x >= pb.x && wp.x <= pb.x + pb.w && wp.y >= pb.y && wp.y <= pb.y + pb.h) { hovering = true; break; }
           }
         }
         this.game.canvas.style.cursor = hovering ? "pointer" : "default";
       }
     }
 
-    // Cleanup
     document.addEventListener("astro:before-swap", function () {
       if (game) { game.destroy(true); game = null; }
     });
-
     document.addEventListener("astro:page-load", function () {
-      var container = document.getElementById("archive-game-container");
-      var gameView = document.querySelector('[data-archive-view="game"]');
-      if (container && gameView && gameView.style.display !== "none") {
-        setTimeout(initGame, 50);
-      }
+      var c = document.getElementById("archive-game-container");
+      var gv = document.querySelector('[data-archive-view="game"]');
+      if (c && gv && gv.style.display !== "none") setTimeout(initGame, 50);
     });
   })();
   </script>
