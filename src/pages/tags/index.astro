@@ -90,6 +90,8 @@ const tagsByLang = BLOG_LANGS.reduce((acc, lang) => {
     }
 
     function createGame() {
+      if (typeof Phaser === "undefined") return;
+
       var container = document.getElementById("tag-game-container");
       if (!container) return;
 
@@ -103,8 +105,8 @@ const tagsByLang = BLOG_LANGS.reduce((acc, lang) => {
       // clear container
       container.innerHTML = "";
 
-      var rect = container.getBoundingClientRect();
-      var w = Math.floor(rect.width) || 600;
+      var w = container.offsetWidth || container.parentElement.offsetWidth || Math.floor(window.innerWidth * 0.9);
+      if (w < 100) w = Math.floor(window.innerWidth * 0.9);
       var h = Math.max(550, Math.min(800, window.innerHeight * 0.72));
 
       game = new Phaser.Game({
@@ -297,14 +299,32 @@ const tagsByLang = BLOG_LANGS.reduce((acc, lang) => {
       }
     });
 
-    // Init - use setTimeout to ensure DOM is ready on first navigation
+    // Init - wait for Phaser to load, then create game
+    var initAttempts = 0;
     function tryInit() {
       var container = document.getElementById("tag-game-container");
-      if (container) createGame();
+      if (!container) return;
+
+      if (typeof Phaser === "undefined") {
+        initAttempts++;
+        if (initAttempts < 50) {
+          setTimeout(tryInit, 100);
+        }
+        return;
+      }
+
+      if (container.offsetWidth < 100) {
+        initAttempts++;
+        if (initAttempts < 50) {
+          setTimeout(tryInit, 100);
+        }
+        return;
+      }
+
+      createGame();
     }
 
     tryInit();
-    setTimeout(tryInit, 100);
 
     // Language change
     document.addEventListener("blog-language-sync", function () {
@@ -320,6 +340,7 @@ const tagsByLang = BLOG_LANGS.reduce((acc, lang) => {
 
     // Astro page transitions
     document.addEventListener("astro:page-load", function () {
+      initAttempts = 0;
       setTimeout(tryInit, 50);
     });
 
@@ -342,15 +363,21 @@ const tagsByLang = BLOG_LANGS.reduce((acc, lang) => {
   }
 
   .tag-game-panel {
+    width: 100%;
+    max-width: 100%;
     margin: 0 auto;
+    box-sizing: border-box;
   }
 
   #tag-game-container {
     width: 100%;
+    max-width: 100%;
+    min-height: 500px;
     border-radius: var(--radius-md);
     border: 1px solid rgba(124, 255, 122, 0.08);
     overflow: hidden;
     margin-top: 1rem;
+    box-sizing: border-box;
   }
 
   #tag-game-container canvas {
