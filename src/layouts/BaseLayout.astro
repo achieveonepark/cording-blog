@@ -1,6 +1,7 @@
 ---
 import { ClientRouter } from "astro:transitions";
 import { site } from "../config/site";
+import BackToTop from "../components/BackToTop.astro";
 import "../styles/global.css";
 
 interface Props {
@@ -392,5 +393,6 @@ const gaId = import.meta.env.PUBLIC_GA_MEASUREMENT_ID ?? "";
         motionPreference.addEventListener("change", startAnimation);
       })();
     </script>
+    <BackToTop />
   </body>
 </html>

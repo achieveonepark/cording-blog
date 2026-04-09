@@ -1,0 +1,75 @@
+---
+---
+
+<button class="back-to-top" id="back-to-top" aria-label="Scroll to top">
+  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M18 15l-6-6-6 6"/>
+  </svg>
+</button>
+
+<script>
+  function initBackToTop() {
+    const btn = document.getElementById("back-to-top");
+    if (!btn) return;
+
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        btn.classList.toggle("visible", window.scrollY > 300);
+        ticking = false;
+      });
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+
+    btn.addEventListener("click", () => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }
+
+  document.addEventListener("astro:page-load", initBackToTop);
+</script>
+
+<style>
+  .back-to-top {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(124, 255, 122, 0.35);
+    background: rgba(10, 15, 19, 0.95);
+    color: rgba(124, 255, 122, 0.8);
+    cursor: pointer;
+    box-shadow: 0 0 8px rgba(124, 255, 122, 0.08);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(10px);
+    transition: opacity 200ms ease, transform 200ms ease, color 150ms, background 150ms, border-color 150ms;
+  }
+
+  .back-to-top.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+
+  .back-to-top:hover {
+    color: #7cff7a;
+    background: rgba(124, 255, 122, 0.12);
+    border-color: rgba(124, 255, 122, 0.55);
+    box-shadow: 0 0 12px rgba(124, 255, 122, 0.15);
+  }
+
+  @media print {
+    .back-to-top { display: none; }
+  }
+</style>

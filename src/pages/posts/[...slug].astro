@@ -8,6 +8,7 @@ import ShareButtons from "../../components/ShareButtons.astro";
 import Giscus from "../../components/Giscus.astro";
 import ReadingProgress from "../../components/ReadingProgress.astro";
 import CodeCopy from "../../components/CodeCopy.astro";
+import PostNav from "../../components/PostNav.astro";
 import { formatDate, getPublishedPosts, getReadingTime, getPostLang, findTranslation } from "../../lib/blog";
 
 export async function getStaticPaths() {
@@ -43,6 +44,7 @@ const jsonLd = JSON.stringify({
   "description": post.data.description,
   "image": ogImage,
   "datePublished": post.data.pubDate.toISOString(),
+  ...(post.data.updatedDate ? { "dateModified": post.data.updatedDate.toISOString() } : {}),
   "author": {
     "@type": "Person",
     "name": "Somiri",
@@ -88,8 +90,17 @@ const jsonLd = JSON.stringify({
       {headings.length > 0 && (
         <aside class="toc-col">
           <div class="toc-sticky">
-            <p class="toc-post-title">{post.data.title}</p>
-            <TOC headings={headings} lang={currentLang} />
+            <div class="toc-header">
+              <p class="toc-post-title">{post.data.title}</p>
+              <button class="toc-toggle" aria-label={currentLang === "en" ? "Toggle table of contents" : "목차 접기/펼치기"}>
+                <svg class="toc-toggle__icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M15 18l-6-6 6-6"/>
+                </svg>
+              </button>
+            </div>
+            <div class="toc-content">
+              <TOC headings={headings} lang={currentLang} />
+            </div>
           </div>
         </aside>
       )}
@@ -106,6 +117,11 @@ const jsonLd = JSON.stringify({
 
           <div class="article__meta" data-pagefind-ignore>
             <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate, currentLang)}</time>
+            {post.data.updatedDate && (
+              <span class="updated-date">
+                {currentLang === "en" ? "Updated" : "수정"} {formatDate(post.data.updatedDate, currentLang)}
+              </span>
+            )}
             <span>{getReadingTime(post, currentLang)}</span>
             {translation && (
               <a
@@ -144,6 +160,11 @@ const jsonLd = JSON.stringify({
         <!-- 공유 버튼 -->
         <div data-pagefind-ignore>
           <ShareButtons title={post.data.title} url={postUrl} image={post.data.thumbnail ?? ""} lang={currentLang} />
+        </div>
+
+        <!-- 이전글/다음글 -->
+        <div data-pagefind-ignore>
+          <PostNav currentPost={post} allPosts={allPosts} />
         </div>
 
         <!-- 댓글 -->
@@ -230,8 +251,24 @@ const jsonLd = JSON.stringify({
     });
   }
 
+  // --- TOC 토글 ---
+  function initTocToggle() {
+    const tocCol = document.querySelector(".toc-col");
+    const toggleBtn = document.querySelector(".toc-toggle");
+    if (!tocCol || !toggleBtn) return;
+
+    if (localStorage.getItem("toc-collapsed") === "true") {
+      tocCol.classList.add("collapsed");
+    }
+
+    toggleBtn.addEventListener("click", () => {
+      tocCol.classList.toggle("collapsed");
+      localStorage.setItem("toc-collapsed", tocCol.classList.contains("collapsed").toString());
+    });
+  }
+
   document.addEventListener("astro:after-swap", initPost);
-  document.addEventListener("astro:page-load",  initPost);
+  document.addEventListener("astro:page-load", () => { initPost(); initTocToggle(); });
 </script>
 
 <style>
@@ -292,18 +329,65 @@ const jsonLd = JSON.stringify({
     top: 2rem;
   }
 
+  .toc-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.65rem;
+    border-bottom: 1px solid rgba(124, 255, 122, 0.1);
+  }
+
   .toc-post-title {
     font-size: 0.8rem;
     font-weight: 700;
     color: var(--text);
     line-height: 1.4;
-    margin: 0 0 0.75rem;
-    padding: 0 0 0.65rem;
-    border-bottom: 1px solid rgba(124, 255, 122, 0.1);
+    margin: 0;
+    flex: 1;
     display: -webkit-box;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
+  }
+
+  .toc-toggle {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid rgba(124, 255, 122, 0.25);
+    background: transparent;
+    color: rgba(124, 255, 122, 0.6);
+    cursor: pointer;
+    transition: color 150ms, background 150ms, border-color 150ms;
+  }
+
+  .toc-toggle:hover {
+    color: #7cff7a;
+    background: rgba(124, 255, 122, 0.08);
+    border-color: rgba(124, 255, 122, 0.45);
+  }
+
+  .toc-toggle__icon {
+    transition: transform 200ms ease;
+  }
+
+  .toc-col.collapsed .toc-toggle__icon {
+    transform: rotate(180deg);
+  }
+
+  .toc-col.collapsed .toc-content {
+    display: none;
+  }
+
+  .toc-col.collapsed .toc-header {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
   }
 
   /* ── 모바일 목차 (인라인) ─────────────────── */
@@ -395,6 +479,11 @@ const jsonLd = JSON.stringify({
   .article__eyebrow {
     text-transform: none;
     letter-spacing: 0.08em;
+  }
+
+  .updated-date {
+    font-style: italic;
+    color: var(--muted);
   }
 
   .article__header .tag-list {
