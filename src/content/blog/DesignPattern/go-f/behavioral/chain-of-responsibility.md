@@ -9,6 +9,7 @@ tags:
   - "GoF"
   - "Behavioral"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-go-f-behavioral-chain-of-responsibility.svg
 ---
 
 # Chain of Responsibility

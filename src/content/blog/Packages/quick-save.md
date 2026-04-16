@@ -8,6 +8,7 @@ tags:
   - "Package"
   - "QuickSave"
 category: "Unity Package"
+thumbnail: /images/thumbnails/packages-quick-save.svg
 ---
 
 | [🪄github 바로가기](https://github.com/achieveonepark/quick-save)

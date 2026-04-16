@@ -8,6 +8,7 @@ tags:
   - "Dirty Flag"
   - "Game Programming"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-game-programming-dirty-flag.svg
 ---
 
 ## One-line pattern summary

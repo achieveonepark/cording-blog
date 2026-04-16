@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Service Locator</title>
+  <desc id="desc">GAME PROGRAMMING Service Locator</desc>
+  <defs>
+    <linearGradient id="bgGradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#05080c" />
+      <stop offset="100%" stop-color="#070b11" />
+    </linearGradient>
+    <linearGradient id="lineGradient" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#7cff7a" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#2ff0d0" stop-opacity="0.28" />
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bgGradient)" />
+  <circle cx="934" cy="140" r="180" fill="#0d4b2f" opacity="0.26" />
+  <rect x="54" y="54" width="1092" height="522" rx="34" fill="#0b1017" stroke="rgba(255,255,255,0.08)" stroke-width="2" />
+  <path d="M90 132 H522" stroke="url(#lineGradient)" stroke-width="3" stroke-linecap="round" />
+
+  <rect x="90" y="86" width="168" height="38" rx="19" fill="#7cff7a" fill-opacity="0.1" stroke="#7cff7a" stroke-opacity="0.26" />
+  <text x="112" y="111" fill="#7cff7a" font-size="16" font-family="'SFMono-Regular', Consolas, 'Liberation Mono', monospace" letter-spacing="2.2">GAME PROGRAMMING</text>
+
+  <text x="90" y="286" fill="#f3f5f7" font-size="74" font-weight="800" font-family="'A2z', 'Pretendard', 'Segoe UI', system-ui, sans-serif" letter-spacing="-2.1">
+    <tspan x="90" dy="0">Service Locator</tspan>
+  </text>
+
+  <text x="92" y="470" fill="#aeb8c2" font-size="22" font-weight="500" font-family="'SFMono-Regular', Consolas, 'Liberation Mono', monospace" letter-spacing="1.2">pattern:service_locator</text>
+  <text x="92" y="516" fill="#2ff0d0" font-size="20" font-family="'SFMono-Regular', Consolas, 'Liberation Mono', monospace" letter-spacing="2">somblog://design-pattern/service-locator</text>
+
+  <g transform="translate(784 133)">
+    <rect x="0" y="0" width="270" height="270" rx="32" fill="rgba(255,255,255,0.02)" stroke="#7cff7a" stroke-opacity="0.24" stroke-width="2" />
+    <circle cx="135" cy="135" r="92" fill="none" stroke="#7cff7a" stroke-opacity="0.18" stroke-width="2" />
+    
+    <circle cx="135" cy="120" r="54" fill="none" stroke="#7cff7a" stroke-width="10" stroke-opacity="0.78" stroke-dasharray="220 28" stroke-linecap="round" />
+    <path d="M178 76 L203 82 L191 104" fill="none" stroke="#2ff0d0" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+    <circle cx="135" cy="120" r="14" fill="#7cff7a" fill-opacity="0.2" stroke="#7cff7a" stroke-width="4" />
+  
+    <text x="135" y="232" fill="#7cff7a" fill-opacity="0.22" text-anchor="middle" font-size="32" font-weight="800" font-family="'SFMono-Regular', Consolas, 'Liberation Mono', monospace" letter-spacing="5">SL</text>
+  </g>
+</svg>

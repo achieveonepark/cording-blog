@@ -8,6 +8,7 @@ tags:
   - "Package"
   - "LiteDB"
 category: "Unity Package"
+thumbnail: /images/thumbnails/packages-lite-db.svg
 ---
 
 | [🪄github 바로가기](https://github.com/achieveonepark/lite-db)

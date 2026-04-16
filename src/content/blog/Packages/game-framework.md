@@ -8,6 +8,7 @@ tags:
   - "Package"
   - "Game Framework"
 category: "Unity Package"
+thumbnail: /images/thumbnails/packages-game-framework.svg
 ---
 
 | [🪄github 바로가기](https://github.com/achieveonepark/game-framework)

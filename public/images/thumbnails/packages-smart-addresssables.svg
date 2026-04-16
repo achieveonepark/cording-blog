@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Smart Addresssables</title>
+  <desc id="desc">UNITY PACKAGE Smart Addresssables</desc>
+  <defs>
+    <linearGradient id="bgGradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#05080c" />
+      <stop offset="100%" stop-color="#070b11" />
+    </linearGradient>
+    <linearGradient id="lineGradient" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#65f5bb" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#31b8ff" stop-opacity="0.28" />
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bgGradient)" />
+  <circle cx="934" cy="140" r="180" fill="#0b3c35" opacity="0.26" />
+  <rect x="54" y="54" width="1092" height="522" rx="34" fill="#0b1017" stroke="rgba(255,255,255,0.08)" stroke-width="2" />
+  <path d="M90 132 H522" stroke="url(#lineGradient)" stroke-width="3" stroke-linecap="round" />
+
+  <rect x="90" y="86" width="168" height="38" rx="19" fill="#65f5bb" fill-opacity="0.1" stroke="#65f5bb" stroke-opacity="0.26" />
+  <text x="112" y="111" fill="#65f5bb" font-size="16" font-family="'SFMono-Regular', Consolas, 'Liberation Mono', monospace" letter-spacing="2.2">UNITY PACKAGE</text>
+
+  <text x="90" y="248" fill="#f3f5f7" font-size="74" font-weight="800" font-family="'A2z', 'Pretendard', 'Segoe UI', system-ui, sans-serif" letter-spacing="-2.1">
+    <tspan x="90" dy="0">Smart</tspan><tspan x="90" dy="84">Addresssables</tspan>
+  </text>
+
+  <text x="92" y="470" fill="#aeb8c2" font-size="22" font-weight="500" font-family="'SFMono-Regular', Consolas, 'Liberation Mono', monospace" letter-spacing="1.2">package:smart_addresssables</text>
+  <text x="92" y="516" fill="#31b8ff" font-size="20" font-family="'SFMono-Regular', Consolas, 'Liberation Mono', monospace" letter-spacing="2">somblog://unity/smart-addresssables</text>
+
+  <g transform="translate(784 133)">
+    <rect x="0" y="0" width="270" height="270" rx="32" fill="rgba(255,255,255,0.02)" stroke="#65f5bb" stroke-opacity="0.24" stroke-width="2" />
+    <circle cx="135" cy="135" r="92" fill="none" stroke="#65f5bb" stroke-opacity="0.18" stroke-width="2" />
+    
+    <path d="M135 78 L195 112 L195 182 L135 216 L75 182 L75 112 Z" fill="none" stroke="#65f5bb" stroke-width="8" stroke-linejoin="round" />
+    <path d="M75 112 L135 146 L195 112" fill="none" stroke="#31b8ff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M135 146 V216" fill="none" stroke="#31b8ff" stroke-width="8" stroke-linecap="round" />
+  
+    <text x="135" y="232" fill="#65f5bb" fill-opacity="0.22" text-anchor="middle" font-size="32" font-weight="800" font-family="'SFMono-Regular', Consolas, 'Liberation Mono', monospace" letter-spacing="5">SA</text>
+  </g>
+</svg>

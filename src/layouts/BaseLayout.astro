@@ -20,8 +20,11 @@ const {
 
 const pageTitle = title === site.title ? title : `${title} | ${site.title}`;
 const canonicalUrl = new URL(Astro.url.pathname, site.url);
-const ogImage = image
+const resolvedImage = image
   ? (image.startsWith("http") ? image : new URL(image, site.url).toString())
+  : null;
+const ogImage = resolvedImage && !resolvedImage.toLowerCase().endsWith(".svg")
+  ? resolvedImage
   : `${site.url}/og-default.png`;
 const gaId = import.meta.env.PUBLIC_GA_MEASUREMENT_ID ?? "";
 const adsenseClientId = import.meta.env.PUBLIC_ADSENSE_CLIENT_ID ?? "";

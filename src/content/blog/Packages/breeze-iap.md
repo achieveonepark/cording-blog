@@ -8,6 +8,7 @@ tags:
   - "Package"
   - "BreezeIAP"
 category: "Unity Package"
+thumbnail: /images/thumbnails/packages-breeze-iap.svg
 ---
 
 | [🪄github 바로가기](https://github.com/achieveonepark/breeze-iap)

@@ -8,6 +8,7 @@ tags:
   - "Game Loop"
   - "Game Programming"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-game-programming-game-loop.svg
 ---
 
 ## One-line pattern summary

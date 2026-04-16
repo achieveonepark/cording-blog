@@ -8,6 +8,7 @@ tags:
   - "Package"
   - "Infinity Value"
 category: "Unity Package"
+thumbnail: /images/thumbnails/packages-infinity-value.svg
 ---
 
 | [🪄Open on GitHub](https://github.com/achieveonepark/infinity-value)

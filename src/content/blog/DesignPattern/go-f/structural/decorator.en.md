@@ -9,6 +9,7 @@ tags:
   - "GoF"
   - "Structural"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-go-f-structural-decorator.svg
 ---
 
 ## One-line pattern summary

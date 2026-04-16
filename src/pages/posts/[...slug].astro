@@ -38,9 +38,13 @@ const hasMermaid = (post.body ?? "").includes("```mermaid");
 
 const postUrl = `${Astro.site?.toString().replace(/\/$/, "") ?? "https://blog.somiri.dev"}/posts/${post.id}/`;
 const siteUrl = Astro.site?.toString().replace(/\/$/, "") ?? "https://blog.somiri.dev";
-const ogImage = post.data.thumbnail
+const resolvedThumbnail = post.data.thumbnail
   ? (post.data.thumbnail.startsWith("http") ? post.data.thumbnail : `${siteUrl}${post.data.thumbnail}`)
+  : null;
+const socialImage = resolvedThumbnail && !resolvedThumbnail.toLowerCase().endsWith(".svg")
+  ? resolvedThumbnail
   : `${siteUrl}/og-default.png`;
+const ogImage = socialImage;
 
 const jsonLd = JSON.stringify({
   "@context": "https://schema.org",
@@ -71,7 +75,7 @@ const jsonLd = JSON.stringify({
 });
 ---
 
-<BaseLayout title={post.data.title} description={post.data.description} image={post.data.thumbnail}>
+<BaseLayout title={post.data.title} description={post.data.description} image={socialImage}>
   <script type="application/ld+json" set:html={jsonLd} />
   <ReadingProgress />
   <CodeCopy />
@@ -167,7 +171,7 @@ const jsonLd = JSON.stringify({
 
         <!-- 공유 버튼 -->
         <div data-pagefind-ignore>
-          <ShareButtons title={post.data.title} url={postUrl} image={post.data.thumbnail ?? ""} lang={currentLang} />
+          <ShareButtons title={post.data.title} url={postUrl} image={socialImage} lang={currentLang} />
         </div>
 
         <AdSlot slot={postBottomAdSlot} minHeight="220px" className="article__ad article__ad--bottom" />

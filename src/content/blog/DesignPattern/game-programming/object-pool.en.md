@@ -8,6 +8,7 @@ tags:
   - "Object Pool"
   - "Game Programming"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-game-programming-object-pool.svg
 ---
 
 ## One-line pattern summary

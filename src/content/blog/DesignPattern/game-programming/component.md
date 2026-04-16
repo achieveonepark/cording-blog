@@ -8,6 +8,7 @@ tags:
   - "Component"
   - "Game Programming"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-game-programming-component.svg
 ---
 
 ## 패턴 한 줄 설명

@@ -8,6 +8,7 @@ tags:
   - "Type Object"
   - "Game Programming"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-game-programming-type-object.svg
 ---
 
 ## 패턴 한 줄 설명

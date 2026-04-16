@@ -9,6 +9,7 @@ tags:
   - "GoF"
   - "Creational"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-go-f-creational-abstract-factory.svg
 ---
 
 # Abstract Factory

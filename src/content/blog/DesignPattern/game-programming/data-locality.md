@@ -8,6 +8,7 @@ tags:
   - "Data Locality"
   - "Game Programming"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-game-programming-data-locality.svg
 ---
 
 ## 패턴 한 줄 설명

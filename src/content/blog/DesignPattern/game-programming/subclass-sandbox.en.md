@@ -8,6 +8,7 @@ tags:
   - "Subclass Sandbox"
   - "Game Programming"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-game-programming-subclass-sandbox.svg
 ---
 
 ## One-line pattern summary

@@ -9,6 +9,7 @@ tags:
   - "GoF"
   - "Structural"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-go-f-structural-composite.svg
 ---
 
 ## One-line pattern summary

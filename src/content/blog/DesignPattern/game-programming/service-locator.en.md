@@ -8,6 +8,7 @@ tags:
   - "Service Locator"
   - "Game Programming"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-game-programming-service-locator.svg
 ---
 
 ## One-line pattern summary

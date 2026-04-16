@@ -8,6 +8,7 @@ tags:
   - "Package"
   - "Data Protector"
 category: "Unity Package"
+thumbnail: /images/thumbnails/packages-data-protector.svg
 ---
 
 | [🪄Open on GitHub](https://github.com/achieveonepark/data-protector)

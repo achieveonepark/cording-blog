@@ -8,6 +8,7 @@ tags:
   - "Package"
   - "Smart Addresssables"
 category: "Unity Package"
+thumbnail: /images/thumbnails/packages-smart-addresssables.svg
 ---
 
 | [🪄github 바로가기](https://github.com/achieveonepark/smart-addressables)
