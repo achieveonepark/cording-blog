@@ -7,10 +7,20 @@ const year = new Date().getFullYear();
     <span data-ui-lang="ko">© {year} achieveonepark. All rights reserved.</span>
     <span data-ui-lang="en">© {year} achieveonepark. All rights reserved.</span>
   </p>
-  <a href="/privacy" class="footer-privacy">
-    <span data-ui-lang="ko">개인정보처리방침</span>
-    <span data-ui-lang="en">Privacy Policy</span>
-  </a>
+  <nav class="footer-links" aria-label="Footer">
+    <a href="/about" class="footer-link">
+      <span data-ui-lang="ko">소개</span>
+      <span data-ui-lang="en">About</span>
+    </a>
+    <a href="/contact" class="footer-link">
+      <span data-ui-lang="ko">문의</span>
+      <span data-ui-lang="en">Contact</span>
+    </a>
+    <a href="/privacy" class="footer-link">
+      <span data-ui-lang="ko">개인정보처리방침</span>
+      <span data-ui-lang="en">Privacy Policy</span>
+    </a>
+  </nav>
 </footer>
 
 <style>
@@ -22,16 +32,23 @@ const year = new Date().getFullYear();
     margin: 0;
   }
 
-  .footer-privacy {
-    display: inline-block;
-    margin-top: 0.35rem;
+  .footer-links {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.85rem;
+    flex-wrap: wrap;
+    margin-top: 0.45rem;
+  }
+
+  .footer-link {
     color: var(--muted);
     opacity: 0.5;
     text-decoration: none;
     font-size: 0.68rem;
   }
 
-  .footer-privacy:hover {
+  .footer-link:hover {
     opacity: 0.8;
     text-decoration: underline;
   }

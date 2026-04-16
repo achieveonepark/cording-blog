@@ -9,6 +9,8 @@ import Giscus from "../../components/Giscus.astro";
 import ReadingProgress from "../../components/ReadingProgress.astro";
 import CodeCopy from "../../components/CodeCopy.astro";
 import PostNav from "../../components/PostNav.astro";
+import AdSlot from "../../components/AdSlot.astro";
+import MermaidRenderer from "../../components/MermaidRenderer.astro";
 import { formatDate, getPublishedPosts, getReadingTime, getPostLang, findTranslation } from "../../lib/blog";
 
 export async function getStaticPaths() {
@@ -30,6 +32,9 @@ const { Content, headings } = await render(post);
 const currentLang = getPostLang(post);
 const translation = await findTranslation(post);
 const articleEyebrow = post.data.category?.trim() || (currentLang === "en" ? "Post" : "글");
+const postTopAdSlot = import.meta.env.PUBLIC_ADSENSE_SLOT_POST_TOP ?? "";
+const postBottomAdSlot = import.meta.env.PUBLIC_ADSENSE_SLOT_POST_BOTTOM ?? "";
+const hasMermaid = (post.body ?? "").includes("```mermaid");
 
 const postUrl = `${Astro.site?.toString().replace(/\/$/, "") ?? "https://blog.somiri.dev"}/posts/${post.id}/`;
 const siteUrl = Astro.site?.toString().replace(/\/$/, "") ?? "https://blog.somiri.dev";
@@ -70,6 +75,7 @@ const jsonLd = JSON.stringify({
   <script type="application/ld+json" set:html={jsonLd} />
   <ReadingProgress />
   <CodeCopy />
+  {hasMermaid && <MermaidRenderer />}
   <Header />
 
   <main class="shell">
@@ -136,7 +142,7 @@ const jsonLd = JSON.stringify({
 
           {post.data.tags.length > 0 && (
             <ul class="tag-list" aria-label={currentLang === "en" ? "Post tags" : "글 태그"} data-pagefind-ignore>
-              {post.data.tags.map((tag) => <li>{tag}</li>)}
+              {post.data.tags.map((tag: string) => <li>{tag}</li>)}
             </ul>
           )}
 
@@ -144,6 +150,8 @@ const jsonLd = JSON.stringify({
             <img class="article__thumb" src={post.data.thumbnail} alt="" loading="lazy" />
           )}
         </header>
+
+        <AdSlot slot={postTopAdSlot} minHeight="180px" className="article__ad article__ad--top" />
 
         <!-- 모바일용 목차 (인라인) -->
         {headings.length > 0 && (
@@ -161,6 +169,8 @@ const jsonLd = JSON.stringify({
         <div data-pagefind-ignore>
           <ShareButtons title={post.data.title} url={postUrl} image={post.data.thumbnail ?? ""} lang={currentLang} />
         </div>
+
+        <AdSlot slot={postBottomAdSlot} minHeight="220px" className="article__ad article__ad--bottom" />
 
         <!-- 이전글/다음글 -->
         <div data-pagefind-ignore>
@@ -488,6 +498,14 @@ const jsonLd = JSON.stringify({
 
   .article__header .tag-list {
     margin-top: 0.8rem;
+  }
+
+  .article__ad {
+    margin: 1.4rem 0 1.8rem;
+  }
+
+  .article__ad--bottom {
+    margin-top: 1.8rem;
   }
 
   .post-admin-btn--danger {

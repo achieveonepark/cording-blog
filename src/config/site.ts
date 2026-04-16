@@ -11,6 +11,7 @@ export const navigation = [
   { href: "/tags", label: { ko: "태그", en: "Tags" } },
   { href: "/archive", label: { ko: "아카이브", en: "Archive" } },
   { href: "/about", label: { ko: "소개", en: "About" } },
+  { href: "/contact", label: { ko: "문의", en: "Contact" } },
 ] as const;
 
 export const externalLinks = [
@@ -30,3 +31,10 @@ export const externalLinks = [
     kind: "library"
   }
 ] as const;
+
+export const contact = {
+  email: import.meta.env.PUBLIC_CONTACT_EMAIL ?? "",
+  github: "https://github.com/achieveonepark",
+  website: "https://www.somiri.dev",
+  blogRepo: "https://github.com/achieveonepark/cording-blog"
+} as const;
