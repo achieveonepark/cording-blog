@@ -3,7 +3,7 @@ import Footer from "../components/Footer.astro";
 import Header from "../components/Header.astro";
 import BackButton from "../components/BackButton.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
-import { site } from "../config/site";
+import { contact, site } from "../config/site";
 import {
   BLOG_LANGS,
   filterPostsByLang,
@@ -110,8 +110,26 @@ const tagCountsByLang = {
         </h2>
         <ul class="contact-list">
           <li>
-            <a href="https://github.com/achieveonepark" target="_blank" rel="noreferrer">
+            <a href="/contact">
+              <span data-ui-lang="ko">문의 페이지</span>
+              <span data-ui-lang="en">Contact page</span>
+            </a>
+          </li>
+          {contact.email && (
+            <li>
+              <a href={`mailto:${contact.email}`}>
+                {contact.email}
+              </a>
+            </li>
+          )}
+          <li>
+            <a href={contact.github} target="_blank" rel="noreferrer">
               GitHub @achieveonepark
+            </a>
+          </li>
+          <li>
+            <a href={contact.website} target="_blank" rel="noreferrer">
+              somiri.dev
             </a>
           </li>
         </ul>

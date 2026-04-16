@@ -18,7 +18,10 @@
     "@astrojs/sitemap": "latest",
     "@toast-ui/editor": "^3.2.2",
     "astro": "latest",
-    "astro-pagefind": "^1.8.5"
+    "astro-pagefind": "^1.8.5",
+    "mermaid": "^11.14.0",
+    "playwright": "^1.59.1",
+    "rehype-mermaid": "^3.0.0"
   },
   "devDependencies": {
     "@astrojs/check": "latest",
