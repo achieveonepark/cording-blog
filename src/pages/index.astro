@@ -3,11 +3,13 @@ import Footer from "../components/Footer.astro";
 import Header from "../components/Header.astro";
 import HomeCategorySidebar from "../components/HomeCategorySidebar.astro";
 import PostCard from "../components/PostCard.astro";
+import AdSlot from "../components/AdSlot.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { BLOG_LANGS, groupPostsByLang, getPublishedPosts } from "../lib/blog";
 import categories from "../data/categories.json";
 
 const posts = await getPublishedPosts();
+const homeTopAdSlot = import.meta.env.PUBLIC_ADSENSE_SLOT_HOME_TOP ?? "";
 const postsByLang = groupPostsByLang(posts);
 const categoryCountsByLang = BLOG_LANGS.reduce((acc, lang) => {
   acc[lang] = categories.reduce<Record<string, number>>((counts, category) => {
@@ -32,6 +34,8 @@ const totalPostsByLang = BLOG_LANGS.reduce((acc, lang) => {
       categoryCountsByLang={categoryCountsByLang}
       totalPostsByLang={totalPostsByLang}
     >
+      <AdSlot slot={homeTopAdSlot} minHeight="140px" className="home-feed__ad" />
+
       {BLOG_LANGS.map((lang) => {
         const langPosts = postsByLang[lang];
         return langPosts.length > 0 ? (
@@ -88,6 +92,10 @@ const totalPostsByLang = BLOG_LANGS.reduce((acc, lang) => {
     max-height: 6rem;
     opacity: 1;
     transform: translateY(0);
+  }
+
+  .home-feed__ad {
+    margin-bottom: 1rem;
   }
 
   @media (prefers-reduced-motion: reduce) {

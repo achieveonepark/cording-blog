@@ -27,6 +27,7 @@
     const ui = getCopyUi(lang);
 
     blocks.forEach((pre) => {
+      if (pre.matches("[data-language='mermaid'], .mermaid")) return;
       if (pre.dataset.copyReady === "true") return;
       pre.dataset.copyReady = "true";
 

@@ -11,7 +11,6 @@ const kakaoKey = import.meta.env.PUBLIC_KAKAO_APP_KEY ?? "";
 
 const twitterUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`;
 const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
-const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
 ---
 
 <div class="share">
@@ -30,18 +29,6 @@ const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURICom
       </button>
     )}
 
-    <button
-      class="share-btn share-btn--copy"
-      id="copy-link-btn"
-      aria-label={lang === "en" ? "Copy link" : "링크 복사"}
-    >
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-        <rect x="9" y="9" width="13" height="13" rx="2"/>
-        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-      </svg>
-      <span id="copy-label">{lang === "en" ? "Copy link" : "링크 복사"}</span>
-    </button>
-
     <a
       class="share-btn share-btn--twitter"
       href={twitterUrl}
@@ -55,18 +42,16 @@ const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURICom
       X
     </a>
 
-    <a
-      class="share-btn share-btn--facebook"
-      href={facebookUrl}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label={lang === "en" ? "Share on Facebook" : "페이스북으로 공유"}
+    <button
+      class="share-btn share-btn--instagram"
+      id="instagram-share-btn"
+      aria-label={lang === "en" ? "Share on Instagram" : "인스타그램으로 공유"}
     >
       <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+        <path d="M7.75 2h8.5A5.75 5.75 0 0 1 22 7.75v8.5A5.75 5.75 0 0 1 16.25 22h-8.5A5.75 5.75 0 0 1 2 16.25v-8.5A5.75 5.75 0 0 1 7.75 2zm0 1.8A3.95 3.95 0 0 0 3.8 7.75v8.5a3.95 3.95 0 0 0 3.95 3.95h8.5a3.95 3.95 0 0 0 3.95-3.95v-8.5a3.95 3.95 0 0 0-3.95-3.95h-8.5zm8.95 1.35a1.1 1.1 0 1 1 0 2.2 1.1 1.1 0 0 1 0-2.2zM12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm0 1.8A3.2 3.2 0 1 0 12 15.2 3.2 3.2 0 0 0 12 8.8z"/>
       </svg>
-      Facebook
-    </a>
+      Instagram
+    </button>
 
     <a
       class="share-btn share-btn--linkedin"
@@ -104,22 +89,24 @@ const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURICom
     });
   }
 
-  // ── 링크 복사 ─────────────────────────────────────────────
-  const copyBtn = document.getElementById("copy-link-btn");
-  const copyLabel = document.getElementById("copy-label");
-
-  copyBtn?.addEventListener("click", async () => {
+  // ── Instagram ────────────────────────────────────────────
+  document.getElementById("instagram-share-btn")?.addEventListener("click", async () => {
     try {
-      await navigator.clipboard.writeText(url);
-      if (copyLabel) {
-        copyLabel.textContent = lang === "en" ? "Copied!" : "복사됨!";
-        setTimeout(() => {
-          copyLabel.textContent = lang === "en" ? "Copy link" : "링크 복사";
-        }, 2000);
+      if (navigator.share) {
+        await navigator.share({ title, text: title, url });
+        return;
       }
-    } catch {
-      prompt(lang === "en" ? "Copy this URL:" : "URL을 복사하세요:", url);
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        return;
+      }
     }
+
+    alert(
+      lang === "en"
+        ? "Instagram sharing is available through the native share sheet on supported mobile browsers."
+        : "인스타그램 공유는 지원되는 모바일 브라우저의 기본 공유 시트에서 사용할 수 있어요."
+    );
   });
 </script>
 
@@ -192,15 +179,15 @@ const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURICom
     color: #e7e9ea;
   }
 
-  .share-btn--facebook {
-    border-color: rgba(24, 119, 242, 0.3);
-    color: rgba(24, 119, 242, 0.75);
+  .share-btn--instagram {
+    border-color: rgba(240, 148, 51, 0.32);
+    color: rgba(255, 194, 93, 0.82);
   }
 
-  .share-btn--facebook:hover {
-    border-color: rgba(24, 119, 242, 0.6);
-    background: rgba(24, 119, 242, 0.07);
-    color: #1877f2;
+  .share-btn--instagram:hover {
+    border-color: rgba(193, 53, 132, 0.58);
+    background: linear-gradient(135deg, rgba(240, 148, 51, 0.09), rgba(193, 53, 132, 0.12));
+    color: #f77737;
   }
 
   .share-btn--linkedin {

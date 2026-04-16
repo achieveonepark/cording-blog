@@ -1,0 +1,157 @@
+---
+import Footer from "../components/Footer.astro";
+import Header from "../components/Header.astro";
+import BackButton from "../components/BackButton.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { contact } from "../config/site";
+---
+
+<BaseLayout title="Contact" description="Ways to contact the author of Somblog.">
+  <Header />
+  <BackButton href="/" />
+
+  <main class="shell app-shell">
+    <section class="app-panel contact-panel">
+      <p class="eyebrow">
+        <span data-ui-lang="ko">문의</span>
+        <span data-ui-lang="en">Contact</span>
+      </p>
+      <h1>
+        <span data-ui-lang="ko">연락 방법</span>
+        <span data-ui-lang="en">Get in Touch</span>
+      </h1>
+      <p class="contact-intro">
+        <span data-ui-lang="ko">
+          블로그 내용 문의, 기술 관련 대화, 협업 제안은 아래 채널로 보내 주세요. 글 내용과 직접 관련된 질문은 각 포스트의 댓글을 이용해도 좋습니다.
+        </span>
+        <span data-ui-lang="en">
+          For blog questions, technical conversations, or collaboration inquiries, use one of the channels below. For post-specific feedback, comments on each article also work well.
+        </span>
+      </p>
+
+      <div class="contact-grid">
+        {contact.email && (
+          <a class="contact-card" href={`mailto:${contact.email}`}>
+            <span class="contact-card__label">Email</span>
+            <strong>{contact.email}</strong>
+            <p>
+              <span data-ui-lang="ko">가장 빠른 일반 문의 채널</span>
+              <span data-ui-lang="en">Best option for direct inquiries</span>
+            </p>
+          </a>
+        )}
+
+        <a class="contact-card" href={contact.github} target="_blank" rel="noreferrer">
+          <span class="contact-card__label">GitHub</span>
+          <strong>@achieveonepark</strong>
+          <p>
+            <span data-ui-lang="ko">개발 관련 이력과 공개 활동 확인</span>
+            <span data-ui-lang="en">See development history and public work</span>
+          </p>
+        </a>
+
+        <a class="contact-card" href={contact.website} target="_blank" rel="noreferrer">
+          <span class="contact-card__label">
+            <span data-ui-lang="ko">개인 사이트</span>
+            <span data-ui-lang="en">Website</span>
+          </span>
+          <strong>somiri.dev</strong>
+          <p>
+            <span data-ui-lang="ko">작업물과 추가 소개 확인</span>
+            <span data-ui-lang="en">Explore additional profile and projects</span>
+          </p>
+        </a>
+
+        <a class="contact-card" href={contact.blogRepo} target="_blank" rel="noreferrer">
+          <span class="contact-card__label">
+            <span data-ui-lang="ko">블로그 저장소</span>
+            <span data-ui-lang="en">Blog Repo</span>
+          </span>
+          <strong>cording-blog</strong>
+          <p>
+            <span data-ui-lang="ko">블로그 구조와 변경 내역 확인</span>
+            <span data-ui-lang="en">Inspect the blog source and change history</span>
+          </p>
+        </a>
+      </div>
+
+      {!contact.email && (
+        <div class="contact-note">
+          <span data-ui-lang="ko">
+            현재는 GitHub와 개인 사이트를 기본 문의 채널로 운영하고 있습니다. 필요하면 `PUBLIC_CONTACT_EMAIL`을 설정해 이메일 채널도 바로 노출할 수 있게 준비해 두었습니다.
+          </span>
+          <span data-ui-lang="en">
+            GitHub and the personal site are currently the primary contact channels. The blog is also ready to expose an email address later through `PUBLIC_CONTACT_EMAIL`.
+          </span>
+        </div>
+      )}
+    </section>
+  </main>
+
+  <Footer />
+</BaseLayout>
+
+<style>
+  .contact-panel {
+    max-width: 860px;
+    margin: 0 auto;
+  }
+
+  .contact-intro {
+    margin: 0.35rem 0 1.5rem;
+    color: var(--muted);
+  }
+
+  .contact-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+
+  .contact-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    padding: 1.15rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--panel-soft);
+    text-decoration: none;
+    transition: border-color 180ms ease, transform 180ms ease, background 180ms ease;
+  }
+
+  .contact-card:hover {
+    border-color: rgba(124, 255, 122, 0.34);
+    background: rgba(124, 255, 122, 0.06);
+    transform: translateY(-2px);
+  }
+
+  .contact-card__label {
+    color: var(--accent);
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .contact-card strong {
+    font-size: 1rem;
+  }
+
+  .contact-card p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.88rem;
+    line-height: 1.7;
+  }
+
+  .contact-note {
+    margin-top: 1rem;
+    padding: 0.95rem 1rem;
+    border: 1px dashed rgba(124, 255, 122, 0.2);
+    border-radius: var(--radius-md);
+    color: var(--muted);
+    font-size: 0.86rem;
+    line-height: 1.75;
+  }
+</style>

@@ -8,12 +8,14 @@ interface Props {
   title?: string;
   description?: string;
   image?: string;
+  noindex?: boolean;
 }
 
 const {
   title = site.title,
   description = site.description,
-  image
+  image,
+  noindex = false
 } = Astro.props;
 
 const pageTitle = title === site.title ? title : `${title} | ${site.title}`;
@@ -22,6 +24,8 @@ const ogImage = image
   ? (image.startsWith("http") ? image : new URL(image, site.url).toString())
   : `${site.url}/og-default.png`;
 const gaId = import.meta.env.PUBLIC_GA_MEASUREMENT_ID ?? "";
+const adsenseClientId = import.meta.env.PUBLIC_ADSENSE_CLIENT_ID ?? "";
+const robotsContent = noindex ? "noindex, nofollow, noarchive" : "index, follow";
 ---
 
 <!doctype html>
@@ -51,11 +55,14 @@ const gaId = import.meta.env.PUBLIC_GA_MEASUREMENT_ID ?? "";
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="generator" content={Astro.generator} />
     <meta name="description" content={description} />
+    <meta name="robots" content={robotsContent} />
+    {noindex && <meta name="googlebot" content="noindex, nofollow, noarchive" />}
     <meta name="theme-color" content="#05080c" />
     <meta name="naver-site-verification" content="fb595d0ae764eb846f6b8977427d2fe8bf8ec113" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="canonical" href={canonicalUrl} />
     <link rel="alternate" type="application/rss+xml" title={`${site.title} RSS`} href="/rss.xml" />
+    {adsenseClientId && !noindex && <meta name="google-adsense-account" content={adsenseClientId} />}
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
@@ -85,6 +92,14 @@ const gaId = import.meta.env.PUBLIC_GA_MEASUREMENT_ID ?? "";
           gtag('config', gaId, { send_page_view: false });
         </script>
       </>
+    )}
+    {adsenseClientId && !noindex && (
+      <script
+        is:inline
+        async
+        crossorigin="anonymous"
+        src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClientId}`}
+      ></script>
     )}
 
     <ClientRouter />
@@ -189,6 +204,30 @@ const gaId = import.meta.env.PUBLIC_GA_MEASUREMENT_ID ?? "";
       syncFloatingUiLanguage();
       document.addEventListener("astro:page-load", syncFloatingUiLanguage);
     </script>
+    {adsenseClientId && !noindex && (
+      <script is:inline>
+        (function() {
+          function fillAdsenseSlots() {
+            var queue = window.adsbygoogle = window.adsbygoogle || [];
+            document.querySelectorAll("ins.adsbygoogle:not([data-ad-ready='true'])").forEach(function(slot) {
+              try {
+                queue.push({});
+                slot.setAttribute("data-ad-ready", "true");
+              } catch (_error) {}
+            });
+          }
+
+          if (!window.__somiriAdsInit) {
+            window.__somiriAdsInit = true;
+            document.addEventListener("astro:page-load", function() {
+              requestAnimationFrame(fillAdsenseSlots);
+            });
+          }
+
+          requestAnimationFrame(fillAdsenseSlots);
+        })();
+      </script>
+    )}
 
     <style>
       #fab-group {
@@ -236,14 +275,15 @@ const gaId = import.meta.env.PUBLIC_GA_MEASUREMENT_ID ?? "";
       .scanlines {
         position: fixed;
         inset: 0;
-        z-index: 9998;
+        z-index: 0;
         pointer-events: none;
+        opacity: 0.58;
         background: repeating-linear-gradient(
           to bottom,
           transparent 0px,
           transparent 3px,
-          rgba(0, 0, 0, 0.1) 3px,
-          rgba(0, 0, 0, 0.1) 4px
+          rgba(0, 0, 0, 0.08) 3px,
+          rgba(0, 0, 0, 0.08) 4px
         );
       }
 

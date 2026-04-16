@@ -1,0 +1,40 @@
+---
+interface Props {
+  slot?: string;
+  className?: string;
+  minHeight?: string;
+}
+
+const {
+  slot = "",
+  className = "",
+  minHeight = "160px"
+} = Astro.props;
+
+const adsenseClientId = import.meta.env.PUBLIC_ADSENSE_CLIENT_ID ?? "";
+const shouldRender = Boolean(adsenseClientId && slot);
+const classes = ["ad-slot", className].filter(Boolean).join(" ");
+const adStyle = `display:block; min-height:${minHeight};`;
+---
+
+{shouldRender && (
+  <div class={classes} data-pagefind-ignore aria-label="Advertisement">
+    <ins
+      class="adsbygoogle"
+      style={adStyle}
+      data-ad-client={adsenseClientId}
+      data-ad-slot={slot}
+      data-ad-format="auto"
+      data-full-width-responsive="true"
+      data-adtest={import.meta.env.DEV ? "on" : undefined}
+    ></ins>
+  </div>
+)}
+
+<style>
+  .ad-slot {
+    width: 100%;
+    margin: 0;
+    padding: 0.35rem 0;
+  }
+</style>

@@ -1,0 +1,415 @@
+<script>
+  import mermaid from "mermaid";
+
+  function getMermaidConfig() {
+    return {
+      startOnLoad: false,
+      securityLevel: "loose",
+      theme: "base",
+      themeVariables: {
+        darkMode: true,
+        fontFamily: "\"A2z\", -apple-system, system-ui, \"Segoe UI\", sans-serif",
+        fontSize: "15px",
+        background: "#05080c",
+        primaryColor: "#101814",
+        primaryTextColor: "#f3fff2",
+        primaryBorderColor: "#7cff7a",
+        secondaryColor: "#0b120e",
+        secondaryTextColor: "#e7ffe5",
+        secondaryBorderColor: "#67e866",
+        tertiaryColor: "#08100b",
+        tertiaryTextColor: "#dbffd8",
+        tertiaryBorderColor: "#4ecb57",
+        lineColor: "#93ff90",
+        textColor: "#f3fff2",
+        mainBkg: "#101814",
+        clusterBkg: "#08100b",
+        clusterBorder: "#58d861",
+        edgeLabelBackground: "#08100b",
+        titleColor: "#c6ffc3",
+        noteBkgColor: "#101814",
+        noteBorderColor: "#7cff7a",
+        noteTextColor: "#f0ffef",
+        actorBkg: "#101814",
+        actorBorder: "#7cff7a",
+        actorTextColor: "#f3fff2",
+        labelBoxBkgColor: "#101814",
+        labelBoxBorderColor: "#7cff7a",
+        labelTextColor: "#f3fff2",
+        activationBorderColor: "#7cff7a",
+        activationBkgColor: "#16311d",
+        sequenceNumberColor: "#05080c"
+      },
+      flowchart: {
+        htmlLabels: true,
+        useMaxWidth: false,
+        curve: "basis",
+        nodeSpacing: 54,
+        rankSpacing: 68,
+        padding: 14
+      }
+    };
+  }
+
+  function getZoomUiLabel() {
+    return document.documentElement.dataset.blogLang === "en" ? "Click to enlarge diagram" : "클릭해서 크게 보기";
+  }
+
+  function ensureMermaidZoomDialog() {
+    const existing = document.getElementById("mermaid-zoom-overlay");
+    if (existing instanceof HTMLElement) return existing;
+
+    const overlay = document.createElement("div");
+    overlay.id = "mermaid-zoom-overlay";
+    overlay.className = "mermaid-zoom";
+    overlay.hidden = true;
+    overlay.innerHTML = `
+      <div class="mermaid-zoom__backdrop" data-close="true"></div>
+      <div class="mermaid-zoom__panel" role="dialog" aria-modal="true">
+        <button class="mermaid-zoom__close" type="button" aria-label="Close diagram">×</button>
+        <div class="mermaid-zoom__body"></div>
+      </div>
+    `;
+
+    const close = () => {
+      overlay.hidden = true;
+      overlay.querySelector(".mermaid-zoom__body")?.replaceChildren();
+      document.body.classList.remove("mermaid-zoom-open");
+    };
+
+    overlay.addEventListener("click", (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+      if (target.dataset.close === "true" || target.classList.contains("mermaid-zoom__close")) {
+        close();
+      }
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && !overlay.hidden) {
+        close();
+      }
+    });
+
+    document.body.appendChild(overlay);
+    return overlay;
+  }
+
+  function getSvgSize(svg) {
+    if (svg.viewBox?.baseVal?.width && svg.viewBox?.baseVal?.height) {
+      return {
+        width: svg.viewBox.baseVal.width,
+        height: svg.viewBox.baseVal.height,
+      };
+    }
+
+    const widthAttr = Number.parseFloat(svg.getAttribute("width") ?? "");
+    const heightAttr = Number.parseFloat(svg.getAttribute("height") ?? "");
+    if (Number.isFinite(widthAttr) && Number.isFinite(heightAttr) && widthAttr > 0 && heightAttr > 0) {
+      return { width: widthAttr, height: heightAttr };
+    }
+
+    const box = svg.getBBox();
+    return {
+      width: box.width || 1,
+      height: box.height || 1,
+    };
+  }
+
+  function fitZoomDiagram(svg, container) {
+    if (!(svg instanceof SVGElement) || !(container instanceof HTMLElement)) return;
+
+    const { width, height } = getSvgSize(svg);
+    const availableWidth = Math.max(container.clientWidth - 8, 1);
+    const availableHeight = Math.max(container.clientHeight - 8, 1);
+    const scale = Math.min(availableWidth / width, availableHeight / height);
+
+    svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
+    svg.style.width = `${Math.max(width * scale, 1)}px`;
+    svg.style.height = `${Math.max(height * scale, 1)}px`;
+    svg.style.maxWidth = "none";
+    svg.style.maxHeight = "none";
+  }
+
+  function bindZoomableDiagrams() {
+    const overlay = ensureMermaidZoomDialog();
+    const body = overlay.querySelector(".mermaid-zoom__body");
+    const close = overlay.querySelector(".mermaid-zoom__close");
+    if (!(body instanceof HTMLElement) || !(close instanceof HTMLButtonElement)) return;
+
+    let activeSvg = null;
+
+    const syncActiveDiagram = () => {
+      if (activeSvg instanceof SVGElement) {
+        fitZoomDiagram(activeSvg, body);
+      }
+    };
+
+    document.querySelectorAll("pre.mermaid[data-processed='true']").forEach((diagram) => {
+      if (!(diagram instanceof HTMLElement) || diagram.dataset.zoomBound === "true") return;
+
+      diagram.dataset.zoomBound = "true";
+      diagram.tabIndex = 0;
+      diagram.setAttribute("role", "button");
+      diagram.setAttribute("aria-label", getZoomUiLabel());
+
+      const openZoom = () => {
+        const svg = diagram.querySelector("svg");
+        if (!(svg instanceof SVGElement)) return;
+
+        const clonedSvg = svg.cloneNode(true);
+        if (!(clonedSvg instanceof SVGElement)) return;
+
+        activeSvg = clonedSvg;
+        body.replaceChildren(clonedSvg);
+        overlay.hidden = false;
+        document.body.classList.add("mermaid-zoom-open");
+        requestAnimationFrame(syncActiveDiagram);
+        close.focus();
+      };
+
+      diagram.addEventListener("click", openZoom);
+      diagram.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          openZoom();
+        }
+      });
+    });
+
+    if (overlay.dataset.zoomResizeBound !== "true") {
+      overlay.dataset.zoomResizeBound = "true";
+      window.addEventListener("resize", syncActiveDiagram, { passive: true });
+    }
+  }
+
+  function normalizeHighlightedMermaidBlocks() {
+    const highlightedBlocks = document.querySelectorAll("pre[data-language='mermaid']");
+
+    highlightedBlocks.forEach((block) => {
+      if (!(block instanceof HTMLElement) || block.dataset.mermaidNormalized === "true") return;
+
+      const source = block.textContent?.trim();
+      if (!source) return;
+
+      const mermaidBlock = document.createElement("pre");
+      mermaidBlock.className = "mermaid";
+      mermaidBlock.dataset.mermaidNormalized = "true";
+      mermaidBlock.textContent = source;
+
+      block.replaceWith(mermaidBlock);
+    });
+  }
+
+  async function renderMermaidDiagrams() {
+    normalizeHighlightedMermaidBlocks();
+    const diagrams = document.querySelectorAll("pre.mermaid");
+
+    if (diagrams.length) {
+      mermaid.initialize(getMermaidConfig());
+
+      try {
+        await mermaid.run({
+          querySelector: "pre.mermaid:not([data-processed='true'])",
+          suppressErrors: false,
+        });
+      } catch (error) {
+        console.error("Failed to render Mermaid diagrams", error);
+      }
+    }
+
+    bindZoomableDiagrams();
+  }
+
+  renderMermaidDiagrams();
+  document.addEventListener("astro:page-load", renderMermaidDiagrams);
+</script>
+
+<style is:global>
+  pre.mermaid {
+    position: relative;
+    margin: 1.4rem 0;
+    padding: 0.9rem;
+    border-radius: 18px;
+    border: 1px solid rgba(124, 255, 122, 0.18);
+    background:
+      radial-gradient(circle at top left, rgba(124, 255, 122, 0.09), transparent 34%),
+      linear-gradient(180deg, rgba(11, 17, 13, 0.96), rgba(6, 10, 8, 0.98));
+    box-shadow:
+      inset 0 1px 0 rgba(198, 255, 195, 0.06),
+      0 20px 60px rgba(0, 0, 0, 0.32);
+    overflow-x: auto;
+  }
+
+  pre.mermaid[data-processed="true"] {
+    padding: 0.9rem;
+    cursor: zoom-in;
+  }
+
+  pre.mermaid svg {
+    display: block;
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto;
+  }
+
+  pre.mermaid[data-processed="true"]::after {
+    content: "Zoom";
+    position: absolute;
+    right: 0.85rem;
+    bottom: 0.65rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    border: 1px solid rgba(124, 255, 122, 0.18);
+    background: rgba(5, 8, 12, 0.76);
+    color: rgba(198, 255, 195, 0.72);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    pointer-events: none;
+  }
+
+  pre.mermaid .copy-btn {
+    display: none;
+  }
+
+  pre.mermaid svg text,
+  pre.mermaid svg tspan {
+    fill: #efffed !important;
+    font-family: var(--font-body) !important;
+    font-size: 15px !important;
+    letter-spacing: 0.01em;
+  }
+
+  pre.mermaid svg .node rect,
+  pre.mermaid svg .node circle,
+  pre.mermaid svg .node ellipse,
+  pre.mermaid svg .node polygon,
+  pre.mermaid svg .node path,
+  pre.mermaid svg .cluster rect {
+    stroke-width: 1.8px !important;
+    filter: drop-shadow(0 0 16px rgba(124, 255, 122, 0.12));
+  }
+
+  pre.mermaid svg .edgePath path,
+  pre.mermaid svg .flowchart-link {
+    stroke: #93ff90 !important;
+    stroke-width: 1.9px !important;
+  }
+
+  pre.mermaid svg .arrowheadPath,
+  pre.mermaid svg marker path {
+    fill: #93ff90 !important;
+    stroke: #93ff90 !important;
+  }
+
+  pre.mermaid svg .edgeLabel rect {
+    fill: #08100b !important;
+    opacity: 0.96 !important;
+    stroke: rgba(124, 255, 122, 0.18) !important;
+  }
+
+  pre.mermaid svg .cluster-label text,
+  pre.mermaid svg .nodeLabel {
+    color: #efffed !important;
+  }
+
+  .mermaid-zoom-open {
+    overflow: hidden;
+  }
+
+  .mermaid-zoom {
+    position: fixed;
+    inset: 0;
+    z-index: 120;
+    display: grid;
+    place-items: center;
+    padding: 0.8rem;
+  }
+
+  .mermaid-zoom[hidden] {
+    display: none;
+  }
+
+  .mermaid-zoom__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(2, 5, 3, 0.82);
+    backdrop-filter: blur(8px);
+  }
+
+  .mermaid-zoom__panel {
+    position: relative;
+    z-index: 1;
+    width: min(1600px, calc(100vw - 1.6rem));
+    height: calc(100vh - 1.6rem);
+    padding: 1rem;
+    border-radius: 24px;
+    border: 1px solid rgba(124, 255, 122, 0.18);
+    background:
+      radial-gradient(circle at top left, rgba(124, 255, 122, 0.1), transparent 34%),
+      linear-gradient(180deg, rgba(11, 17, 13, 0.98), rgba(6, 10, 8, 0.99));
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.42);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .mermaid-zoom__close {
+    position: absolute;
+    top: 0.9rem;
+    right: 0.9rem;
+    width: 2.2rem;
+    height: 2.2rem;
+    border: 1px solid rgba(124, 255, 122, 0.18);
+    border-radius: 999px;
+    background: rgba(5, 8, 12, 0.72);
+    color: rgba(239, 255, 237, 0.92);
+    cursor: pointer;
+  }
+
+  .mermaid-zoom__body {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    padding: 2.4rem 0.35rem 0.35rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mermaid-zoom__body svg {
+    display: block;
+    flex: none;
+    margin: 0 auto;
+  }
+
+  @media (max-width: 720px) {
+    pre.mermaid {
+      margin: 1.2rem 0;
+      padding: 0.8rem;
+      border-radius: 16px;
+    }
+
+    pre.mermaid[data-processed="true"] {
+      padding: 0.8rem;
+    }
+
+    pre.mermaid svg text,
+    pre.mermaid svg tspan {
+      font-size: 13px !important;
+    }
+
+    .mermaid-zoom__panel {
+      width: calc(100vw - 0.9rem);
+      height: calc(100vh - 0.9rem);
+      padding: 0.8rem;
+      border-radius: 18px;
+    }
+
+    .mermaid-zoom__body {
+      padding-top: 2.2rem;
+    }
+  }
+</style>
