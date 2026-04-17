@@ -7,6 +7,7 @@ tags:
   - "Design Pattern"
   - "Game Programming"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-game-programming-event-queue.svg
 ---
 
 ## 패턴 한 줄 설명

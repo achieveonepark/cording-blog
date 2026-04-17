@@ -7,6 +7,7 @@ tags:
   - "Design Pattern"
   - "Structural"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-go-f-structural-flyweight.svg
 ---
 
 ## One-line pattern summary
@@ -75,7 +76,7 @@ flowchart LR
   context["Bullet Context (pos/speed)"]
   render["Draw / Simulate"]
 
-  spawn -->|get(typeId)| factory
+  spawn -- "get(typeId)" --> factory
   factory -->|reuse| shared
   spawn -->|extrinsic state| context
   shared -->|intrinsic| render

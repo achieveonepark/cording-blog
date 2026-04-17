@@ -7,6 +7,7 @@ tags:
   - "Unity"
   - "Package"
 category: "Unity Package"
+thumbnail: /images/packages/unity-package.png
 ---
 
 | [🪄Open on GitHub](https://github.com/achieveonepark/game-framework)

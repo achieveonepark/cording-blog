@@ -7,6 +7,7 @@ tags:
   - "Design Pattern"
   - "Structural"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-go-f-structural-facade.svg
 ---
 
 ## 패턴 한 줄 설명
@@ -62,7 +63,7 @@ flowchart LR
   network["NetworkClient"]
   result["Ready To Play"]
 
-  client -->|StartGame()| facade
+  client -- "StartGame()" --> facade
   facade -->|load| assets
   facade -->|restore| save
   facade -->|connect| network

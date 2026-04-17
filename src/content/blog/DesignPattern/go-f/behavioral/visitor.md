@@ -7,6 +7,7 @@ tags:
   - "Design Pattern"
   - "Behavioral"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-go-f-behavioral-visitor.svg
 ---
 
 ## 패턴 한 줄 설명
@@ -71,9 +72,9 @@ flowchart LR
   end
 
   client -->|iterate| structure
-  structure -->|accept(visitor)| enemy
-  structure -->|accept(visitor)| npc
-  structure -->|accept(visitor)| item
+  structure -- "accept(visitor)" --> enemy
+  structure -- "accept(visitor)" --> npc
+  structure -- "accept(visitor)" --> item
   enemy -->|visitEnemy| visit
   npc -->|visitNpc| visit
   item -->|visitItem| visit

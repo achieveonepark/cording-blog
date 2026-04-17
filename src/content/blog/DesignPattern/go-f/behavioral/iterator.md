@@ -7,6 +7,7 @@ tags:
   - "Design Pattern"
   - "Behavioral"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-go-f-behavioral-iterator.svg
 ---
 
 ## 패턴 한 줄 설명
@@ -71,7 +72,7 @@ flowchart LR
   next["Next()"]
   value["Current Item"]
 
-  client -->|CreateIterator()| aggregate
+  client -- "CreateIterator()" --> aggregate
   aggregate --> iterator
   client --> check
   check -->|true| next

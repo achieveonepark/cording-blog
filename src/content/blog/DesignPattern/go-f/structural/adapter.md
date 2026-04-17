@@ -7,6 +7,7 @@ tags:
   - "Design Pattern"
   - "Structural"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-go-f-structural-adapter.svg
 ---
 
 ## 패턴 한 줄 설명
@@ -67,7 +68,7 @@ flowchart LR
   adaptee["Legacy SDK"]
   result["Rank Data"]
 
-  client -->|GetTopRanks()| target
+  client -- "GetTopRanks()" --> target
   target --> adapter
   adapter -->|Convert Call| adaptee
   adaptee -->|legacy response| adapter

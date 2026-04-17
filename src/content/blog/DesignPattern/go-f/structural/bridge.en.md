@@ -7,6 +7,7 @@ tags:
   - "Design Pattern"
   - "Structural"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-go-f-structural-bridge.svg
 ---
 
 ## One-line pattern summary

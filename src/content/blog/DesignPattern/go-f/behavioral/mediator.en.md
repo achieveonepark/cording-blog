@@ -7,6 +7,7 @@ tags:
   - "Design Pattern"
   - "Behavioral"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-go-f-behavioral-mediator.svg
 ---
 
 ## One-line pattern summary

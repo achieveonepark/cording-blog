@@ -7,6 +7,7 @@ tags:
   - "Design Pattern"
   - "Game Programming"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-game-programming-service-locator.svg
 ---
 
 ## One-line pattern summary
@@ -70,9 +71,9 @@ flowchart LR
   service["IAudioService Implementation"]
   result["Play SFX"]
 
-  client -->|Resolve<IAudioService>()| locator
+  client -- "Resolve<IAudioService>()" --> locator
   locator -->|lookup key| registry
   registry -->|return instance| service
-  service -->|Play(soundId)| result
+  service -- "Play(soundId)" --> result
   result -->|done| client
 ```

@@ -7,6 +7,7 @@ tags:
   - "Design Pattern"
   - "Structural"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-go-f-structural-proxy.svg
 ---
 
 ## One-line pattern summary
@@ -71,7 +72,7 @@ flowchart LR
   real["RealTexture"]
   result["Texture Data"]
 
-  client -->|Draw()| proxy
+  client -- "Draw()" --> proxy
   proxy --> check_cache
   check_cache -->|no| real
   real -->|load once| proxy

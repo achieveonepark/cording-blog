@@ -7,6 +7,7 @@ tags:
   - "Design Pattern"
   - "Structural"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-go-f-structural-composite.svg
 ---
 
 ## One-line pattern summary
@@ -82,7 +83,7 @@ flowchart TD
   text_label["Label (Leaf)"]
   render["Render()"]
 
-  client -->|render()| root
+  client -- "render()" --> root
   root -->|render child| panel
   panel -->|render child| button
   panel -->|render child| text_label

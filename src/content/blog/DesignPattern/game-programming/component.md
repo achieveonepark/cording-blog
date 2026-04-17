@@ -7,6 +7,7 @@ tags:
   - "Design Pattern"
   - "Game Programming"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-game-programming-component.svg
 ---
 
 ## 패턴 한 줄 설명
@@ -86,7 +87,7 @@ flowchart LR
     inventory["Inventory"]
   end
 
-  game_loop -->|Tick()| entity
+  game_loop -- "Tick()" --> entity
   entity -->|update| movement
   entity -->|update| health
   entity -->|update| inventory
