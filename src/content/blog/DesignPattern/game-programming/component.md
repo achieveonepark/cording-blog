@@ -1,13 +1,13 @@
 ---
-title: "Component"
+title: "[게임 프로그래밍 패턴] Component"
 description: "상속 대신 기능을 작은 단위로 쪼개 조합해 엔티티를 구성하는 패턴입니다."
-pubDate: 2026-04-16
+pubDate: 2026-03-04
 lang: ko
 tags:
   - "Design Pattern"
-  - "Component"
   - "Game Programming"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-game-programming-component.svg
 ---
 
 ## 패턴 한 줄 설명
@@ -87,7 +87,7 @@ flowchart LR
     inventory["Inventory"]
   end
 
-  game_loop -->|Tick()| entity
+  game_loop -- "Tick()" --> entity
   entity -->|update| movement
   entity -->|update| health
   entity -->|update| inventory

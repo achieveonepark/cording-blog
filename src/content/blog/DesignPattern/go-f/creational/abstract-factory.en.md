@@ -1,14 +1,13 @@
 ---
-title: "AbstractFactory"
+title: "[Design Pattern] Abstract Factory Pattern"
 description: "A pattern that creates related groups of objects without depending on concrete types."
-pubDate: 2026-04-16
+pubDate: 2026-03-10
 lang: en
 tags:
   - "Design Pattern"
-  - "AbstractFactory"
-  - "GoF"
   - "Creational"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-go-f-creational-abstract-factory.svg
 ---
 
 # Abstract Factory

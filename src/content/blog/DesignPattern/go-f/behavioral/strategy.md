@@ -1,14 +1,13 @@
 ---
-title: "Strategy"
+title: "[디자인 패턴] Strategy 패턴"
 description: "동일 목적의 알고리즘을 인터페이스로 캡슐화해 런타임에 바꿔 끼우는 패턴입니다."
-pubDate: 2026-04-16
+pubDate: 2026-04-03
 lang: ko
 tags:
   - "Design Pattern"
-  - "Strategy"
-  - "GoF"
   - "Behavioral"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-go-f-behavioral-strategy.svg
 ---
 
 ## 패턴 한 줄 설명

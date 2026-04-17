@@ -1,14 +1,13 @@
 ---
-title: "Mediator"
+title: "[디자인 패턴] Mediator 패턴"
 description: "여러 객체의 상호작용을 중재 객체로 모아 객체 간 직접 의존을 줄이는 패턴입니다."
-pubDate: 2026-04-16
+pubDate: 2026-04-08
 lang: ko
 tags:
   - "Design Pattern"
-  - "Mediator"
-  - "GoF"
   - "Behavioral"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-go-f-behavioral-mediator.svg
 ---
 
 ## 패턴 한 줄 설명

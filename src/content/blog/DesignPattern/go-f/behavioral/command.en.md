@@ -1,14 +1,13 @@
 ---
-title: "Command"
+title: "[Design Pattern] Command Pattern"
 description: "A pattern that turns requests into objects and handles execution, undo, and queueing flexibly."
-pubDate: 2026-04-16
+pubDate: 2026-04-01
 lang: en
 tags:
   - "Design Pattern"
-  - "Command"
-  - "GoF"
   - "Behavioral"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-go-f-behavioral-command.svg
 ---
 
 ## One-line pattern summary

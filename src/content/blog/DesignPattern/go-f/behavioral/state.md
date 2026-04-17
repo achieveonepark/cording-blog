@@ -1,14 +1,13 @@
 ---
-title: "State"
+title: "[디자인 패턴] State 패턴"
 description: "상태별 행동을 객체로 분리해 상태 전환에 따라 동작을 교체하는 패턴입니다."
-pubDate: 2026-04-16
+pubDate: 2026-04-05
 lang: ko
 tags:
   - "Design Pattern"
-  - "State"
-  - "GoF"
   - "Behavioral"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-go-f-behavioral-state.svg
 ---
 
 ## 패턴 한 줄 설명

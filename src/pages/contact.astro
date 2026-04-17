@@ -62,29 +62,7 @@ import { contact } from "../config/site";
           </p>
         </a>
 
-        <a class="contact-card" href={contact.blogRepo} target="_blank" rel="noreferrer">
-          <span class="contact-card__label">
-            <span data-ui-lang="ko">블로그 저장소</span>
-            <span data-ui-lang="en">Blog Repo</span>
-          </span>
-          <strong>cording-blog</strong>
-          <p>
-            <span data-ui-lang="ko">블로그 구조와 변경 내역 확인</span>
-            <span data-ui-lang="en">Inspect the blog source and change history</span>
-          </p>
-        </a>
       </div>
-
-      {!contact.email && (
-        <div class="contact-note">
-          <span data-ui-lang="ko">
-            현재는 GitHub와 개인 사이트를 기본 문의 채널로 운영하고 있습니다. 필요하면 `PUBLIC_CONTACT_EMAIL`을 설정해 이메일 채널도 바로 노출할 수 있게 준비해 두었습니다.
-          </span>
-          <span data-ui-lang="en">
-            GitHub and the personal site are currently the primary contact channels. The blog is also ready to expose an email address later through `PUBLIC_CONTACT_EMAIL`.
-          </span>
-        </div>
-      )}
     </section>
   </main>
 
@@ -145,13 +123,4 @@ import { contact } from "../config/site";
     line-height: 1.7;
   }
 
-  .contact-note {
-    margin-top: 1rem;
-    padding: 0.95rem 1rem;
-    border: 1px dashed rgba(124, 255, 122, 0.2);
-    border-radius: var(--radius-md);
-    color: var(--muted);
-    font-size: 0.86rem;
-    line-height: 1.75;
-  }
 </style>

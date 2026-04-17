@@ -1,14 +1,13 @@
 ---
-title: "Memento"
+title: "[Design Pattern] Memento Pattern"
 description: "A pattern that saves and restores internal object state as encapsulated snapshots."
-pubDate: 2026-04-16
+pubDate: 2026-04-09
 lang: en
 tags:
   - "Design Pattern"
-  - "Memento"
-  - "GoF"
   - "Behavioral"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-go-f-behavioral-memento.svg
 ---
 
 ## One-line pattern summary

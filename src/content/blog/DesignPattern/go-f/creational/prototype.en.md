@@ -1,14 +1,13 @@
 ---
-title: "Prototype"
+title: "[Design Pattern] Prototype Pattern"
 description: "A pattern that creates new objects by cloning an existing prototype instead of calling a constructor."
-pubDate: 2026-04-16
+pubDate: 2026-03-07
 lang: en
 tags:
   - "Design Pattern"
-  - "Prototype"
-  - "GoF"
   - "Creational"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-go-f-creational-prototype.svg
 ---
 
 ## One-line pattern summary

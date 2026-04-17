@@ -1,14 +1,13 @@
 ---
-title: "Proxy"
+title: "[Design Pattern] Proxy Pattern"
 description: "A pattern that places a surrogate object in front of the real object to handle control, lazy loading, or caching."
-pubDate: 2026-04-16
+pubDate: 2026-03-27
 lang: en
 tags:
   - "Design Pattern"
-  - "Proxy"
-  - "GoF"
   - "Structural"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-go-f-structural-proxy.svg
 ---
 
 ## One-line pattern summary
@@ -73,7 +72,7 @@ flowchart LR
   real["RealTexture"]
   result["Texture Data"]
 
-  client -->|Draw()| proxy
+  client -- "Draw()" --> proxy
   proxy --> check_cache
   check_cache -->|no| real
   real -->|load once| proxy

@@ -1,14 +1,13 @@
 ---
-title: "Observer"
+title: "[디자인 패턴] Observer 패턴"
 description: "발행자 상태 변화가 구독자들에게 자동 통지되도록 하는 반응형 패턴입니다."
-pubDate: 2026-04-16
+pubDate: 2026-04-02
 lang: ko
 tags:
   - "Design Pattern"
-  - "Observer"
-  - "GoF"
   - "Behavioral"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-go-f-behavioral-observer.svg
 ---
 
 ## 패턴 한 줄 설명

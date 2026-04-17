@@ -1,14 +1,13 @@
 ---
-title: "TemplateMethod"
+title: "[Design Pattern] Template Method Pattern"
 description: "A pattern where the overall procedure is fixed, while only the detailed steps are changed in subclasses."
-pubDate: 2026-04-16
+pubDate: 2026-04-12
 lang: en
 tags:
   - "Design Pattern"
-  - "TemplateMethod"
-  - "GoF"
   - "Behavioral"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-go-f-behavioral-template-method.svg
 ---
 
 # Template Method

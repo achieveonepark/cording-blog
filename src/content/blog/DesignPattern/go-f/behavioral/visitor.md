@@ -1,14 +1,13 @@
 ---
-title: "Visitor"
+title: "[디자인 패턴] Visitor 패턴"
 description: "객체 구조를 건드리지 않고 연산을 Visitor로 분리해 확장하는 패턴입니다."
-pubDate: 2026-04-16
+pubDate: 2026-04-10
 lang: ko
 tags:
   - "Design Pattern"
-  - "Visitor"
-  - "GoF"
   - "Behavioral"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-go-f-behavioral-visitor.svg
 ---
 
 ## 패턴 한 줄 설명
@@ -73,9 +72,9 @@ flowchart LR
   end
 
   client -->|iterate| structure
-  structure -->|accept(visitor)| enemy
-  structure -->|accept(visitor)| npc
-  structure -->|accept(visitor)| item
+  structure -- "accept(visitor)" --> enemy
+  structure -- "accept(visitor)" --> npc
+  structure -- "accept(visitor)" --> item
   enemy -->|visitEnemy| visit
   npc -->|visitNpc| visit
   item -->|visitItem| visit

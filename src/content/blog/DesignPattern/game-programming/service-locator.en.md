@@ -1,13 +1,13 @@
 ---
-title: "Service Locator"
+title: "[Game Programming] Service Locator Pattern"
 description: "A pattern that gathers access to shared services into a central registry to reduce coupling at the call site."
-pubDate: 2026-04-16
+pubDate: 2026-04-10
 lang: en
 tags:
   - "Design Pattern"
-  - "Service Locator"
   - "Game Programming"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-game-programming-service-locator.svg
 ---
 
 ## One-line pattern summary
@@ -71,9 +71,9 @@ flowchart LR
   service["IAudioService Implementation"]
   result["Play SFX"]
 
-  client -->|Resolve<IAudioService>()| locator
+  client -- "Resolve<IAudioService>()" --> locator
   locator -->|lookup key| registry
   registry -->|return instance| service
-  service -->|Play(soundId)| result
+  service -- "Play(soundId)" --> result
   result -->|done| client
 ```

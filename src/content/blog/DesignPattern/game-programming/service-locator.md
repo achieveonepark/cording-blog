@@ -1,13 +1,13 @@
 ---
-title: "Service Locator"
+title: "[게임 프로그래밍 패턴] Service Locator"
 description: "공통 서비스 접근을 중앙 레지스트리로 모아 호출부 결합을 줄이는 패턴입니다."
-pubDate: 2026-04-16
+pubDate: 2026-04-10
 lang: ko
 tags:
   - "Design Pattern"
-  - "Service Locator"
   - "Game Programming"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-game-programming-service-locator.svg
 ---
 
 ## 패턴 한 줄 설명
@@ -71,9 +71,9 @@ flowchart LR
   service["IAudioService 구현체"]
   result["Play SFX"]
 
-  client -->|Resolve<IAudioService>()| locator
+  client -- "Resolve<IAudioService>()" --> locator
   locator -->|lookup key| registry
   registry -->|return instance| service
-  service -->|Play(soundId)| result
+  service -- "Play(soundId)" --> result
   result -->|done| client
 ```

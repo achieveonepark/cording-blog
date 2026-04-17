@@ -1,13 +1,13 @@
 ---
-title: "BreezeIAP"
+title: "[Unity Package] BreezeIAP"
 description: "This package wraps Unity IAP and provides an interface that is easier for users to work with. However, receipt validation logic must still be implemented separately."
-pubDate: 2026-04-16
+pubDate: 2026-03-02
 lang: en
 tags:
   - "Unity"
   - "Package"
-  - "BreezeIAP"
 category: "Unity Package"
+thumbnail: /images/packages/unity-package.png
 ---
 
 | [🪄Open on GitHub](https://github.com/achieveonepark/breeze-iap)

@@ -1,13 +1,13 @@
 ---
-title: "Infinity Value"
+title: "[Unity Package] Infinity Value"
 description: "Choose one of the installation methods below."
-pubDate: 2026-04-16
+pubDate: 2026-03-23
 lang: en
 tags:
   - "Unity"
   - "Package"
-  - "Infinity Value"
 category: "Unity Package"
+thumbnail: /images/packages/unity-package.png
 ---
 
 | [🪄Open on GitHub](https://github.com/achieveonepark/infinity-value)
