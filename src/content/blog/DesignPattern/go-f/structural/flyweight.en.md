@@ -1,14 +1,13 @@
 ---
-title: "Flyweight"
+title: "[Design Pattern] Flyweight Pattern"
 description: "A pattern that reduces memory usage for large numbers of objects by reusing shareable immutable state."
-pubDate: 2026-04-16
+pubDate: 2026-03-25
 lang: en
 tags:
   - "Design Pattern"
-  - "Flyweight"
-  - "GoF"
   - "Structural"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-go-f-structural-flyweight.svg
 ---
 
 ## One-line pattern summary
@@ -77,7 +76,7 @@ flowchart LR
   context["Bullet Context (pos/speed)"]
   render["Draw / Simulate"]
 
-  spawn -->|get(typeId)| factory
+  spawn -- "get(typeId)" --> factory
   factory -->|reuse| shared
   spawn -->|extrinsic state| context
   shared -->|intrinsic| render

@@ -1,13 +1,13 @@
 ---
-title: "Object Pool"
+title: "[Game Programming] Object Pool Pattern"
 description: "A pattern that reuses frequently created and destroyed objects to reduce allocation cost and GC spikes."
-pubDate: 2026-04-16
+pubDate: 2026-04-07
 lang: en
 tags:
   - "Design Pattern"
-  - "Object Pool"
   - "Game Programming"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-game-programming-object-pool.svg
 ---
 
 ## One-line pattern summary

@@ -1,14 +1,13 @@
 ---
-title: "Iterator"
+title: "[디자인 패턴] Iterator 패턴"
 description: "컬렉션 내부 구조를 숨기고 순회 방법만 외부에 노출하는 패턴입니다."
-pubDate: 2026-04-16
+pubDate: 2026-04-06
 lang: ko
 tags:
   - "Design Pattern"
-  - "Iterator"
-  - "GoF"
   - "Behavioral"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-go-f-behavioral-iterator.svg
 ---
 
 ## 패턴 한 줄 설명
@@ -73,7 +72,7 @@ flowchart LR
   next["Next()"]
   value["Current Item"]
 
-  client -->|CreateIterator()| aggregate
+  client -- "CreateIterator()" --> aggregate
   aggregate --> iterator
   client --> check
   check -->|true| next

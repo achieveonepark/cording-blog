@@ -1,14 +1,13 @@
 ---
-title: "Facade"
+title: "[Design Pattern] Facade Pattern"
 description: "A pattern that wraps a complex subsystem with a simple top-level API to improve usability."
-pubDate: 2026-04-16
+pubDate: 2026-03-21
 lang: en
 tags:
   - "Design Pattern"
-  - "Facade"
-  - "GoF"
   - "Structural"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-go-f-structural-facade.svg
 ---
 
 ## One-line pattern summary
@@ -64,7 +63,7 @@ flowchart LR
   network["NetworkClient"]
   result["Ready To Play"]
 
-  client -->|StartGame()| facade
+  client -- "StartGame()" --> facade
   facade -->|load| assets
   facade -->|restore| save
   facade -->|connect| network

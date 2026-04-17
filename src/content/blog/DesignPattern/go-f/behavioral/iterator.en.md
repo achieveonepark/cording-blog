@@ -1,14 +1,13 @@
 ---
-title: "Iterator"
+title: "[Design Pattern] Iterator Pattern"
 description: "A pattern that hides the internal structure of a collection and only exposes a way to traverse it."
-pubDate: 2026-04-16
+pubDate: 2026-04-06
 lang: en
 tags:
   - "Design Pattern"
-  - "Iterator"
-  - "GoF"
   - "Behavioral"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-go-f-behavioral-iterator.svg
 ---
 
 ## One-line pattern summary
@@ -73,7 +72,7 @@ flowchart LR
   next["Next()"]
   value["Current Item"]
 
-  client -->|CreateIterator()| aggregate
+  client -- "CreateIterator()" --> aggregate
   aggregate --> iterator
   client --> check
   check -->|true| next

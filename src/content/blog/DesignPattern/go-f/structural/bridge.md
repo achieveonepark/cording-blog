@@ -1,14 +1,13 @@
 ---
-title: "Bridge"
+title: "[디자인 패턴] Bridge 패턴"
 description: "추상화와 구현을 분리해 양쪽을 독립적으로 확장하는 패턴입니다."
-pubDate: 2026-04-16
+pubDate: 2026-03-14
 lang: ko
 tags:
   - "Design Pattern"
-  - "Bridge"
-  - "GoF"
   - "Structural"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-go-f-structural-bridge.svg
 ---
 
 ## 패턴 한 줄 설명

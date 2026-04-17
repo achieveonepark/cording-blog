@@ -1,13 +1,13 @@
 ---
-title: "Event Queue"
+title: "[게임 프로그래밍 패턴] Event Queue"
 description: "이벤트 발행과 소비를 큐로 분리해 시스템 간 결합을 낮추는 패턴입니다."
-pubDate: 2026-04-16
+pubDate: 2026-03-26
 lang: ko
 tags:
   - "Design Pattern"
-  - "Event Queue"
   - "Game Programming"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-game-programming-event-queue.svg
 ---
 
 ## 패턴 한 줄 설명

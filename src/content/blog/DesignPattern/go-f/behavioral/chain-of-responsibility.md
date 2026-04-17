@@ -1,14 +1,13 @@
 ---
-title: "ChainOfResponsibility"
+title: "[디자인 패턴] Chain Of Responsibility 패턴"
 description: "요청을 여러 처리자 체인에 통과시키며 각 처리자가 순차적으로 책임을 수행하는 패턴입니다."
-pubDate: 2026-04-16
+pubDate: 2026-04-13
 lang: ko
 tags:
   - "Design Pattern"
-  - "ChainOfResponsibility"
-  - "GoF"
   - "Behavioral"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-go-f-behavioral-chain-of-responsibility.svg
 ---
 
 # Chain of Responsibility

@@ -1,13 +1,13 @@
 ---
-title: "Type Object"
+title: "[Game Programming] Type Object Pattern"
 description: "A pattern that models object types as data rather than classes so that extension can be handled by adding new data."
 pubDate: 2026-04-16
 lang: en
 tags:
   - "Design Pattern"
-  - "Type Object"
   - "Game Programming"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-game-programming-type-object.svg
 ---
 
 ## One-line pattern summary

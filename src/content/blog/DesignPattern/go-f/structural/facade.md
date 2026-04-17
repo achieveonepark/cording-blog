@@ -1,14 +1,13 @@
 ---
-title: "Facade"
+title: "[디자인 패턴] Facade 패턴"
 description: "복잡한 서브시스템을 단순한 상위 API로 감싸 사용성을 높이는 패턴입니다."
-pubDate: 2026-04-16
+pubDate: 2026-03-21
 lang: ko
 tags:
   - "Design Pattern"
-  - "Facade"
-  - "GoF"
   - "Structural"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-go-f-structural-facade.svg
 ---
 
 ## 패턴 한 줄 설명
@@ -64,7 +63,7 @@ flowchart LR
   network["NetworkClient"]
   result["Ready To Play"]
 
-  client -->|StartGame()| facade
+  client -- "StartGame()" --> facade
   facade -->|load| assets
   facade -->|restore| save
   facade -->|connect| network

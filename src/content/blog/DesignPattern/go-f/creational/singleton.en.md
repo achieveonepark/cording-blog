@@ -1,14 +1,13 @@
 ---
-title: "Singleton"
+title: "[Design Pattern] Singleton Pattern"
 description: "A pattern that keeps a single instance and provides a global access point."
-pubDate: 2026-04-16
+pubDate: 2026-03-03
 lang: en
 tags:
   - "Design Pattern"
-  - "Singleton"
-  - "GoF"
   - "Creational"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-go-f-creational-singleton.svg
 ---
 
 ## One-line pattern summary

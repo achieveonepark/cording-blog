@@ -1,14 +1,13 @@
 ---
-title: "FactoryMethod"
+title: "[Design Pattern] Factory Method Pattern"
 description: "A pattern that delegates the actual creation responsibility of a factory method to subclasses."
-pubDate: 2026-04-16
+pubDate: 2026-03-29
 lang: en
 tags:
   - "Design Pattern"
-  - "FactoryMethod"
-  - "GoF"
   - "Structural"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-go-f-structural-factory-method.svg
 ---
 
 # Factory Method

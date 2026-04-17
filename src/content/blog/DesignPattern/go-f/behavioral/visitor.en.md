@@ -1,14 +1,13 @@
 ---
-title: "Visitor"
+title: "[Design Pattern] Visitor Pattern"
 description: "A pattern that separates operations into visitors so the object structure can be extended without modifying it."
-pubDate: 2026-04-16
+pubDate: 2026-04-10
 lang: en
 tags:
   - "Design Pattern"
-  - "Visitor"
-  - "GoF"
   - "Behavioral"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-go-f-behavioral-visitor.svg
 ---
 
 ## One-line pattern summary
@@ -73,9 +72,9 @@ flowchart LR
   end
 
   client -->|iterate| structure
-  structure -->|accept(visitor)| enemy
-  structure -->|accept(visitor)| npc
-  structure -->|accept(visitor)| item
+  structure -- "accept(visitor)" --> enemy
+  structure -- "accept(visitor)" --> npc
+  structure -- "accept(visitor)" --> item
   enemy -->|visitEnemy| visit
   npc -->|visitNpc| visit
   item -->|visitItem| visit

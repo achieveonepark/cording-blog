@@ -1,14 +1,13 @@
 ---
-title: "Composite"
+title: "[디자인 패턴] Composite 패턴"
 description: "개별 객체와 복합 객체를 동일 인터페이스로 다루는 트리 구조 패턴입니다."
-pubDate: 2026-04-16
+pubDate: 2026-03-17
 lang: ko
 tags:
   - "Design Pattern"
-  - "Composite"
-  - "GoF"
   - "Structural"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-go-f-structural-composite.svg
 ---
 
 ## 패턴 한 줄 설명
@@ -84,7 +83,7 @@ flowchart TD
   text_label["Label (Leaf)"]
   render["Render()"]
 
-  client -->|render()| root
+  client -- "render()" --> root
   root -->|render child| panel
   panel -->|render child| button
   panel -->|render child| text_label

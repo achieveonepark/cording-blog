@@ -1,14 +1,13 @@
 ---
-title: "Memento"
+title: "[디자인 패턴] Memento 패턴"
 description: "객체 내부 상태를 캡슐화한 스냅샷으로 저장/복원하는 패턴입니다."
-pubDate: 2026-04-16
+pubDate: 2026-04-09
 lang: ko
 tags:
   - "Design Pattern"
-  - "Memento"
-  - "GoF"
   - "Behavioral"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-go-f-behavioral-memento.svg
 ---
 
 ## 패턴 한 줄 설명

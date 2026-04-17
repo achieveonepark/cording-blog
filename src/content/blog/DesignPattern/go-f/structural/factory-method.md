@@ -1,14 +1,13 @@
 ---
-title: "FactoryMethod"
+title: "[디자인 패턴] Factory Method 패턴"
 description: "생성 메서드의 실제 생성 책임을 하위 클래스가 결정하도록 위임하는 패턴입니다."
-pubDate: 2026-04-16
+pubDate: 2026-03-29
 lang: ko
 tags:
   - "Design Pattern"
-  - "FactoryMethod"
-  - "GoF"
   - "Structural"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-go-f-structural-factory-method.svg
 ---
 
 # Factory Method

@@ -24,11 +24,6 @@ export const externalLinks = [
     href: "https://www.somiri.dev",
     label: "OS",
     kind: "os"
-  },
-  {
-    href: "https://lib.somiri.dev",
-    label: "Library",
-    kind: "library"
   }
 ] as const;
 

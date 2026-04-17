@@ -1,14 +1,13 @@
 ---
-title: "Adapter"
+title: "[Design Pattern] Adapter Pattern"
 description: "A pattern that converts an incompatible existing interface into the interface expected by the current system."
-pubDate: 2026-04-16
+pubDate: 2026-03-12
 lang: en
 tags:
   - "Design Pattern"
-  - "Adapter"
-  - "GoF"
   - "Structural"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-go-f-structural-adapter.svg
 ---
 
 ## One-line pattern summary
@@ -69,7 +68,7 @@ flowchart LR
   adaptee["Legacy SDK"]
   result["Rank Data"]
 
-  client -->|GetTopRanks()| target
+  client -- "GetTopRanks()" --> target
   target --> adapter
   adapter -->|Convert Call| adaptee
   adaptee -->|legacy response| adapter

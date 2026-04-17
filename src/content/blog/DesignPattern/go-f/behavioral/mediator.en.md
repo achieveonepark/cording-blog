@@ -1,14 +1,13 @@
 ---
-title: "Mediator"
+title: "[Design Pattern] Mediator Pattern"
 description: "A pattern that collects interactions between many objects into a mediator so direct dependencies between objects are reduced."
-pubDate: 2026-04-16
+pubDate: 2026-04-08
 lang: en
 tags:
   - "Design Pattern"
-  - "Mediator"
-  - "GoF"
   - "Behavioral"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-go-f-behavioral-mediator.svg
 ---
 
 ## One-line pattern summary

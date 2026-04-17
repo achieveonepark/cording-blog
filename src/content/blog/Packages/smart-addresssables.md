@@ -1,13 +1,13 @@
 ---
-title: "Smart Addresssables"
+title: "[Unity 패키지] Smart Addresssables"
 description: "Smart Addresssables"
-pubDate: 2026-04-16
+pubDate: 2026-04-14
 lang: ko
 tags:
   - "Unity"
   - "Package"
-  - "Smart Addresssables"
 category: "Unity Package"
+thumbnail: /images/packages/unity-package.png
 ---
 
 | [🪄github 바로가기](https://github.com/achieveonepark/smart-addressables)

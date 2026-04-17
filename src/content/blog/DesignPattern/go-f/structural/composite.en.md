@@ -1,14 +1,13 @@
 ---
-title: "Composite"
+title: "[Design Pattern] Composite Pattern"
 description: "A tree-structure pattern that treats individual objects and composed objects through the same interface."
-pubDate: 2026-04-16
+pubDate: 2026-03-17
 lang: en
 tags:
   - "Design Pattern"
-  - "Composite"
-  - "GoF"
   - "Structural"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-go-f-structural-composite.svg
 ---
 
 ## One-line pattern summary
@@ -84,7 +83,7 @@ flowchart TD
   text_label["Label (Leaf)"]
   render["Render()"]
 
-  client -->|render()| root
+  client -- "render()" --> root
   root -->|render child| panel
   panel -->|render child| button
   panel -->|render child| text_label

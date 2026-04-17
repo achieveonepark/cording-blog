@@ -1,13 +1,13 @@
 ---
-title: "Dirty Flag"
+title: "[Game Programming] Dirty Flag Pattern"
 description: "A lazy update pattern that marks expensive calculations so they are recomputed only when the underlying value changes."
-pubDate: 2026-04-16
+pubDate: 2026-03-18
 lang: en
 tags:
   - "Design Pattern"
-  - "Dirty Flag"
   - "Game Programming"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-game-programming-dirty-flag.svg
 ---
 
 ## One-line pattern summary

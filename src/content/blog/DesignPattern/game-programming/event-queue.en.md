@@ -1,13 +1,13 @@
 ---
-title: "Event Queue"
+title: "[Game Programming] Event Queue Pattern"
 description: "A pattern that lowers coupling between systems by separating event publishing and consuming through a queue."
-pubDate: 2026-04-16
+pubDate: 2026-03-26
 lang: en
 tags:
   - "Design Pattern"
-  - "Event Queue"
   - "Game Programming"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-game-programming-event-queue.svg
 ---
 
 ## One-line pattern summary

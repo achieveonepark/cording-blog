@@ -1,14 +1,13 @@
 ---
-title: "Singleton"
+title: "[디자인 패턴] Singleton 패턴"
 description: "인스턴스를 하나만 유지하고 전역 접근점을 제공하는 패턴입니다."
-pubDate: 2026-04-16
+pubDate: 2026-03-03
 lang: ko
 tags:
   - "Design Pattern"
-  - "Singleton"
-  - "GoF"
   - "Creational"
 category: "Design Pattern"
+thumbnail: /images/thumbnails/designpattern-go-f-creational-singleton.svg
 ---
 
 ## 패턴 한 줄 설명
