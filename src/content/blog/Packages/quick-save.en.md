@@ -6,7 +6,6 @@ lang: en
 tags:
   - "Unity"
   - "Package"
-  - "QuickSave"
 category: "Unity Package"
 ---
 

@@ -6,7 +6,6 @@ lang: en
 tags:
   - "Unity"
   - "Package"
-  - "Data Protector"
 category: "Unity Package"
 ---
 

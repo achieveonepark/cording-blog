@@ -5,7 +5,6 @@ pubDate: 2026-04-16
 lang: ko
 tags:
   - "Design Pattern"
-  - "Type Object"
   - "Game Programming"
 category: "Design Pattern"
 ---

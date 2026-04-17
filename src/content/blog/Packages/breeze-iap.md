@@ -6,7 +6,6 @@ lang: ko
 tags:
   - "Unity"
   - "Package"
-  - "BreezeIAP"
 category: "Unity Package"
 ---
 

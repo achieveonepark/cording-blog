@@ -5,8 +5,6 @@ pubDate: 2026-04-16
 lang: en
 tags:
   - "Design Pattern"
-  - "FactoryMethod"
-  - "GoF"
   - "Structural"
 category: "Design Pattern"
 ---

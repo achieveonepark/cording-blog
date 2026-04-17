@@ -6,7 +6,6 @@ lang: ko
 tags:
   - "Unity"
   - "Package"
-  - "Infinity Value"
 category: "Unity Package"
 ---
 

@@ -6,7 +6,6 @@ lang: ko
 tags:
   - "Unity"
   - "Package"
-  - "Game Framework"
 category: "Unity Package"
 ---
 

@@ -5,7 +5,6 @@ pubDate: 2026-04-16
 lang: en
 tags:
   - "Design Pattern"
-  - "Game Loop"
   - "Game Programming"
 category: "Design Pattern"
 ---

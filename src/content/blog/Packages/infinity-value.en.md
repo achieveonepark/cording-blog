@@ -6,7 +6,6 @@ lang: en
 tags:
   - "Unity"
   - "Package"
-  - "Infinity Value"
 category: "Unity Package"
 ---
 

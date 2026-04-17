@@ -6,7 +6,6 @@ lang: ko
 tags:
   - "Unity"
   - "Package"
-  - "QuickSave"
 category: "Unity Package"
 ---
 

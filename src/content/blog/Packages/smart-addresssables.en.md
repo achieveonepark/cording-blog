@@ -6,7 +6,6 @@ lang: en
 tags:
   - "Unity"
   - "Package"
-  - "Smart Addresssables"
 category: "Unity Package"
 ---
 

@@ -6,7 +6,6 @@ lang: ko
 tags:
   - "Unity"
   - "Package"
-  - "LiteDB"
 category: "Unity Package"
 ---
 

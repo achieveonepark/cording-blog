@@ -5,8 +5,6 @@ pubDate: 2026-04-16
 lang: en
 tags:
   - "Design Pattern"
-  - "Singleton"
-  - "GoF"
   - "Creational"
 category: "Design Pattern"
 ---

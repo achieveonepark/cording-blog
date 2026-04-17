@@ -5,8 +5,6 @@ pubDate: 2026-04-16
 lang: ko
 tags:
   - "Design Pattern"
-  - "Prototype"
-  - "GoF"
   - "Creational"
 category: "Design Pattern"
 ---

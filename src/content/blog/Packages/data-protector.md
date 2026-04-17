@@ -6,7 +6,6 @@ lang: ko
 tags:
   - "Unity"
   - "Package"
-  - "Data Protector"
 category: "Unity Package"
 ---
 
