@@ -1,71 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#06090d"/>
-      <stop offset="100%" stop-color="#0a1018"/>
-    </linearGradient>
-  </defs>
-
-  <!-- 배경 -->
-  <rect width="1200" height="630" fill="url(#bg)"/>
-
-  <!-- 도트 패턴 -->
-  <g>
-    <circle cx="967" cy="143" r="1.5" fill="#c4b5fd" opacity="0.08"/>
-    <circle cx="794" cy="226" r="2" fill="#c4b5fd" opacity="0.1"/>
-    <circle cx="621" cy="309" r="1" fill="#c4b5fd" opacity="0.12"/>
-    <circle cx="448" cy="392" r="1.5" fill="#c4b5fd" opacity="0.14"/>
-    <circle cx="275" cy="475" r="2" fill="#c4b5fd" opacity="0.06"/>
-    <circle cx="102" cy="558" r="1" fill="#c4b5fd" opacity="0.08"/>
-    <circle cx="1009" cy="131" r="1.5" fill="#c4b5fd" opacity="0.1"/>
-    <circle cx="836" cy="214" r="2" fill="#c4b5fd" opacity="0.12"/>
-    <circle cx="663" cy="297" r="1" fill="#c4b5fd" opacity="0.14"/>
-    <circle cx="490" cy="380" r="1.5" fill="#c4b5fd" opacity="0.06"/>
-    <circle cx="317" cy="463" r="2" fill="#c4b5fd" opacity="0.08"/>
-    <circle cx="144" cy="546" r="1" fill="#c4b5fd" opacity="0.1"/>
-    <circle cx="1051" cy="119" r="1.5" fill="#c4b5fd" opacity="0.12"/>
-    <circle cx="878" cy="202" r="2" fill="#c4b5fd" opacity="0.14"/>
-    <circle cx="705" cy="285" r="1" fill="#c4b5fd" opacity="0.06"/>
-    <circle cx="532" cy="368" r="1.5" fill="#c4b5fd" opacity="0.08"/>
-    <circle cx="359" cy="451" r="2" fill="#c4b5fd" opacity="0.1"/>
-    <circle cx="186" cy="534" r="1" fill="#c4b5fd" opacity="0.12"/>
-    <circle cx="1093" cy="107" r="1.5" fill="#c4b5fd" opacity="0.14"/>
-    <circle cx="920" cy="190" r="2" fill="#c4b5fd" opacity="0.06"/>
-    <circle cx="747" cy="273" r="1" fill="#c4b5fd" opacity="0.08"/>
-    <circle cx="574" cy="356" r="1.5" fill="#c4b5fd" opacity="0.1"/>
-    <circle cx="401" cy="439" r="2" fill="#c4b5fd" opacity="0.12"/>
-    <circle cx="228" cy="522" r="1" fill="#c4b5fd" opacity="0.14"/>
-  </g>
-
-  <!-- 테두리 -->
-  <rect x="40" y="40" width="1120" height="550" rx="24" fill="none" stroke="#c4b5fd" stroke-opacity="0.08" stroke-width="1"/>
-
-  <!-- 상단 악센트 라인 -->
-  <line x1="90" y1="40" x2="400" y2="40" stroke="#c4b5fd" stroke-opacity="0.4" stroke-width="2"/>
-
-  <!-- 뱃지 -->
-  <rect x="90" y="90" rx="14" width="182" height="30" fill="#c4b5fd" fill-opacity="0.08" stroke="#c4b5fd" stroke-opacity="0.2" stroke-width="1"/>
-  <text x="104" y="110" fill="#c4b5fd" font-size="13" font-weight="600" font-family="'SF Mono','SFMono-Regular',Consolas,'Liberation Mono',monospace" letter-spacing="1.8">DESIGN PATTERN</text>
-
-  <!-- 서브카테고리 -->
-  <text x="92" y="166" fill="#c4b5fd" fill-opacity="0.35" font-size="15" font-weight="500" font-family="'SF Mono','SFMono-Regular',Consolas,monospace" letter-spacing="1">Game Programming</text>
-
-  <!-- 구분선 -->
-  <line x1="90" y1="186" x2="500" y2="186" stroke="#c4b5fd" stroke-opacity="0.12" stroke-width="1"/>
-
-  <!-- 타이틀 -->
-  <text x="90" y="290" fill="#f0f4f8" font-size="64" font-weight="800" font-family="'Pretendard','Segoe UI',system-ui,sans-serif" letter-spacing="-1.5">Service Locator</text>
-
-  <!-- 하단 경로 -->
-  <text x="92" y="520" fill="#c4b5fd" fill-opacity="0.25" font-size="14" font-family="'SF Mono','SFMono-Regular',Consolas,monospace" letter-spacing="1.5">somblog</text>
-
-  <!-- 우측 장식 -->
-  
-    <circle cx="980" cy="260" r="120" fill="none" stroke="#c4b5fd" stroke-opacity="0.06" stroke-width="1"/>
-    <circle cx="980" cy="260" r="80" fill="none" stroke="#c4b5fd" stroke-opacity="0.09" stroke-width="1"/>
-    <circle cx="980" cy="260" r="40" fill="none" stroke="#c4b5fd" stroke-opacity="0.14" stroke-width="1"/>
-    <circle cx="980" cy="260" r="6" fill="#c4b5fd" opacity="0.2"/>
-    <line x1="860" y1="260" x2="936" y2="260" stroke="#c4b5fd" stroke-opacity="0.08" stroke-width="1"/>
-    <line x1="980" y1="140" x2="980" y2="216" stroke="#c4b5fd" stroke-opacity="0.08" stroke-width="1"/>
+  <rect width="1200" height="630" fill="#06090d"/>
+  <text x="600" y="315" text-anchor="middle" dominant-baseline="middle"
+    fill="#c4b5fd" font-size="88" font-weight="800"
+    font-family="'Pretendard','Segoe UI',system-ui,sans-serif"
+    letter-spacing="-2">Service Locator</text>
 </svg>
