@@ -1,5 +1,5 @@
 ---
-title: "Game Framework"
+title: "[Unity Package] Game Framework"
 description: "A collection of prebuilt systems and extension features that is designed to speed up game development in Unity."
 pubDate: 2026-04-16
 lang: en

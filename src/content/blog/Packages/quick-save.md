@@ -1,5 +1,5 @@
 ---
-title: "QuickSave"
+title: "[Unity 패키지] QuickSave"
 description: "Cysharp의 MemoryPack을 이용하여 Binary 파일을 Serialize, Deserialize하여 데이터를 저장 및 로드하는 기능을 제공합니다. Data Protector를 설치하시면 데이터를 압축하여 암/복호화할 수 있는 기능도 제공합니다. (문서)"
 pubDate: 2026-04-16
 lang: ko

@@ -1,5 +1,5 @@
 ---
-title: "Type Object"
+title: "[Game Programming] Type Object Pattern"
 description: "A pattern that models object types as data rather than classes so that extension can be handled by adding new data."
 pubDate: 2026-04-16
 lang: en

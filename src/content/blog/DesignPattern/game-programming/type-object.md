@@ -1,5 +1,5 @@
 ---
-title: "Type Object"
+title: "[게임 프로그래밍 패턴] Type Object"
 description: "객체 타입을 클래스가 아닌 데이터로 모델링해 확장을 데이터 추가로 처리하는 패턴입니다."
 pubDate: 2026-04-16
 lang: ko

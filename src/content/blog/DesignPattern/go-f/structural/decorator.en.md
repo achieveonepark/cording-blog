@@ -1,5 +1,5 @@
 ---
-title: "Decorator"
+title: "[Design Pattern] Decorator Pattern"
 description: "A pattern that dynamically adds functionality at runtime through wrappers that surround an object."
 pubDate: 2026-04-16
 lang: en

@@ -1,5 +1,5 @@
 ---
-title: "Infinity Value"
+title: "[Unity Package] Infinity Value"
 description: "Choose one of the installation methods below."
 pubDate: 2026-04-16
 lang: en

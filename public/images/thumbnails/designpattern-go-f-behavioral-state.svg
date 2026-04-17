@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#06090d"/>
+      <stop offset="100%" stop-color="#0a1018"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 배경 -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- 도트 패턴 -->
+  <g>
+    <circle cx="501" cy="249" r="1" fill="#6ee7b7" opacity="0.12"/>
+    <circle cx="942" cy="438" r="1" fill="#6ee7b7" opacity="0.08"/>
+    <circle cx="303" cy="117" r="1" fill="#6ee7b7" opacity="0.14"/>
+    <circle cx="744" cy="306" r="1" fill="#6ee7b7" opacity="0.1"/>
+    <circle cx="105" cy="495" r="1" fill="#6ee7b7" opacity="0.06"/>
+    <circle cx="546" cy="174" r="1" fill="#6ee7b7" opacity="0.12"/>
+    <circle cx="987" cy="363" r="1" fill="#6ee7b7" opacity="0.08"/>
+    <circle cx="348" cy="552" r="1" fill="#6ee7b7" opacity="0.14"/>
+    <circle cx="789" cy="231" r="1" fill="#6ee7b7" opacity="0.1"/>
+    <circle cx="150" cy="420" r="1" fill="#6ee7b7" opacity="0.06"/>
+    <circle cx="591" cy="99" r="1" fill="#6ee7b7" opacity="0.12"/>
+    <circle cx="1032" cy="288" r="1" fill="#6ee7b7" opacity="0.08"/>
+    <circle cx="393" cy="477" r="1" fill="#6ee7b7" opacity="0.14"/>
+    <circle cx="834" cy="156" r="1" fill="#6ee7b7" opacity="0.1"/>
+    <circle cx="195" cy="345" r="1" fill="#6ee7b7" opacity="0.06"/>
+    <circle cx="636" cy="534" r="1" fill="#6ee7b7" opacity="0.12"/>
+    <circle cx="1077" cy="213" r="1" fill="#6ee7b7" opacity="0.08"/>
+    <circle cx="438" cy="402" r="1" fill="#6ee7b7" opacity="0.14"/>
+    <circle cx="879" cy="81" r="1" fill="#6ee7b7" opacity="0.1"/>
+    <circle cx="240" cy="270" r="1" fill="#6ee7b7" opacity="0.06"/>
+    <circle cx="681" cy="459" r="1" fill="#6ee7b7" opacity="0.12"/>
+    <circle cx="1122" cy="138" r="1" fill="#6ee7b7" opacity="0.08"/>
+    <circle cx="483" cy="327" r="1" fill="#6ee7b7" opacity="0.14"/>
+    <circle cx="924" cy="516" r="1" fill="#6ee7b7" opacity="0.1"/>
+  </g>
+
+  <!-- 테두리 -->
+  <rect x="40" y="40" width="1120" height="550" rx="24" fill="none" stroke="#6ee7b7" stroke-opacity="0.08" stroke-width="1"/>
+
+  <!-- 상단 악센트 라인 -->
+  <line x1="90" y1="40" x2="400" y2="40" stroke="#6ee7b7" stroke-opacity="0.4" stroke-width="2"/>
+
+  <!-- 뱃지 -->
+  <rect x="90" y="90" rx="14" width="182" height="30" fill="#6ee7b7" fill-opacity="0.08" stroke="#6ee7b7" stroke-opacity="0.2" stroke-width="1"/>
+  <text x="104" y="110" fill="#6ee7b7" font-size="13" font-weight="600" font-family="'SF Mono','SFMono-Regular',Consolas,'Liberation Mono',monospace" letter-spacing="1.8">DESIGN PATTERN</text>
+
+  <!-- 서브카테고리 -->
+  <text x="92" y="166" fill="#6ee7b7" fill-opacity="0.35" font-size="15" font-weight="500" font-family="'SF Mono','SFMono-Regular',Consolas,monospace" letter-spacing="1">GoF · Behavioral</text>
+
+  <!-- 구분선 -->
+  <line x1="90" y1="186" x2="500" y2="186" stroke="#6ee7b7" stroke-opacity="0.12" stroke-width="1"/>
+
+  <!-- 타이틀 -->
+  <text x="90" y="290" fill="#f0f4f8" font-size="72" font-weight="800" font-family="'Pretendard','Segoe UI',system-ui,sans-serif" letter-spacing="-1.5">State</text>
+
+  <!-- 하단 경로 -->
+  <text x="92" y="520" fill="#6ee7b7" fill-opacity="0.25" font-size="14" font-family="'SF Mono','SFMono-Regular',Consolas,monospace" letter-spacing="1.5">somblog</text>
+
+  <!-- 우측 장식 -->
+  
+    <circle cx="980" cy="260" r="120" fill="none" stroke="#6ee7b7" stroke-opacity="0.06" stroke-width="1"/>
+    <circle cx="980" cy="260" r="80" fill="none" stroke="#6ee7b7" stroke-opacity="0.09" stroke-width="1"/>
+    <circle cx="980" cy="260" r="40" fill="none" stroke="#6ee7b7" stroke-opacity="0.14" stroke-width="1"/>
+    <circle cx="980" cy="260" r="6" fill="#6ee7b7" opacity="0.2"/>
+    <line x1="860" y1="260" x2="936" y2="260" stroke="#6ee7b7" stroke-opacity="0.08" stroke-width="1"/>
+    <line x1="980" y1="140" x2="980" y2="216" stroke="#6ee7b7" stroke-opacity="0.08" stroke-width="1"/>
+</svg>

@@ -1,5 +1,5 @@
 ---
-title: "Facade"
+title: "[Design Pattern] Facade Pattern"
 description: "A pattern that wraps a complex subsystem with a simple top-level API to improve usability."
 pubDate: 2026-04-16
 lang: en

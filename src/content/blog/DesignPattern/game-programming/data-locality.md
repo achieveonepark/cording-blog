@@ -1,5 +1,5 @@
 ---
-title: "Data Locality"
+title: "[게임 프로그래밍 패턴] Data Locality"
 description: "자주 접근하는 데이터를 연속 메모리에 배치해 캐시 효율을 높이는 성능 중심 패턴입니다."
 pubDate: 2026-04-16
 lang: ko

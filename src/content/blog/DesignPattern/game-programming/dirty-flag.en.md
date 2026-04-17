@@ -1,5 +1,5 @@
 ---
-title: "Dirty Flag"
+title: "[Game Programming] Dirty Flag Pattern"
 description: "A lazy update pattern that marks expensive calculations so they are recomputed only when the underlying value changes."
 pubDate: 2026-04-16
 lang: en

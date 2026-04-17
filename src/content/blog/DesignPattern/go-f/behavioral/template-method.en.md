@@ -1,5 +1,5 @@
 ---
-title: "TemplateMethod"
+title: "[Design Pattern] Template Method Pattern"
 description: "A pattern where the overall procedure is fixed, while only the detailed steps are changed in subclasses."
 pubDate: 2026-04-16
 lang: en

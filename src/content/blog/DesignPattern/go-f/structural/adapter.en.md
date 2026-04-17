@@ -1,5 +1,5 @@
 ---
-title: "Adapter"
+title: "[Design Pattern] Adapter Pattern"
 description: "A pattern that converts an incompatible existing interface into the interface expected by the current system."
 pubDate: 2026-04-16
 lang: en

@@ -1,5 +1,5 @@
 ---
-title: "Observer"
+title: "[Design Pattern] Observer Pattern"
 description: "A reactive pattern where subscribers are automatically notified when the publisher's state changes."
 pubDate: 2026-04-16
 lang: en

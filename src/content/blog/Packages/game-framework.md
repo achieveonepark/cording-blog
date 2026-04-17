@@ -1,5 +1,5 @@
 ---
-title: "Game Framework"
+title: "[Unity 패키지] Game Framework"
 description: "Unity에서의 게임 개발을 빠르게 진행할 수 있도록 설계된 사전 구축된 시스템과 확장 기능들의 모음입니다."
 pubDate: 2026-04-16
 lang: ko

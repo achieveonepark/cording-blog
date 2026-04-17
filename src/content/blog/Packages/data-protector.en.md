@@ -1,5 +1,5 @@
 ---
-title: "Data Protector"
+title: "[Unity Package] Data Protector"
 description: "- Provides functionality to compress and encrypt byte[] and string data before saving it physically, making it harder to inspect the stored data directly. - For encryption, the user must supply a 16-byte string key value. - Also provides logic to compare whether a file has changed by extracting a SHA256 hash value from byte[] or string data."
 pubDate: 2026-04-16
 lang: en

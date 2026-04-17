@@ -1,5 +1,5 @@
 ---
-title: "Subclass Sandbox"
+title: "[게임 프로그래밍 패턴] Subclass Sandbox"
 description: "부모가 안전한 확장 API를 제공하고 자식은 그 범위 내에서만 구현하도록 제한하는 패턴입니다."
 pubDate: 2026-04-16
 lang: ko

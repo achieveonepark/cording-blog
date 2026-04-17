@@ -1,5 +1,5 @@
 ---
-title: "Prototype"
+title: "[Design Pattern] Prototype Pattern"
 description: "A pattern that creates new objects by cloning an existing prototype instead of calling a constructor."
 pubDate: 2026-04-16
 lang: en

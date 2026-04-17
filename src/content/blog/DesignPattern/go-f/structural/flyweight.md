@@ -1,5 +1,5 @@
 ---
-title: "Flyweight"
+title: "[디자인 패턴] Flyweight 패턴"
 description: "공유 가능한 불변 상태를 재사용해 대량 객체의 메모리 사용을 줄이는 패턴입니다."
 pubDate: 2026-04-16
 lang: ko

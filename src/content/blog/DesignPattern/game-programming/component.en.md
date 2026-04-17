@@ -1,5 +1,5 @@
 ---
-title: "Component"
+title: "[Game Programming] Component Pattern"
 description: "A pattern that builds entities by splitting behavior into small units and composing them instead of relying on inheritance."
 pubDate: 2026-04-16
 lang: en

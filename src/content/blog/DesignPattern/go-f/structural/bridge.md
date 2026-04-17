@@ -1,5 +1,5 @@
 ---
-title: "Bridge"
+title: "[디자인 패턴] Bridge 패턴"
 description: "추상화와 구현을 분리해 양쪽을 독립적으로 확장하는 패턴입니다."
 pubDate: 2026-04-16
 lang: ko

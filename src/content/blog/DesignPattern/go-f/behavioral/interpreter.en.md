@@ -1,5 +1,5 @@
 ---
-title: "Interpreter"
+title: "[Design Pattern] Interpreter Pattern"
 description: "A pattern that interprets small domain language rules through grammar objects and computes a result."
 pubDate: 2026-04-16
 lang: en

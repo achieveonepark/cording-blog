@@ -1,5 +1,5 @@
 ---
-title: "Singleton"
+title: "[Design Pattern] Singleton Pattern"
 description: "A pattern that keeps a single instance and provides a global access point."
 pubDate: 2026-04-16
 lang: en

@@ -1,5 +1,5 @@
 ---
-title: "Prototype"
+title: "[디자인 패턴] Prototype 패턴"
 description: "새 객체를 생성자 호출 대신 기존 원형 복제로 만드는 패턴입니다."
 pubDate: 2026-04-16
 lang: ko

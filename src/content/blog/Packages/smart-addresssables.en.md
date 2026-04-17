@@ -1,5 +1,5 @@
 ---
-title: "Smart Addresssables"
+title: "[Unity Package] Smart Addresssables"
 description: "Smart Addresssables"
 pubDate: 2026-04-16
 lang: en

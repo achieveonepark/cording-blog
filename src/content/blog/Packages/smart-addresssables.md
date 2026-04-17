@@ -1,5 +1,5 @@
 ---
-title: "Smart Addresssables"
+title: "[Unity 패키지] Smart Addresssables"
 description: "Smart Addresssables"
 pubDate: 2026-04-16
 lang: ko

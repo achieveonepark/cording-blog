@@ -1,5 +1,5 @@
 ---
-title: "Iterator"
+title: "[Design Pattern] Iterator Pattern"
 description: "A pattern that hides the internal structure of a collection and only exposes a way to traverse it."
 pubDate: 2026-04-16
 lang: en

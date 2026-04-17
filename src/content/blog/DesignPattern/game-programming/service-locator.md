@@ -1,5 +1,5 @@
 ---
-title: "Service Locator"
+title: "[게임 프로그래밍 패턴] Service Locator"
 description: "공통 서비스 접근을 중앙 레지스트리로 모아 호출부 결합을 줄이는 패턴입니다."
 pubDate: 2026-04-16
 lang: ko

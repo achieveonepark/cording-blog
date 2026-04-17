@@ -1,5 +1,5 @@
 ---
-title: "Singleton"
+title: "[디자인 패턴] Singleton 패턴"
 description: "인스턴스를 하나만 유지하고 전역 접근점을 제공하는 패턴입니다."
 pubDate: 2026-04-16
 lang: ko

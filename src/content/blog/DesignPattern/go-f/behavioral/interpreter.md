@@ -1,5 +1,5 @@
 ---
-title: "Interpreter"
+title: "[디자인 패턴] Interpreter 패턴"
 description: "작은 도메인 언어 규칙을 문법 객체로 해석해 결과를 계산하는 패턴입니다."
 pubDate: 2026-04-16
 lang: ko

@@ -1,5 +1,5 @@
 ---
-title: "Composite"
+title: "[디자인 패턴] Composite 패턴"
 description: "개별 객체와 복합 객체를 동일 인터페이스로 다루는 트리 구조 패턴입니다."
 pubDate: 2026-04-16
 lang: ko

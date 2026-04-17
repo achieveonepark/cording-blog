@@ -1,5 +1,5 @@
 ---
-title: "Memento"
+title: "[Design Pattern] Memento Pattern"
 description: "A pattern that saves and restores internal object state as encapsulated snapshots."
 pubDate: 2026-04-16
 lang: en

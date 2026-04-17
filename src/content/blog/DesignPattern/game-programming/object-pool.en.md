@@ -1,5 +1,5 @@
 ---
-title: "Object Pool"
+title: "[Game Programming] Object Pool Pattern"
 description: "A pattern that reuses frequently created and destroyed objects to reduce allocation cost and GC spikes."
 pubDate: 2026-04-16
 lang: en

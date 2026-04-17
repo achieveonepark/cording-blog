@@ -1,5 +1,5 @@
 ---
-title: "LiteDB"
+title: "[Unity 패키지] LiteDB"
 description: "게임에서 사용하는 테이블 데이터를 SQLite로 관리하면서 내부적으로 QUERY의 WHERE절을 이용해 데이터를 반환합니다."
 pubDate: 2026-04-16
 lang: ko

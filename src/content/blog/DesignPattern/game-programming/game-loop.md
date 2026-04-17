@@ -1,5 +1,5 @@
 ---
-title: "Game Loop"
+title: "[게임 프로그래밍 패턴] Game Loop"
 description: "입력-업데이트-렌더의 반복 흐름을 안정적으로 유지하는 게임의 핵심 실행 패턴입니다."
 pubDate: 2026-04-16
 lang: ko

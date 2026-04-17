@@ -1,5 +1,5 @@
 ---
-title: "AbstractFactory"
+title: "[Design Pattern] Abstract Factory Pattern"
 description: "A pattern that creates related groups of objects without depending on concrete types."
 pubDate: 2026-04-16
 lang: en

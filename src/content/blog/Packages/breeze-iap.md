@@ -1,5 +1,5 @@
 ---
-title: "BreezeIAP"
+title: "[Unity 패키지] BreezeIAP"
 description: "Unity IAP를 Wrapping하여 사용자가 보다 편리하게 접근할 수 있도록 인터페이스를 제공합니다. 단, 영수증 검증 로직은 따로 구현해주셔야 합니다."
 pubDate: 2026-04-16
 lang: ko

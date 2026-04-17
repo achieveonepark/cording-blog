@@ -1,5 +1,5 @@
 ---
-title: "Composite"
+title: "[Design Pattern] Composite Pattern"
 description: "A tree-structure pattern that treats individual objects and composed objects through the same interface."
 pubDate: 2026-04-16
 lang: en

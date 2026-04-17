@@ -1,5 +1,5 @@
 ---
-title: "FactoryMethod"
+title: "[Design Pattern] Factory Method Pattern"
 description: "A pattern that delegates the actual creation responsibility of a factory method to subclasses."
 pubDate: 2026-04-16
 lang: en

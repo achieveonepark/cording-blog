@@ -1,5 +1,5 @@
 ---
-title: "Flyweight"
+title: "[Design Pattern] Flyweight Pattern"
 description: "A pattern that reduces memory usage for large numbers of objects by reusing shareable immutable state."
 pubDate: 2026-04-16
 lang: en

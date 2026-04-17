@@ -1,5 +1,5 @@
 ---
-title: "Component"
+title: "[게임 프로그래밍 패턴] Component"
 description: "상속 대신 기능을 작은 단위로 쪼개 조합해 엔티티를 구성하는 패턴입니다."
 pubDate: 2026-04-16
 lang: ko
