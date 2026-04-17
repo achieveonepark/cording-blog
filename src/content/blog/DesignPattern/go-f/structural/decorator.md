@@ -1,7 +1,7 @@
 ---
 title: "[디자인 패턴] Decorator 패턴"
 description: "객체를 감싸는 래퍼를 통해 런타임에 기능을 동적으로 덧붙이는 패턴입니다."
-pubDate: 2026-04-16
+pubDate: 2026-03-19
 lang: ko
 tags:
   - "Design Pattern"

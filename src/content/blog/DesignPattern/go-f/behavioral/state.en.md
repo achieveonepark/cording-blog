@@ -1,7 +1,7 @@
 ---
 title: "[Design Pattern] State Pattern"
 description: "A pattern that separates behavior by state into objects and swaps behavior based on state transitions."
-pubDate: 2026-04-16
+pubDate: 2026-04-05
 lang: en
 tags:
   - "Design Pattern"

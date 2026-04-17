@@ -1,7 +1,7 @@
 ---
 title: "[Unity Package] Infinity Value"
 description: "Choose one of the installation methods below."
-pubDate: 2026-04-16
+pubDate: 2026-03-23
 lang: en
 tags:
   - "Unity"

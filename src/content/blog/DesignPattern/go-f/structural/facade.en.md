@@ -1,7 +1,7 @@
 ---
 title: "[Design Pattern] Facade Pattern"
 description: "A pattern that wraps a complex subsystem with a simple top-level API to improve usability."
-pubDate: 2026-04-16
+pubDate: 2026-03-21
 lang: en
 tags:
   - "Design Pattern"

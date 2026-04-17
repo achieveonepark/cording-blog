@@ -1,7 +1,7 @@
 ---
 title: "[디자인 패턴] Command 패턴"
 description: "요청을 객체로 만들고 실행/취소/큐잉을 유연하게 처리하는 패턴입니다."
-pubDate: 2026-04-16
+pubDate: 2026-04-01
 lang: ko
 tags:
   - "Design Pattern"

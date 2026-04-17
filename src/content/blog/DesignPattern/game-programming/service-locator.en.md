@@ -1,7 +1,7 @@
 ---
 title: "[Game Programming] Service Locator Pattern"
 description: "A pattern that gathers access to shared services into a central registry to reduce coupling at the call site."
-pubDate: 2026-04-16
+pubDate: 2026-04-10
 lang: en
 tags:
   - "Design Pattern"

@@ -1,7 +1,7 @@
 ---
 title: "[게임 프로그래밍 패턴] Object Pool"
 description: "자주 생성/파괴되는 객체를 재사용해 할당 비용과 GC 스파이크를 줄이는 패턴입니다."
-pubDate: 2026-04-16
+pubDate: 2026-04-07
 lang: ko
 tags:
   - "Design Pattern"

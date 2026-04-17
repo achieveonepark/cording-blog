@@ -1,7 +1,7 @@
 ---
 title: "[Design Pattern] Decorator Pattern"
 description: "A pattern that dynamically adds functionality at runtime through wrappers that surround an object."
-pubDate: 2026-04-16
+pubDate: 2026-03-19
 lang: en
 tags:
   - "Design Pattern"

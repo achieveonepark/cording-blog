@@ -1,7 +1,7 @@
 ---
 title: "[Game Programming] Game Loop Pattern"
 description: "The core execution pattern of games that maintains a stable input-update-render loop."
-pubDate: 2026-04-16
+pubDate: 2026-04-02
 lang: en
 tags:
   - "Design Pattern"

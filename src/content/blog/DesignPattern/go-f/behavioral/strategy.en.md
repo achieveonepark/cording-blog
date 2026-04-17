@@ -1,7 +1,7 @@
 ---
 title: "[Design Pattern] Strategy Pattern"
 description: "A pattern that encapsulates algorithms with the same goal behind an interface so they can be swapped at runtime."
-pubDate: 2026-04-16
+pubDate: 2026-04-03
 lang: en
 tags:
   - "Design Pattern"

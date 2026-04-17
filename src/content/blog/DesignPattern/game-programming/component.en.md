@@ -1,7 +1,7 @@
 ---
 title: "[Game Programming] Component Pattern"
 description: "A pattern that builds entities by splitting behavior into small units and composing them instead of relying on inheritance."
-pubDate: 2026-04-16
+pubDate: 2026-03-04
 lang: en
 tags:
   - "Design Pattern"

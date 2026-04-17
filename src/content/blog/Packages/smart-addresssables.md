@@ -1,7 +1,7 @@
 ---
 title: "[Unity 패키지] Smart Addresssables"
 description: "Smart Addresssables"
-pubDate: 2026-04-16
+pubDate: 2026-04-14
 lang: ko
 tags:
   - "Unity"

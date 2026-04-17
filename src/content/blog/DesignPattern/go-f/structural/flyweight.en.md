@@ -1,7 +1,7 @@
 ---
 title: "[Design Pattern] Flyweight Pattern"
 description: "A pattern that reduces memory usage for large numbers of objects by reusing shareable immutable state."
-pubDate: 2026-04-16
+pubDate: 2026-03-25
 lang: en
 tags:
   - "Design Pattern"

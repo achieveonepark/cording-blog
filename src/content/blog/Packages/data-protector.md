@@ -1,7 +1,7 @@
 ---
 title: "[Unity 패키지] Data Protector"
 description: "- byte[], string 형태의 데이터를 물리적 저장을 하기 전에 외부에서 데이터를 조회하기 힘들도록 압축 및 암호화를 하는 기능을 제공합니다. - 암호화를 위해선 사용자가 직접 16byte의 string key 값을 입력해주어야 합니다. - 파일의 변경사항이 있는지 SHA256을 이용한 byte[] 또는 string의 Hash값을 추출하여 비교하는 로직도 제공합니다."
-pubDate: 2026-04-16
+pubDate: 2026-03-09
 lang: ko
 tags:
   - "Unity"

@@ -1,7 +1,7 @@
 ---
 title: "[디자인 패턴] Proxy 패턴"
 description: "실제 객체 접근 앞에 대리 객체를 두어 제어/지연 로딩/캐싱을 담당시키는 패턴입니다."
-pubDate: 2026-04-16
+pubDate: 2026-03-27
 lang: ko
 tags:
   - "Design Pattern"

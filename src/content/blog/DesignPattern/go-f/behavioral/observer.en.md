@@ -1,7 +1,7 @@
 ---
 title: "[Design Pattern] Observer Pattern"
 description: "A reactive pattern where subscribers are automatically notified when the publisher's state changes."
-pubDate: 2026-04-16
+pubDate: 2026-04-02
 lang: en
 tags:
   - "Design Pattern"

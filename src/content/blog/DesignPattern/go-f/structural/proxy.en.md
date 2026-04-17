@@ -1,7 +1,7 @@
 ---
 title: "[Design Pattern] Proxy Pattern"
 description: "A pattern that places a surrogate object in front of the real object to handle control, lazy loading, or caching."
-pubDate: 2026-04-16
+pubDate: 2026-03-27
 lang: en
 tags:
   - "Design Pattern"

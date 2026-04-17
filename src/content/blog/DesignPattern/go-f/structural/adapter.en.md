@@ -1,7 +1,7 @@
 ---
 title: "[Design Pattern] Adapter Pattern"
 description: "A pattern that converts an incompatible existing interface into the interface expected by the current system."
-pubDate: 2026-04-16
+pubDate: 2026-03-12
 lang: en
 tags:
   - "Design Pattern"

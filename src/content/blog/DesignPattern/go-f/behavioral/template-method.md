@@ -1,7 +1,7 @@
 ---
 title: "[디자인 패턴] Template Method 패턴"
 description: "전체 절차는 고정하고 세부 단계만 하위 클래스에서 바꾸는 패턴입니다."
-pubDate: 2026-04-16
+pubDate: 2026-04-12
 lang: ko
 tags:
   - "Design Pattern"

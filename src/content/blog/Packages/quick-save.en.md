@@ -1,7 +1,7 @@
 ---
 title: "[Unity Package] QuickSave"
 description: "Provides functionality to save and load data by serializing and deserializing binary files using Cysharp's MemoryPack. If you also install Data Protector, you can compress, encrypt, and decrypt the saved data as well. (Docs)"
-pubDate: 2026-04-16
+pubDate: 2026-04-07
 lang: en
 tags:
   - "Unity"

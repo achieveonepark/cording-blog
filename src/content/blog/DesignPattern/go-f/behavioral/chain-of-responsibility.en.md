@@ -1,7 +1,7 @@
 ---
 title: "[Design Pattern] Chain Of Responsibility Pattern"
 description: "A pattern that passes a request through a chain of handlers, where each handler performs its responsibility in sequence."
-pubDate: 2026-04-16
+pubDate: 2026-04-13
 lang: en
 tags:
   - "Design Pattern"

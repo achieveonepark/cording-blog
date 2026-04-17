@@ -1,7 +1,7 @@
 ---
 title: "[게임 프로그래밍 패턴] Dirty Flag"
 description: "값이 바뀐 경우에만 비싼 계산을 다시 수행하도록 표시하는 지연 갱신 패턴입니다."
-pubDate: 2026-04-16
+pubDate: 2026-03-18
 lang: ko
 tags:
   - "Design Pattern"

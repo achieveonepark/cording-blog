@@ -1,7 +1,7 @@
 ---
 title: "[Unity 패키지] Infinity Value"
 description: "다음 설치 방법 중 하나를 선택하세요."
-pubDate: 2026-04-16
+pubDate: 2026-03-23
 lang: ko
 tags:
   - "Unity"

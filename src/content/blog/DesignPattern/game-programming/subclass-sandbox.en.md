@@ -1,7 +1,7 @@
 ---
 title: "[Game Programming] Subclass Sandbox Pattern"
 description: "A pattern where the parent provides a safe extension API and children are restricted to implementing only within that boundary."
-pubDate: 2026-04-16
+pubDate: 2026-04-14
 lang: en
 tags:
   - "Design Pattern"

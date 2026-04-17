@@ -1,7 +1,7 @@
 ---
 title: "[Design Pattern] Visitor Pattern"
 description: "A pattern that separates operations into visitors so the object structure can be extended without modifying it."
-pubDate: 2026-04-16
+pubDate: 2026-04-10
 lang: en
 tags:
   - "Design Pattern"

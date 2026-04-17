@@ -1,7 +1,7 @@
 ---
 title: "[Unity Package] LiteDB"
 description: "This package manages table data used in games with SQLite and returns data internally through SQL queries using the WHERE clause."
-pubDate: 2026-04-16
+pubDate: 2026-04-01
 lang: en
 tags:
   - "Unity"

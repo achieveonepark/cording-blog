@@ -1,7 +1,7 @@
 ---
 title: "[Design Pattern] Bridge Pattern"
 description: "A pattern that separates abstraction and implementation so both can be extended independently."
-pubDate: 2026-04-16
+pubDate: 2026-03-14
 lang: en
 tags:
   - "Design Pattern"

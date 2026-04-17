@@ -1,7 +1,7 @@
 ---
 title: "[디자인 패턴] Abstract Factory 패턴"
 description: "연관된 객체 묶음을 구체 타입 의존 없이 생성하는 패턴입니다."
-pubDate: 2026-04-16
+pubDate: 2026-03-10
 lang: ko
 tags:
   - "Design Pattern"

@@ -1,7 +1,7 @@
 ---
 title: "[Game Programming] Data Locality Pattern"
 description: "A performance-oriented pattern that places frequently accessed data in contiguous memory to improve cache efficiency."
-pubDate: 2026-04-16
+pubDate: 2026-03-11
 lang: en
 tags:
   - "Design Pattern"

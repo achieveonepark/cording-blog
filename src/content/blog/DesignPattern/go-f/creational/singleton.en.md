@@ -1,7 +1,7 @@
 ---
 title: "[Design Pattern] Singleton Pattern"
 description: "A pattern that keeps a single instance and provides a global access point."
-pubDate: 2026-04-16
+pubDate: 2026-03-03
 lang: en
 tags:
   - "Design Pattern"

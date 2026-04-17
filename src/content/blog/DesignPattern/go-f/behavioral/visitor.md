@@ -1,7 +1,7 @@
 ---
 title: "[디자인 패턴] Visitor 패턴"
 description: "객체 구조를 건드리지 않고 연산을 Visitor로 분리해 확장하는 패턴입니다."
-pubDate: 2026-04-16
+pubDate: 2026-04-10
 lang: ko
 tags:
   - "Design Pattern"

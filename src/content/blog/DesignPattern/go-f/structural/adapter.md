@@ -1,7 +1,7 @@
 ---
 title: "[디자인 패턴] Adapter 패턴"
 description: "호환되지 않는 기존 인터페이스를 현재 시스템 인터페이스로 변환하는 패턴입니다."
-pubDate: 2026-04-16
+pubDate: 2026-03-12
 lang: ko
 tags:
   - "Design Pattern"

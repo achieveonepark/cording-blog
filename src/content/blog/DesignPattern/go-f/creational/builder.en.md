@@ -1,7 +1,7 @@
 ---
 title: "[Design Pattern] Builder Pattern"
 description: "A pattern that separates complex object creation into steps to improve readability and safety."
-pubDate: 2026-04-16
+pubDate: 2026-03-05
 lang: en
 tags:
   - "Design Pattern"

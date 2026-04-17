@@ -1,7 +1,7 @@
 ---
 title: "[디자인 패턴] Builder 패턴"
 description: "복잡한 객체 생성 과정을 단계별로 분리해 가독성과 안전성을 높이는 패턴입니다."
-pubDate: 2026-04-16
+pubDate: 2026-03-05
 lang: ko
 tags:
   - "Design Pattern"
