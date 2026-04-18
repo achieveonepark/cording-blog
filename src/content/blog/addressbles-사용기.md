@@ -6,8 +6,9 @@ tags:
   - Unity
   - Addressables
   - Resource
-category: R&D
 thumbnail: /images/1775359380524.png
+category: R&D
+subcategory: Unity
 ---
 
 # 개요
