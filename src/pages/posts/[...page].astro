@@ -1,0 +1,375 @@
+---
+import Footer from "../../components/Footer.astro";
+import Header from "../../components/Header.astro";
+import PostCard from "../../components/PostCard.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getPublishedPosts } from "../../lib/blog";
+import categories from "../../data/categories.json";
+
+export async function getStaticPaths() {
+  return [{ params: { page: undefined } }];
+}
+
+const allPosts = await getPublishedPosts();
+
+const categoryCounts = categories.reduce<Record<string, number>>((acc, cat) => {
+  acc[cat] = allPosts.filter((p) => p.data.category === cat).length;
+  return acc;
+}, {});
+---
+
+<BaseLayout title="모든 글" description="Somiri 블로그의 전체 글 목록입니다.">
+  <Header />
+
+  <main class="shell app-shell">
+    <section class="app-panel">
+      <div class="section-heading">
+        <p class="eyebrow">Archive</p>
+        <h1>모든 로그</h1>
+        <p>저장된 글을 시간순으로 훑을 수 있는 전체 스트림입니다.</p>
+      </div>
+
+      <div class="category-filter" role="group" aria-label="카테고리 필터">
+        <button class="cat-btn cat-btn--active" data-cat="">
+          전체 <span class="cat-count">{allPosts.length}</span>
+        </button>
+        {categories.map((cat) => (
+          <button class="cat-btn" data-cat={cat}>
+            {cat}
+            {categoryCounts[cat] > 0 && <span class="cat-count">{categoryCounts[cat]}</span>}
+          </button>
+        ))}
+      </div>
+
+      <div class="post-stack" id="post-stack">
+        {allPosts.map((post: any) => <PostCard post={post} />)}
+      </div>
+
+      <nav class="pagination" id="pagination" aria-label="페이지 네비게이션" style="display:none">
+        <button type="button" class="pagination__btn" id="page-prev">← 이전</button>
+        <div class="pagination__pages" id="page-numbers"></div>
+        <button type="button" class="pagination__btn" id="page-next">다음 →</button>
+      </nav>
+    </section>
+  </main>
+
+  <Footer />
+</BaseLayout>
+
+<script is:inline>
+  (function () {
+    var PAGE_SIZE = 10;
+    var currentPage = 1;
+    var currentCat = '';
+
+    function getCards() {
+      var stack = document.getElementById('post-stack');
+      return stack ? Array.from(stack.querySelectorAll('.post-card')) : [];
+    }
+
+    function getFiltered() {
+      var cards = getCards();
+      if (!currentCat) return cards;
+      return cards.filter(function (c) { return c.dataset.category === currentCat; });
+    }
+
+    function render() {
+      var filtered = getFiltered();
+      var all = getCards();
+      var start = (currentPage - 1) * PAGE_SIZE;
+      var visible = new Set(filtered.slice(start, start + PAGE_SIZE));
+      all.forEach(function (c) { c.style.display = visible.has(c) ? '' : 'none'; });
+      renderPagination(filtered.length);
+    }
+
+    function renderPagination(total) {
+      var totalPages = Math.ceil(total / PAGE_SIZE) || 1;
+      var nav = document.getElementById('pagination');
+      var numbersEl = document.getElementById('page-numbers');
+      var prevBtn = document.getElementById('page-prev');
+      var nextBtn = document.getElementById('page-next');
+      if (!nav || !numbersEl || !prevBtn || !nextBtn) return;
+
+      nav.style.display = totalPages > 1 ? 'flex' : 'none';
+
+      prevBtn.disabled = currentPage <= 1;
+      prevBtn.classList.toggle('pagination__btn--disabled', currentPage <= 1);
+      nextBtn.disabled = currentPage >= totalPages;
+      nextBtn.classList.toggle('pagination__btn--disabled', currentPage >= totalPages);
+
+      numbersEl.innerHTML = '';
+      var maxShow = 7;
+      var half = Math.floor(maxShow / 2);
+      var start = Math.max(1, currentPage - half);
+      var end = Math.min(totalPages, start + maxShow - 1);
+      if (end - start < maxShow - 1) start = Math.max(1, end - maxShow + 1);
+
+      for (var i = start; i <= end; i++) {
+        var a = document.createElement('button');
+        a.type = 'button';
+        a.className = 'pagination__page' + (i === currentPage ? ' pagination__page--current' : '');
+        a.textContent = String(i);
+        a.dataset.page = String(i);
+        numbersEl.appendChild(a);
+      }
+    }
+
+    function init() {
+      var stack = document.getElementById('post-stack');
+      var filter = document.querySelector('.category-filter');
+      var prevBtn = document.getElementById('page-prev');
+      var nextBtn = document.getElementById('page-next');
+      var numbersEl = document.getElementById('page-numbers');
+      if (!stack || !filter) return;
+
+      currentPage = 1;
+      currentCat = '';
+      document.querySelectorAll('.cat-btn').forEach(function (b) {
+        b.classList.toggle('cat-btn--active', b.dataset.cat === '');
+      });
+      render();
+
+      filter.addEventListener('click', function (e) {
+        var btn = e.target.closest('.cat-btn');
+        if (!btn) return;
+        document.querySelectorAll('.cat-btn').forEach(function (b) { b.classList.remove('cat-btn--active'); });
+        btn.classList.add('cat-btn--active');
+        currentCat = btn.dataset.cat || '';
+        currentPage = 1;
+        render();
+      });
+
+      prevBtn && prevBtn.addEventListener('click', function () {
+        if (currentPage > 1) { currentPage--; render(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+      });
+      nextBtn && nextBtn.addEventListener('click', function () {
+        var total = Math.ceil(getFiltered().length / PAGE_SIZE) || 1;
+        if (currentPage < total) { currentPage++; render(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+      });
+      numbersEl && numbersEl.addEventListener('click', function (e) {
+        var btn = e.target.closest('.pagination__page');
+        if (!btn || !btn.dataset.page) return;
+        currentPage = parseInt(btn.dataset.page, 10);
+        render();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    }
+
+    if (!window.__postsPageInit) {
+      window.__postsPageInit = true;
+      document.addEventListener('astro:page-load', init);
+    }
+  })();
+</script>
+
+<style>
+  .category-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .cat-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.85rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: border-color 150ms, background 150ms, color 150ms;
+  }
+
+  .cat-btn:hover {
+    border-color: var(--accent);
+    color: var(--text);
+  }
+
+  .cat-btn--active {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  .cat-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.2rem;
+    height: 1.2rem;
+    padding: 0 0.3rem;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--muted);
+    font-size: 0.68rem;
+    font-weight: 700;
+  }
+
+  .cat-btn--active .cat-count {
+    color: var(--accent);
+  }
+
+  /* ── 페이지네이션 ─────────────────────────────────── */
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.9rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .pagination__btn,
+  :global(.pagination__page) {
+    appearance: none;
+    -webkit-appearance: none;
+    font-family: var(--font-ui);
+    user-select: none;
+  }
+
+  .pagination__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 5.2rem;
+    padding: 0.62rem 1.15rem;
+    border-radius: 999px;
+    border: 1px solid rgba(124, 255, 122, 0.14);
+    background:
+      linear-gradient(180deg, rgba(17, 22, 28, 0.96), rgba(9, 13, 18, 0.92));
+    box-shadow:
+      inset 0 1px 0 rgba(214, 255, 214, 0.03),
+      0 10px 24px rgba(0, 0, 0, 0.24);
+    color: rgba(124, 255, 122, 0.72);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition:
+      border-color 180ms ease,
+      background 180ms ease,
+      color 180ms ease,
+      transform 180ms ease,
+      box-shadow 180ms ease;
+  }
+
+  .pagination__btn:not(:disabled):hover {
+    border-color: rgba(124, 255, 122, 0.32);
+    background:
+      linear-gradient(180deg, rgba(21, 28, 35, 0.98), rgba(12, 17, 23, 0.94));
+    color: var(--accent);
+    transform: translateY(-1px);
+    box-shadow:
+      inset 0 1px 0 rgba(214, 255, 214, 0.05),
+      0 12px 28px rgba(0, 0, 0, 0.28);
+  }
+
+  .pagination__btn--disabled,
+  .pagination__btn:disabled {
+    opacity: 0.32;
+    color: rgba(124, 255, 122, 0.24);
+    cursor: default;
+    box-shadow: none;
+  }
+
+  .pagination__pages {
+    display: flex;
+    gap: 0.45rem;
+    padding: 0.32rem 0.42rem;
+    border-radius: 999px;
+    border: 1px solid rgba(124, 255, 122, 0.08);
+    background: rgba(7, 11, 15, 0.58);
+    box-shadow: inset 0 1px 0 rgba(214, 255, 214, 0.02);
+  }
+
+  :global(.pagination__page) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.35rem;
+    height: 2.35rem;
+    padding: 0;
+    border-radius: 0.82rem;
+    border: 1px solid rgba(124, 255, 122, 0.1);
+    background:
+      linear-gradient(180deg, rgba(20, 26, 32, 0.94), rgba(9, 13, 18, 0.92));
+    box-shadow:
+      inset 0 1px 0 rgba(214, 255, 214, 0.03),
+      0 8px 18px rgba(0, 0, 0, 0.18);
+    color: rgba(214, 255, 214, 0.68);
+    font-family: var(--font-code);
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition:
+      border-color 180ms ease,
+      background 180ms ease,
+      color 180ms ease,
+      transform 180ms ease,
+      box-shadow 180ms ease;
+  }
+
+  :global(.pagination__page:hover) {
+    border-color: rgba(124, 255, 122, 0.26);
+    background:
+      linear-gradient(180deg, rgba(24, 31, 38, 0.96), rgba(11, 17, 23, 0.94));
+    color: var(--accent);
+    transform: translateY(-1px);
+    box-shadow:
+      inset 0 1px 0 rgba(214, 255, 214, 0.05),
+      0 12px 24px rgba(0, 0, 0, 0.22);
+  }
+
+  :global(.pagination__page--current) {
+    border-color: rgba(124, 255, 122, 0.34);
+    background:
+      linear-gradient(180deg, rgba(124, 255, 122, 0.18), rgba(124, 255, 122, 0.06)),
+      rgba(14, 21, 17, 0.92);
+    color: var(--accent-strong);
+    text-shadow: 0 0 12px rgba(124, 255, 122, 0.2);
+    box-shadow:
+      inset 0 1px 0 rgba(214, 255, 214, 0.08),
+      0 0 0 1px rgba(124, 255, 122, 0.06),
+      0 10px 22px rgba(0, 0, 0, 0.24),
+      0 0 20px rgba(124, 255, 122, 0.08);
+  }
+
+  .pagination__btn:focus-visible,
+  :global(.pagination__page:focus-visible) {
+    outline: 2px solid rgba(124, 255, 122, 0.42);
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 640px) {
+    .pagination {
+      gap: 0.7rem;
+    }
+
+    .pagination__btn {
+      min-width: 4.6rem;
+      padding: 0.58rem 0.95rem;
+      font-size: 0.68rem;
+    }
+
+    .pagination__pages {
+      gap: 0.35rem;
+      padding: 0.26rem 0.32rem;
+    }
+
+    :global(.pagination__page) {
+      width: 2.12rem;
+      height: 2.12rem;
+      border-radius: 0.72rem;
+      font-size: 0.76rem;
+    }
+  }
+</style>

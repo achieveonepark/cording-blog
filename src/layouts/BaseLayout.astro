@@ -112,7 +112,12 @@ const robotsContent = noindex ? "noindex, nofollow, noarchive" : "index, follow"
     </div>
 
     <!-- 관리자 플로팅 버튼 -->
-    <div id="fab-group" style="display:none">
+    <div id="fab-group" style="display:none" data-worker-base={import.meta.env.PUBLIC_OAUTH_WORKER_URL ?? ""}>
+      <div id="fab-stats" style="display:none" class="fab-stats">
+        <span class="fab-stats__item">Today <strong id="fab-stat-today">—</strong></span>
+        <span class="fab-stats__sep">/</span>
+        <span class="fab-stats__item">Total <strong id="fab-stat-total">—</strong></span>
+      </div>
       <a
         id="fab-settings"
         href="/admin/settings"
@@ -147,18 +152,51 @@ const robotsContent = noindex ? "noindex, nofollow, noarchive" : "index, follow"
 
     <script>
       const OWNER = "achieveonepark";
-      const fabGroup = document.getElementById("fab-group");
-      const token = localStorage.getItem("gh_token");
-      if (token && fabGroup) {
+      let isOwner = false;
+
+      function refreshStats(workerBase: string) {
+        const article = document.querySelector("article[data-post-slug]") as HTMLElement | null;
+        const fabStats = document.getElementById("fab-stats");
+        if (!fabStats) return;
+        if (!article || !workerBase) { fabStats.style.display = "none"; return; }
+        const postSlug = article.dataset.postSlug ?? "";
+        fabStats.style.display = "flex";
+        fetch(`${workerBase}/stats?post=${encodeURIComponent(postSlug)}`)
+          .then((r) => r.json())
+          .then((s) => {
+            const elToday = document.getElementById("fab-stat-today");
+            const elTotal = document.getElementById("fab-stat-total");
+            if (elToday) elToday.textContent = String(s.today ?? 0);
+            if (elTotal) elTotal.textContent = String(s.total ?? 0);
+          })
+          .catch(() => {});
+      }
+
+      function initFab() {
+        const fabGroup = document.getElementById("fab-group") as HTMLElement | null;
+        if (!fabGroup) return;
+        const workerBase = (fabGroup.dataset.workerBase ?? "").replace(/\/$/, "");
+        const token = localStorage.getItem("gh_token");
+        if (isOwner) {
+          fabGroup.style.display = "flex";
+          refreshStats(workerBase);
+          return;
+        }
+        if (!token) return;
         fetch("https://api.github.com/user", {
           headers: { Authorization: `Bearer ${token}` },
         })
           .then((r) => r.json())
           .then((u) => {
-            if (u.login === OWNER) fabGroup.style.display = "flex";
+            if (u.login !== OWNER) return;
+            isOwner = true;
+            fabGroup.style.display = "flex";
+            refreshStats(workerBase);
           })
           .catch(() => {});
       }
+
+      document.addEventListener("astro:page-load", initFab);
 
       // 스크롤 위치 저장/복원
       const SCROLL_NS = "scroll:";
@@ -262,6 +300,30 @@ const robotsContent = noindex ? "noindex, nofollow, noarchive" : "index, follow"
         color: rgba(124, 255, 122, 0.55) !important;
         border-color: rgba(124, 255, 122, 0.15) !important;
         font-size: 0.76rem !important;
+      }
+
+      .fab-stats {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.35rem 0.9rem;
+        border-radius: 999px;
+        border: 1px solid rgba(124, 255, 122, 0.12);
+        background: rgba(10, 15, 19, 0.88);
+        backdrop-filter: blur(12px);
+        font-size: 0.74rem;
+        color: rgba(124, 255, 122, 0.4);
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+      }
+
+      .fab-stats__item strong {
+        color: rgba(124, 255, 122, 0.75);
+        font-variant-numeric: tabular-nums;
+        margin-left: 0.2rem;
+      }
+
+      .fab-stats__sep {
+        color: rgba(124, 255, 122, 0.2);
       }
 
       #fab-group a:hover {

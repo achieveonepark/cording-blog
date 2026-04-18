@@ -184,10 +184,6 @@ const jsonLd = JSON.stringify({
 
         <!-- 어드민 바 -->
         <div id="post-admin-bar" style="display:none" data-pagefind-ignore>
-          <div class="post-stats">
-            <span class="post-stats__item">Today <strong id="stat-today">—</strong></span>
-            <span class="post-stats__item">Total <strong id="stat-total">—</strong></span>
-          </div>
           <a href={`/admin/new-post?edit=${post.id}`} class="post-admin-btn">{currentLang === "en" ? "Edit" : "수정"}</a>
           <button id="post-delete-btn" class="post-admin-btn post-admin-btn--danger">{currentLang === "en" ? "Delete" : "삭제"}</button>
         </div>
@@ -250,19 +246,6 @@ const jsonLd = JSON.stringify({
         .then((u) => {
           if (u.login !== OWNER) return;
           adminBar.style.display = "flex";
-
-          // 어드민에게만 방문 통계 표시
-          if (workerBase && postSlug) {
-            fetch(`${workerBase}/stats?post=${encodeURIComponent(postSlug)}`)
-              .then((r) => r.json())
-              .then((s) => {
-                const elToday = document.getElementById("stat-today");
-                const elTotal = document.getElementById("stat-total");
-                if (elToday) elToday.textContent = String(s.today ?? 0);
-                if (elTotal) elTotal.textContent = String(s.total ?? 0);
-              })
-              .catch(() => {});
-          }
         })
         .catch(() => {});
     }
@@ -495,24 +478,6 @@ const jsonLd = JSON.stringify({
     margin-top: 2rem;
     padding-top: 1.25rem;
     border-top: 1px solid rgba(124, 255, 122, 0.1);
-  }
-
-  .post-stats {
-    display: flex;
-    gap: 0.75rem;
-    margin-right: auto;
-  }
-
-  .post-stats__item {
-    font-size: 0.78rem;
-    color: rgba(124, 255, 122, 0.45);
-    letter-spacing: 0.03em;
-  }
-
-  .post-stats__item strong {
-    color: rgba(124, 255, 122, 0.8);
-    font-variant-numeric: tabular-nums;
-    margin-left: 0.25rem;
   }
 
   .post-admin-btn {

@@ -54,6 +54,21 @@ const totalPostsByLang = BLOG_LANGS.reduce((acc, lang) => {
                 ? "No posts match this category in the current language."
                 : "현재 언어에서 이 카테고리에 해당하는 글이 없어요."}
             </p>
+            <nav
+              class="home-feed__pagination"
+              data-home-pagination
+              data-ui-lang={lang}
+              aria-label={lang === "en" ? "Post pages" : "포스트 페이지"}
+              hidden
+            >
+              <button type="button" class="home-feed__pagination-btn" data-home-page-action="prev">
+                {lang === "en" ? "Prev" : "이전"}
+              </button>
+              <div class="home-feed__pagination-pages" data-home-pagination-pages></div>
+              <button type="button" class="home-feed__pagination-btn" data-home-page-action="next">
+                {lang === "en" ? "Next" : "다음"}
+              </button>
+            </nav>
           </section>
         ) : null;
       })}
@@ -96,6 +111,121 @@ const totalPostsByLang = BLOG_LANGS.reduce((acc, lang) => {
 
   .home-feed__ad {
     margin-bottom: 1rem;
+  }
+
+  .home-feed__pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid rgba(124, 255, 122, 0.08);
+  }
+
+  .home-feed__pagination[hidden] {
+    display: none;
+  }
+
+  .home-feed__pagination-btn,
+  .home-feed__pagination-pages :global(.home-feed__pagination-page) {
+    appearance: none;
+    -webkit-appearance: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.2rem;
+    border-radius: 999px;
+    border: 1px solid rgba(124, 255, 122, 0.12);
+    background:
+      linear-gradient(180deg, rgba(17, 22, 28, 0.96), rgba(9, 13, 18, 0.92));
+    box-shadow:
+      inset 0 1px 0 rgba(214, 255, 214, 0.03),
+      0 10px 24px rgba(0, 0, 0, 0.22);
+    color: rgba(124, 255, 122, 0.72);
+    font-size: 0.74rem;
+    font-weight: 700;
+    font-family: var(--font-ui);
+    cursor: pointer;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    user-select: none;
+    transition:
+      border-color 180ms ease,
+      background 180ms ease,
+      color 180ms ease,
+      transform 180ms ease,
+      box-shadow 180ms ease;
+  }
+
+  .home-feed__pagination-btn {
+    min-width: 5rem;
+    padding: 0.55rem 1rem;
+  }
+
+  .home-feed__pagination-pages :global(.home-feed__pagination-page) {
+    width: 2.25rem;
+    padding: 0;
+    border-radius: 0.78rem;
+    border-color: rgba(124, 255, 122, 0.1);
+    color: rgba(214, 255, 214, 0.68);
+    font-family: var(--font-code);
+    font-size: 0.8rem;
+    box-shadow:
+      inset 0 1px 0 rgba(214, 255, 214, 0.03),
+      0 8px 18px rgba(0, 0, 0, 0.18);
+  }
+
+  .home-feed__pagination-btn:hover:not(:disabled),
+  .home-feed__pagination-pages :global(.home-feed__pagination-page:hover:not(:disabled)) {
+    border-color: rgba(124, 255, 122, 0.28);
+    background:
+      linear-gradient(180deg, rgba(24, 31, 38, 0.96), rgba(11, 17, 23, 0.94));
+    color: var(--accent);
+    transform: translateY(-1px);
+    box-shadow:
+      inset 0 1px 0 rgba(214, 255, 214, 0.05),
+      0 12px 24px rgba(0, 0, 0, 0.22);
+  }
+
+  .home-feed__pagination-btn:disabled,
+  .home-feed__pagination-pages :global(.home-feed__pagination-page:disabled) {
+    opacity: 0.32;
+    cursor: default;
+    transform: none;
+    box-shadow: none;
+  }
+
+  .home-feed__pagination-pages {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.35rem;
+    padding: 0.32rem 0.42rem;
+    border-radius: 999px;
+    border: 1px solid rgba(124, 255, 122, 0.08);
+    background: rgba(7, 11, 15, 0.58);
+    box-shadow: inset 0 1px 0 rgba(214, 255, 214, 0.02);
+  }
+
+  .home-feed__pagination-pages :global(.home-feed__pagination-page--current) {
+    border-color: rgba(124, 255, 122, 0.34);
+    background:
+      linear-gradient(180deg, rgba(124, 255, 122, 0.18), rgba(124, 255, 122, 0.06)),
+      rgba(14, 21, 17, 0.92);
+    color: var(--accent-strong);
+    text-shadow: 0 0 12px rgba(124, 255, 122, 0.2);
+    box-shadow:
+      inset 0 1px 0 rgba(214, 255, 214, 0.08),
+      0 0 0 1px rgba(124, 255, 122, 0.06),
+      0 10px 22px rgba(0, 0, 0, 0.24),
+      0 0 20px rgba(124, 255, 122, 0.08);
+  }
+
+  .home-feed__pagination-btn:focus-visible,
+  .home-feed__pagination-pages :global(.home-feed__pagination-page:focus-visible) {
+    outline: 2px solid rgba(124, 255, 122, 0.42);
+    outline-offset: 2px;
   }
 
   @media (prefers-reduced-motion: reduce) {
