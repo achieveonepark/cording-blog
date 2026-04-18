@@ -107,10 +107,6 @@ const postUrl = `${Astro.site?.toString().replace(/\/$/, "") ?? "https://blog.so
 
         <!-- 어드민 바 -->
         <div id="post-admin-bar" style="display:none" data-pagefind-ignore>
-          <div id="post-stats" class="post-stats">
-            <span class="post-stats__item">Today <strong id="stat-today">—</strong></span>
-            <span class="post-stats__item">Total <strong id="stat-total">—</strong></span>
-          </div>
           <a href={`/admin/new-post?edit=${post.id}`} class="post-admin-btn">수정</a>
           <button id="post-delete-btn" class="post-admin-btn post-admin-btn--danger">삭제</button>
         </div>
@@ -160,23 +156,7 @@ const postUrl = `${Astro.site?.toString().replace(/\/$/, "") ?? "https://blog.so
         headers: { Authorization: `Bearer ${token}` },
       })
         .then((r) => r.json())
-        .then((u) => {
-          if (u.login !== OWNER) return;
-          adminBar.style.display = "flex";
-
-          // 어드민에게만 방문 통계 표시
-          if (workerBase && postSlug) {
-            fetch(`${workerBase}/stats?post=${encodeURIComponent(postSlug)}`)
-              .then((r) => r.json())
-              .then((s) => {
-                const elToday = document.getElementById("stat-today");
-                const elTotal = document.getElementById("stat-total");
-                if (elToday) elToday.textContent = String(s.today ?? 0);
-                if (elTotal) elTotal.textContent = String(s.total ?? 0);
-              })
-              .catch(() => {});
-          }
-        })
+        .then((u) => { if (u.login === OWNER) adminBar.style.display = "flex"; })
         .catch(() => {});
     }
 
