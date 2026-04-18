@@ -8,8 +8,9 @@ tags:
   - Jenkins
   - Ruby
   - wsl
-category: R&D
 thumbnail: /images/1775357461068.png
+category: R&D
+subcategory: CI/CD
 ---
 
 While writing Part 1, I thought:
