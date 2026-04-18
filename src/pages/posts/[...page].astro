@@ -6,13 +6,10 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 import { getPublishedPosts } from "../../lib/blog";
 import categories from "../../data/categories.json";
 
-export async function getStaticPaths({ paginate }: { paginate: Function }) {
-  const posts = await getPublishedPosts();
-  return paginate(posts, { pageSize: 10 });
+export async function getStaticPaths() {
+  return [{ params: { page: undefined } }];
 }
 
-const { page } = Astro.props as { page: any };
-const posts = page.data;
 const allPosts = await getPublishedPosts();
 
 const categoryCounts = categories.reduce<Record<string, number>>((acc, cat) => {
@@ -21,7 +18,7 @@ const categoryCounts = categories.reduce<Record<string, number>>((acc, cat) => {
 }, {});
 ---
 
-<BaseLayout title={page.currentPage === 1 ? "모든 글" : `모든 글 — ${page.currentPage}페이지`} description="Somiri 블로그의 전체 글 목록입니다.">
+<BaseLayout title="모든 글" description="Somiri 블로그의 전체 글 목록입니다.">
   <Header />
 
   <main class="shell app-shell">
@@ -45,37 +42,14 @@ const categoryCounts = categories.reduce<Record<string, number>>((acc, cat) => {
       </div>
 
       <div class="post-stack" id="post-stack">
-        {posts.map((post: any) => <PostCard post={post} />)}
+        {allPosts.map((post: any) => <PostCard post={post} />)}
       </div>
 
-      <!-- 페이지네이션 -->
-      {page.lastPage > 1 && (
-        <nav class="pagination" aria-label="페이지 네비게이션">
-          {page.url.prev ? (
-            <a href={page.url.prev} class="pagination__btn">← 이전</a>
-          ) : (
-            <span class="pagination__btn pagination__btn--disabled">← 이전</span>
-          )}
-
-          <div class="pagination__pages">
-            {Array.from({ length: page.lastPage }, (_, i) => i + 1).map((num) => (
-              <a
-                href={num === 1 ? "/posts/" : `/posts/${num}/`}
-                class:list={["pagination__page", { "pagination__page--current": num === page.currentPage }]}
-                aria-current={num === page.currentPage ? "page" : undefined}
-              >
-                {num}
-              </a>
-            ))}
-          </div>
-
-          {page.url.next ? (
-            <a href={page.url.next} class="pagination__btn">다음 →</a>
-          ) : (
-            <span class="pagination__btn pagination__btn--disabled">다음 →</span>
-          )}
-        </nav>
-      )}
+      <nav class="pagination" id="pagination" aria-label="페이지 네비게이션" style="display:none">
+        <button class="pagination__btn" id="page-prev">← 이전</button>
+        <div class="pagination__pages" id="page-numbers"></div>
+        <button class="pagination__btn" id="page-next">다음 →</button>
+      </nav>
     </section>
   </main>
 
@@ -83,30 +57,108 @@ const categoryCounts = categories.reduce<Record<string, number>>((acc, cat) => {
 </BaseLayout>
 
 <script is:inline>
-  if (!window.__catFilterInit) {
-    window.__catFilterInit = true;
-    document.addEventListener('click', function(e) {
-      var btn = e.target.closest('.cat-btn');
-      if (!btn) return;
+  (function () {
+    var PAGE_SIZE = 10;
+    var currentPage = 1;
+    var currentCat = '';
 
-      var group = btn.closest('.category-filter');
-      if (!group) return;
-
-      var btns = group.querySelectorAll('.cat-btn');
+    function getCards() {
       var stack = document.getElementById('post-stack');
-      if (!stack) return;
-      var cards = stack.querySelectorAll('.post-card');
+      return stack ? Array.from(stack.querySelectorAll('.post-card')) : [];
+    }
 
-      btns.forEach(function(b) { b.classList.remove('cat-btn--active'); });
-      btn.classList.add('cat-btn--active');
+    function getFiltered() {
+      var cards = getCards();
+      if (!currentCat) return cards;
+      return cards.filter(function (c) { return c.dataset.category === currentCat; });
+    }
 
-      var cat = btn.dataset.cat || '';
-      cards.forEach(function(card) {
-        var match = !cat || card.dataset.category === cat;
-        card.style.display = match ? '' : 'none';
+    function render() {
+      var filtered = getFiltered();
+      var all = getCards();
+      var start = (currentPage - 1) * PAGE_SIZE;
+      var visible = new Set(filtered.slice(start, start + PAGE_SIZE));
+      all.forEach(function (c) { c.style.display = visible.has(c) ? '' : 'none'; });
+      renderPagination(filtered.length);
+    }
+
+    function renderPagination(total) {
+      var totalPages = Math.ceil(total / PAGE_SIZE) || 1;
+      var nav = document.getElementById('pagination');
+      var numbersEl = document.getElementById('page-numbers');
+      var prevBtn = document.getElementById('page-prev');
+      var nextBtn = document.getElementById('page-next');
+      if (!nav || !numbersEl || !prevBtn || !nextBtn) return;
+
+      nav.style.display = totalPages > 1 ? 'flex' : 'none';
+
+      prevBtn.disabled = currentPage <= 1;
+      prevBtn.classList.toggle('pagination__btn--disabled', currentPage <= 1);
+      nextBtn.disabled = currentPage >= totalPages;
+      nextBtn.classList.toggle('pagination__btn--disabled', currentPage >= totalPages);
+
+      numbersEl.innerHTML = '';
+      var maxShow = 7;
+      var half = Math.floor(maxShow / 2);
+      var start = Math.max(1, currentPage - half);
+      var end = Math.min(totalPages, start + maxShow - 1);
+      if (end - start < maxShow - 1) start = Math.max(1, end - maxShow + 1);
+
+      for (var i = start; i <= end; i++) {
+        var a = document.createElement('button');
+        a.className = 'pagination__page' + (i === currentPage ? ' pagination__page--current' : '');
+        a.textContent = String(i);
+        a.dataset.page = String(i);
+        numbersEl.appendChild(a);
+      }
+    }
+
+    function init() {
+      var stack = document.getElementById('post-stack');
+      var filter = document.querySelector('.category-filter');
+      var prevBtn = document.getElementById('page-prev');
+      var nextBtn = document.getElementById('page-next');
+      var numbersEl = document.getElementById('page-numbers');
+      if (!stack || !filter) return;
+
+      currentPage = 1;
+      currentCat = '';
+      document.querySelectorAll('.cat-btn').forEach(function (b) {
+        b.classList.toggle('cat-btn--active', b.dataset.cat === '');
       });
-    });
-  }
+      render();
+
+      filter.addEventListener('click', function (e) {
+        var btn = e.target.closest('.cat-btn');
+        if (!btn) return;
+        document.querySelectorAll('.cat-btn').forEach(function (b) { b.classList.remove('cat-btn--active'); });
+        btn.classList.add('cat-btn--active');
+        currentCat = btn.dataset.cat || '';
+        currentPage = 1;
+        render();
+      });
+
+      prevBtn && prevBtn.addEventListener('click', function () {
+        if (currentPage > 1) { currentPage--; render(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+      });
+      nextBtn && nextBtn.addEventListener('click', function () {
+        var total = Math.ceil(getFiltered().length / PAGE_SIZE) || 1;
+        if (currentPage < total) { currentPage++; render(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+      });
+      numbersEl && numbersEl.addEventListener('click', function (e) {
+        var btn = e.target.closest('.pagination__page');
+        if (!btn || !btn.dataset.page) return;
+        currentPage = parseInt(btn.dataset.page, 10);
+        render();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    }
+
+    if (!window.__postsPageInit) {
+      window.__postsPageInit = true;
+      document.addEventListener('astro:page-load', init);
+    }
+  })();
 </script>
 
 <style>
@@ -159,7 +211,6 @@ const categoryCounts = categories.reduce<Record<string, number>>((acc, cat) => {
   }
 
   .cat-btn--active .cat-count {
-    background: var(--accent-soft);
     color: var(--accent);
   }
 
@@ -184,16 +235,17 @@ const categoryCounts = categories.reduce<Record<string, number>>((acc, cat) => {
     color: var(--muted);
     font-size: 0.8rem;
     font-weight: 600;
-    text-decoration: none;
+    cursor: pointer;
     transition: border-color 150ms, color 150ms;
   }
 
-  .pagination__btn:not(.pagination__btn--disabled):hover {
+  .pagination__btn:not(:disabled):hover {
     border-color: var(--accent);
     color: var(--accent);
   }
 
-  .pagination__btn--disabled {
+  .pagination__btn--disabled,
+  .pagination__btn:disabled {
     opacity: 0.35;
     cursor: default;
   }
@@ -215,7 +267,7 @@ const categoryCounts = categories.reduce<Record<string, number>>((acc, cat) => {
     color: var(--muted);
     font-size: 0.8rem;
     font-weight: 600;
-    text-decoration: none;
+    cursor: pointer;
     transition: border-color 150ms, background 150ms, color 150ms;
   }
 
