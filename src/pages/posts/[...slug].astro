@@ -112,7 +112,7 @@ const jsonLd = JSON.stringify({
       )}
 
       <!-- 본문 -->
-      <article class="app-panel article" data-pagefind-body data-pagefind-meta={`title:${post.data.title}`} data-pagefind-filter={`lang:${currentLang}`} data-post-slug={post.id} data-post-lang={currentLang}>
+      <article class="app-panel article" data-pagefind-body data-pagefind-meta={`title:${post.data.title}`} data-pagefind-filter={`lang:${currentLang}`} data-post-slug={post.id} data-post-lang={currentLang} data-worker-base={import.meta.env.PUBLIC_OAUTH_WORKER_URL ?? ""}>
 
         <header class="article__header">
           <div class="panel-heading" data-pagefind-ignore>
@@ -184,6 +184,10 @@ const jsonLd = JSON.stringify({
 
         <!-- 어드민 바 -->
         <div id="post-admin-bar" style="display:none" data-pagefind-ignore>
+          <div class="post-stats">
+            <span class="post-stats__item">Today <strong id="stat-today">—</strong></span>
+            <span class="post-stats__item">Total <strong id="stat-total">—</strong></span>
+          </div>
           <a href={`/admin/new-post?edit=${post.id}`} class="post-admin-btn">{currentLang === "en" ? "Edit" : "수정"}</a>
           <button id="post-delete-btn" class="post-admin-btn post-admin-btn--danger">{currentLang === "en" ? "Delete" : "삭제"}</button>
         </div>
@@ -206,12 +210,22 @@ const jsonLd = JSON.stringify({
     const article = document.querySelector("article[data-post-slug]") as HTMLElement | null;
     if (!article) { lastSlug = ""; return; }
 
-    const postSlug = article.dataset.postSlug ?? "";
-    const postLang = article.dataset.postLang === "en" ? "en" : "ko";
+    const postSlug   = article.dataset.postSlug   ?? "";
+    const postLang   = article.dataset.postLang === "en" ? "en" : "ko";
+    const workerBase = (article.dataset.workerBase ?? "").replace(/\/$/, "");
 
     // 같은 페이지 중복 실행 방지
     if (postSlug && postSlug === lastSlug) return;
     lastSlug = postSlug;
+
+    // 방문 카운트 (모든 방문자 — IP 기반 하루 1회 중복 방지)
+    if (workerBase && postSlug) {
+      fetch(`${workerBase}/visit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ post: postSlug }),
+      }).catch(() => {});
+    }
 
     const token = localStorage.getItem("gh_token");
     const translationLink = document.querySelector(".lang-switch-link") as HTMLAnchorElement | null;
@@ -233,7 +247,23 @@ const jsonLd = JSON.stringify({
         headers: { Authorization: `Bearer ${token}` },
       })
         .then((r) => r.json())
-        .then((u) => { if (u.login === OWNER) adminBar.style.display = "flex"; })
+        .then((u) => {
+          if (u.login !== OWNER) return;
+          adminBar.style.display = "flex";
+
+          // 어드민에게만 방문 통계 표시
+          if (workerBase && postSlug) {
+            fetch(`${workerBase}/stats?post=${encodeURIComponent(postSlug)}`)
+              .then((r) => r.json())
+              .then((s) => {
+                const elToday = document.getElementById("stat-today");
+                const elTotal = document.getElementById("stat-total");
+                if (elToday) elToday.textContent = String(s.today ?? 0);
+                if (elTotal) elTotal.textContent = String(s.total ?? 0);
+              })
+              .catch(() => {});
+          }
+        })
         .catch(() => {});
     }
 
@@ -459,10 +489,30 @@ const jsonLd = JSON.stringify({
   /* ── 어드민 바 ────────────────────────────── */
   #post-admin-bar {
     display: none;
+    align-items: center;
+    flex-wrap: wrap;
     gap: 0.75rem;
     margin-top: 2rem;
     padding-top: 1.25rem;
     border-top: 1px solid rgba(124, 255, 122, 0.1);
+  }
+
+  .post-stats {
+    display: flex;
+    gap: 0.75rem;
+    margin-right: auto;
+  }
+
+  .post-stats__item {
+    font-size: 0.78rem;
+    color: rgba(124, 255, 122, 0.45);
+    letter-spacing: 0.03em;
+  }
+
+  .post-stats__item strong {
+    color: rgba(124, 255, 122, 0.8);
+    font-variant-numeric: tabular-nums;
+    margin-left: 0.25rem;
   }
 
   .post-admin-btn {
