@@ -8,11 +8,15 @@
  *      - GITHUB_CLIENT_ID     : GitHub OAuth App 의 Client ID
  *      - GITHUB_CLIENT_SECRET : GitHub OAuth App 의 Client Secret (Encrypt 체크)
  *
- * 방문자 수 / 좋아요 사용 시 추가 설정:
+ * 방문자 수 사용 시 추가 설정:
  *   4. Workers & Pages > KV > Create namespace "BLOG_KV"
  *   5. Worker Settings > Bindings > KV Namespace 에 BLOG_KV 바인딩 추가
  *   6. .env 에 PUBLIC_OAUTH_WORKER_URL=https://your-worker.workers.dev 기입
- *      (기존 OAuth URL 과 동일한 Worker URL 사용)
+ *
+ * KV 키 구조:
+ *   visit-ip:{post}:{ip}:{YYYY-MM-DD}  TTL 86400  — 일별 IP 중복 방지
+ *   visits:total:{post}                            — 누적 방문 수
+ *   visits:daily:{post}:{YYYY-MM-DD}   TTL 172800 — 일별 방문 수
  */
 
 const ALLOWED_ORIGIN = "https://blog.somiri.dev";
@@ -30,6 +34,10 @@ function json(data, status = 200) {
   });
 }
 
+function todayUTC() {
+  return new Date().toISOString().split("T")[0]; // "YYYY-MM-DD"
+}
+
 export default {
   async fetch(request, env) {
     if (request.method === "OPTIONS") {
@@ -44,16 +52,17 @@ export default {
       const post = url.searchParams.get("post");
       if (!post) return json({ error: "Missing post param" }, 400);
 
-      if (!env.BLOG_KV) return json({ visits: 0, likes: 0 });
+      if (!env.BLOG_KV) return json({ today: 0, total: 0 });
 
-      const [visits, likes] = await Promise.all([
-        env.BLOG_KV.get(`visits:${post}`),
-        env.BLOG_KV.get(`likes:${post}`),
+      const date = todayUTC();
+      const [total, today] = await Promise.all([
+        env.BLOG_KV.get(`visits:total:${post}`),
+        env.BLOG_KV.get(`visits:daily:${post}:${date}`),
       ]);
 
       return json({
-        visits: Number(visits ?? 0),
-        likes: Number(likes ?? 0),
+        today: Number(today ?? 0),
+        total: Number(total ?? 0),
       });
     }
 
@@ -67,50 +76,40 @@ export default {
       }
       if (!post) return json({ error: "Missing post" }, 400);
 
-      if (!env.BLOG_KV) return json({ ok: true, visits: 0 });
+      if (!env.BLOG_KV) return json({ ok: true, today: 0, total: 0 });
 
-      // IP 기반 중복 방지 (24시간 TTL)
       const ip = request.headers.get("CF-Connecting-IP") || "unknown";
-      const ipKey = `visit-ip:${post}:${ip}`;
-      if (await env.BLOG_KV.get(ipKey)) {
-        const visits = Number((await env.BLOG_KV.get(`visits:${post}`)) ?? 0);
-        return json({ ok: true, visits, duplicate: true });
+      const date = todayUTC();
+      const ipKey = `visit-ip:${post}:${ip}:${date}`;
+
+      // 같은 IP는 하루에 한 번만 카운트
+      const alreadyCounted = await env.BLOG_KV.get(ipKey);
+      if (alreadyCounted) {
+        const [total, today] = await Promise.all([
+          env.BLOG_KV.get(`visits:total:${post}`),
+          env.BLOG_KV.get(`visits:daily:${post}:${date}`),
+        ]);
+        return json({ ok: true, today: Number(today ?? 0), total: Number(total ?? 0), duplicate: true });
       }
+
+      // IP 중복 방지 키 저장 (24시간 TTL)
       await env.BLOG_KV.put(ipKey, "1", { expirationTtl: 86400 });
 
-      const current = Number((await env.BLOG_KV.get(`visits:${post}`)) ?? 0);
-      const updated = current + 1;
-      await env.BLOG_KV.put(`visits:${post}`, String(updated));
+      // 누적 / 일별 카운트 증가
+      const [currentTotal, currentDaily] = await Promise.all([
+        env.BLOG_KV.get(`visits:total:${post}`),
+        env.BLOG_KV.get(`visits:daily:${post}:${date}`),
+      ]);
 
-      return json({ ok: true, visits: updated });
-    }
+      const newTotal = Number(currentTotal ?? 0) + 1;
+      const newDaily = Number(currentDaily ?? 0) + 1;
 
-    // ── POST /like ────────────────────────────────────────────
-    if (path === "/like" && request.method === "POST") {
-      let post;
-      try {
-        ({ post } = await request.json());
-      } catch {
-        return json({ error: "Invalid JSON" }, 400);
-      }
-      if (!post) return json({ error: "Missing post" }, 400);
+      await Promise.all([
+        env.BLOG_KV.put(`visits:total:${post}`, String(newTotal)),
+        env.BLOG_KV.put(`visits:daily:${post}:${date}`, String(newDaily), { expirationTtl: 172800 }),
+      ]);
 
-      if (!env.BLOG_KV) return json({ ok: true, likes: 0 });
-
-      // IP 기반 중복 방지 (영구 — 좋아요는 1인 1회)
-      const ip = request.headers.get("CF-Connecting-IP") || "unknown";
-      const ipKey = `like-ip:${post}:${ip}`;
-      if (await env.BLOG_KV.get(ipKey)) {
-        const likes = Number((await env.BLOG_KV.get(`likes:${post}`)) ?? 0);
-        return json({ ok: true, likes, duplicate: true });
-      }
-      await env.BLOG_KV.put(ipKey, "1");
-
-      const current = Number((await env.BLOG_KV.get(`likes:${post}`)) ?? 0);
-      const updated = current + 1;
-      await env.BLOG_KV.put(`likes:${post}`, String(updated));
-
-      return json({ ok: true, likes: updated });
+      return json({ ok: true, today: newDaily, total: newTotal });
     }
 
     // ── POST / — GitHub OAuth ─────────────────────────────────
