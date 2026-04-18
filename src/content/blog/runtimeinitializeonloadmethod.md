@@ -4,8 +4,9 @@ description: "이 메서드에 산전수전 겪은 내용을 정리한 포스팅
 pubDate: 2026-03-24
 tags:
   - Unity
-category: R&D
 thumbnail: /images/1775359199678.png
+category: R&D
+subcategory: Unity
 ---
 
 # 가 뭐죠?
