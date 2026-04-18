@@ -3,8 +3,9 @@ import Footer from "../../components/Footer.astro";
 import Header from "../../components/Header.astro";
 import PostCard from "../../components/PostCard.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import { getPublishedPosts } from "../../lib/blog";
+import { getPostSubcategory, getPublishedPosts } from "../../lib/blog";
 import categories from "../../data/categories.json";
+import subcategories from "../../data/subcategories.json";
 
 export async function getStaticPaths() {
   return [{ params: { page: undefined } }];
@@ -14,6 +15,17 @@ const allPosts = await getPublishedPosts();
 
 const categoryCounts = categories.reduce<Record<string, number>>((acc, cat) => {
   acc[cat] = allPosts.filter((p) => p.data.category === cat).length;
+  return acc;
+}, {});
+
+const subcategoryCounts = categories.reduce<Record<string, Record<string, number>>>((acc, cat) => {
+  const items = subcategories[cat] ?? [];
+  acc[cat] = items.reduce<Record<string, number>>((subcategoryMap, subcategory) => {
+    subcategoryMap[subcategory] = allPosts.filter((post) => {
+      return post.data.category === cat && getPostSubcategory(post) === subcategory;
+    }).length;
+    return subcategoryMap;
+  }, {});
   return acc;
 }, {});
 ---
@@ -30,15 +42,43 @@ const categoryCounts = categories.reduce<Record<string, number>>((acc, cat) => {
       </div>
 
       <div class="category-filter" role="group" aria-label="카테고리 필터">
-        <button class="cat-btn cat-btn--active" data-cat="">
-          전체 <span class="cat-count">{allPosts.length}</span>
-        </button>
-        {categories.map((cat) => (
-          <button class="cat-btn" data-cat={cat}>
-            {cat}
-            {categoryCounts[cat] > 0 && <span class="cat-count">{categoryCounts[cat]}</span>}
+        <div class="category-filter__item category-filter__item--all">
+          <button class="cat-btn cat-btn--active" data-cat="">
+            전체 <span class="cat-count">{allPosts.length}</span>
           </button>
-        ))}
+        </div>
+
+        {categories.map((cat) => {
+          const items = subcategories[cat] ?? [];
+
+          return (
+            <div class="category-filter__item" data-cat-item={cat} data-expanded="false">
+              <button class="cat-btn" data-cat={cat}>
+                {cat}
+                {categoryCounts[cat] > 0 && <span class="cat-count">{categoryCounts[cat]}</span>}
+              </button>
+
+              {items.length > 0 && (
+                <div class="subcategory-panel" data-subcategory-group={cat} aria-hidden="true">
+                  <button class="subcat-btn subcat-btn--active" data-cat={cat} data-subcat="">
+                    전체 <span class="cat-count">{categoryCounts[cat] ?? 0}</span>
+                  </button>
+
+                  {items.map((subcategory) => {
+                    const count = subcategoryCounts[cat]?.[subcategory] ?? 0;
+
+                    return (
+                      <button class="subcat-btn" data-cat={cat} data-subcat={subcategory} disabled={count === 0}>
+                        {subcategory}
+                        <span class="cat-count">{count}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       <div class="post-stack" id="post-stack">
@@ -61,6 +101,7 @@ const categoryCounts = categories.reduce<Record<string, number>>((acc, cat) => {
     var PAGE_SIZE = 10;
     var currentPage = 1;
     var currentCat = '';
+    var currentSubcat = '';
 
     function getCards() {
       var stack = document.getElementById('post-stack');
@@ -69,8 +110,35 @@ const categoryCounts = categories.reduce<Record<string, number>>((acc, cat) => {
 
     function getFiltered() {
       var cards = getCards();
-      if (!currentCat) return cards;
-      return cards.filter(function (c) { return c.dataset.category === currentCat; });
+      return cards.filter(function (c) {
+        var categoryMatches = !currentCat || c.dataset.category === currentCat;
+        var subcategoryMatches = !currentSubcat || c.dataset.subcategory === currentSubcat;
+        return categoryMatches && subcategoryMatches;
+      });
+    }
+
+    function renderSubcategoryFilter() {
+      var filter = document.querySelector('.category-filter');
+      if (!filter) return;
+
+      filter.querySelectorAll('[data-cat-item]').forEach(function (item) {
+        if (!(item instanceof HTMLElement)) return;
+        var panel = item.querySelector('[data-subcategory-group]');
+        var expanded = !!currentCat
+          && item.dataset.catItem === currentCat
+          && panel instanceof HTMLElement;
+
+        item.dataset.expanded = expanded ? 'true' : 'false';
+        if (panel instanceof HTMLElement) {
+          panel.setAttribute('aria-hidden', String(!expanded));
+        }
+      });
+
+      filter.querySelectorAll('.subcat-btn').forEach(function (button) {
+        if (!(button instanceof HTMLButtonElement)) return;
+        var isActive = (button.dataset.cat || '') === currentCat && (button.dataset.subcat || '') === currentSubcat;
+        button.classList.toggle('subcat-btn--active', isActive);
+      });
     }
 
     function render() {
@@ -79,6 +147,7 @@ const categoryCounts = categories.reduce<Record<string, number>>((acc, cat) => {
       var start = (currentPage - 1) * PAGE_SIZE;
       var visible = new Set(filtered.slice(start, start + PAGE_SIZE));
       all.forEach(function (c) { c.style.display = visible.has(c) ? '' : 'none'; });
+      renderSubcategoryFilter();
       renderPagination(filtered.length);
     }
 
@@ -124,17 +193,28 @@ const categoryCounts = categories.reduce<Record<string, number>>((acc, cat) => {
 
       currentPage = 1;
       currentCat = '';
+      currentSubcat = '';
       document.querySelectorAll('.cat-btn').forEach(function (b) {
         b.classList.toggle('cat-btn--active', b.dataset.cat === '');
       });
       render();
 
       filter.addEventListener('click', function (e) {
+        var subBtn = e.target.closest('.subcat-btn');
+        if (subBtn && !subBtn.disabled) {
+          currentCat = subBtn.dataset.cat || '';
+          currentSubcat = subBtn.dataset.subcat || '';
+          currentPage = 1;
+          render();
+          return;
+        }
+
         var btn = e.target.closest('.cat-btn');
         if (!btn) return;
         document.querySelectorAll('.cat-btn').forEach(function (b) { b.classList.remove('cat-btn--active'); });
         btn.classList.add('cat-btn--active');
         currentCat = btn.dataset.cat || '';
+        currentSubcat = '';
         currentPage = 1;
         render();
       });
@@ -166,8 +246,39 @@ const categoryCounts = categories.reduce<Record<string, number>>((acc, cat) => {
   .category-filter {
     display: flex;
     flex-wrap: wrap;
+    align-items: flex-start;
     gap: 0.5rem;
     margin-bottom: 1.25rem;
+  }
+
+  .category-filter__item {
+    display: grid;
+    gap: 0.42rem;
+  }
+
+  .subcategory-panel {
+    display: grid;
+    gap: 0.45rem;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(-0.25rem);
+    pointer-events: none;
+    width: min(100%, 16rem);
+    margin-left: 0.35rem;
+    padding: 0.12rem 0 0 0.7rem;
+    border-left: 1px solid rgba(124, 255, 122, 0.14);
+    transition:
+      max-height 260ms ease,
+      opacity 180ms ease,
+      transform 180ms ease;
+  }
+
+  .category-filter__item[data-expanded="true"] .subcategory-panel {
+    max-height: 18rem;
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
   }
 
   .cat-btn {
@@ -195,6 +306,47 @@ const categoryCounts = categories.reduce<Record<string, number>>((acc, cat) => {
     border-color: var(--accent);
     background: var(--accent-soft);
     color: var(--accent);
+  }
+
+  .subcat-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+    width: 100%;
+    padding: 0.48rem 0.8rem 0.48rem 0.88rem;
+    border-radius: 1rem;
+    border: 1px solid rgba(124, 255, 122, 0.12);
+    background:
+      linear-gradient(180deg, rgba(16, 22, 29, 0.94), rgba(9, 13, 18, 0.9));
+    color: rgba(214, 255, 214, 0.74);
+    font-size: 0.74rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 150ms, background 150ms, color 150ms, transform 150ms;
+  }
+
+  .subcat-btn:hover:not(:disabled) {
+    border-color: rgba(124, 255, 122, 0.28);
+    background:
+      linear-gradient(180deg, rgba(20, 27, 34, 0.96), rgba(11, 16, 20, 0.92));
+    color: var(--accent);
+    transform: translateY(-1px);
+  }
+
+  .subcat-btn:disabled {
+    opacity: 0.34;
+    cursor: not-allowed;
+  }
+
+  .subcat-btn--active {
+    border-color: rgba(124, 255, 122, 0.34);
+    background:
+      linear-gradient(180deg, rgba(124, 255, 122, 0.16), rgba(124, 255, 122, 0.05)),
+      rgba(11, 16, 20, 0.92);
+    color: var(--accent-strong);
+    box-shadow: 0 0 0 1px rgba(124, 255, 122, 0.06);
   }
 
   .cat-count {

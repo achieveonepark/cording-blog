@@ -7,6 +7,7 @@ import {
   BLOG_LANGS,
   type BlogLang,
   filterPostsByLang,
+  getPostCategoryTrail,
   getPublishedPosts
 } from "../lib/blog";
 
@@ -64,7 +65,7 @@ const gameDataByLang = BLOG_LANGS.reduce((acc, lang) => {
         posts: monthPosts.map(p => ({
           title: p.data.title,
           id: p.id,
-          category: p.data.category || ""
+          category: getPostCategoryTrail(p)
         }))
       });
     }

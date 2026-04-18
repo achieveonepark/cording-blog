@@ -1,6 +1,6 @@
 ---
 import type { CollectionEntry } from "astro:content";
-import { formatDate, getPostLang } from "../lib/blog";
+import { formatDate, getPostCategoryTrail, getPostLang, getPostSubcategory } from "../lib/blog";
 
 interface Props {
   currentPost: CollectionEntry<"blog">;
@@ -9,10 +9,12 @@ interface Props {
 
 const { currentPost, allPosts } = Astro.props;
 const currentLang = getPostLang(currentPost);
+const currentSubcategory = getPostSubcategory(currentPost);
 
 function score(post: CollectionEntry<"blog">) {
   let s = 0;
   if (post.data.category && post.data.category === currentPost.data.category) s += 3;
+  if (currentSubcategory && getPostSubcategory(post) === currentSubcategory) s += 2;
   const sharedTags = post.data.tags.filter((t) => currentPost.data.tags.includes(t));
   s += sharedTags.length;
   return s;
@@ -36,7 +38,7 @@ const related = allPosts
           <a href={`/posts/${post.id}/`} class="related__item">
             <span class="related__title">{post.data.title}</span>
             <span class="related__meta">
-              {post.data.category && <span class="related__cat">{post.data.category}</span>}
+              {getPostCategoryTrail(post) && <span class="related__cat">{getPostCategoryTrail(post)}</span>}
               <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate, currentLang)}</time>
             </span>
           </a>
@@ -115,7 +117,7 @@ const related = allPosts
     font-size: 0.65rem;
     font-weight: 700;
     letter-spacing: 0.05em;
-    text-transform: uppercase;
+    text-transform: none;
   }
 
   time {
