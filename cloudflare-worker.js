@@ -38,6 +38,27 @@ function todayUTC() {
   return new Date().toISOString().split("T")[0]; // "YYYY-MM-DD"
 }
 
+async function sumKvValues(kv, prefix, predicate = () => true) {
+  let cursor;
+  let total = 0;
+  let listComplete = false;
+
+  while (!listComplete) {
+    const page = await kv.list({ prefix, cursor });
+    const keys = page.keys.filter(({ name }) => predicate(name));
+
+    if (keys.length > 0) {
+      const values = await Promise.all(keys.map(({ name }) => kv.get(name)));
+      total += values.reduce((sum, value) => sum + Number(value ?? 0), 0);
+    }
+
+    cursor = page.cursor;
+    listComplete = page.list_complete;
+  }
+
+  return total;
+}
+
 export default {
   async fetch(request, env) {
     if (request.method === "OPTIONS") {
@@ -50,20 +71,29 @@ export default {
     // ── GET /stats?post={slug} ────────────────────────────────
     if (path === "/stats" && request.method === "GET") {
       const post = url.searchParams.get("post");
-      if (!post) return json({ error: "Missing post param" }, 400);
 
       if (!env.BLOG_KV) return json({ today: 0, total: 0 });
 
       const date = todayUTC();
+
+      if (post) {
+        const [total, today] = await Promise.all([
+          env.BLOG_KV.get(`visits:total:${post}`),
+          env.BLOG_KV.get(`visits:daily:${post}:${date}`),
+        ]);
+
+        return json({
+          today: Number(today ?? 0),
+          total: Number(total ?? 0),
+        });
+      }
+
       const [total, today] = await Promise.all([
-        env.BLOG_KV.get(`visits:total:${post}`),
-        env.BLOG_KV.get(`visits:daily:${post}:${date}`),
+        sumKvValues(env.BLOG_KV, "visits:total:"),
+        sumKvValues(env.BLOG_KV, "visits:daily:", (name) => name.endsWith(`:${date}`)),
       ]);
 
-      return json({
-        today: Number(today ?? 0),
-        total: Number(total ?? 0),
-      });
+      return json({ today, total });
     }
 
     // ── POST /visit ───────────────────────────────────────────
