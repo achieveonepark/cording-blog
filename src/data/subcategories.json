@@ -1,6 +1,9 @@
 {
   "Troubleshooting": [],
-  "R&D": [],
+  "R&D": [
+    "CI/CD",
+    "Unity"
+  ],
   "Thinking": [],
   "AI": [],
   "Design Pattern": [
