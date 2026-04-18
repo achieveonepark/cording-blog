@@ -9,8 +9,9 @@ tags:
   - Build
   - Jenkins
   - Fastlane
-category: R&D
 thumbnail: /images/1775347507127.png
+category: R&D
+subcategory: CI/CD
 ---
 
 ## Xcode
