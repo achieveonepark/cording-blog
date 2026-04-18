@@ -145,6 +145,8 @@ const { categories, categoryCountsByLang, totalPostsByLang } = Astro.props;
   var HOME_FILTER_EASING = "cubic-bezier(0.22, 1, 0.36, 1)";
   var HOME_FILTER_MOVE_DURATION = 340;
   var HOME_FILTER_HEIGHT_DURATION = 380;
+  var HOME_PAGE_SIZE = 10;
+  var HOME_MAX_PAGE_BUTTONS = 7;
 
   function syncHomeSidebarLabels(shell, lang) {
     shell.querySelectorAll("[data-label-ko][data-label-en]").forEach(function(element) {
@@ -214,10 +216,91 @@ const { categories, categoryCountsByLang, totalPostsByLang } = Astro.props;
     });
   }
 
-  function getHomeVisibleCards(section) {
+  function getHomeSectionCards(section) {
     return Array.from(section.querySelectorAll("[data-home-post-stack] .post-card")).filter(function(card) {
+      return card instanceof HTMLElement;
+    });
+  }
+
+  function getHomeVisibleCards(section) {
+    return getHomeSectionCards(section).filter(function(card) {
       return card instanceof HTMLElement && !card.hidden;
     });
+  }
+
+  function getHomeSectionLang(section) {
+    return section.dataset.uiLang === "en" ? "en" : "ko";
+  }
+
+  function getHomeFilteredCards(section, category) {
+    return getHomeSectionCards(section).filter(function(card) {
+      return !category || card.dataset.category === category;
+    });
+  }
+
+  function getHomePageStorageKey(lang) {
+    return "home_current_page_" + lang;
+  }
+
+  function readHomeCurrentPage(lang) {
+    var value = parseInt(readHomeSidebarStorage(getHomePageStorageKey(lang), "1"), 10);
+    return Number.isFinite(value) && value > 0 ? value : 1;
+  }
+
+  function writeHomeCurrentPage(lang, page) {
+    writeHomeSidebarStorage(getHomePageStorageKey(lang), String(page));
+  }
+
+  function clampHomePage(totalItems, page) {
+    var totalPages = Math.max(1, Math.ceil(totalItems / HOME_PAGE_SIZE));
+    var nextPage = Number.isFinite(page) ? page : 1;
+    return Math.min(Math.max(1, nextPage), totalPages);
+  }
+
+  function renderHomePagination(section, currentPage, totalItems) {
+    var pagination = section.querySelector("[data-home-pagination]");
+    var pages = section.querySelector("[data-home-pagination-pages]");
+    var prevBtn = section.querySelector('[data-home-page-action="prev"]');
+    var nextBtn = section.querySelector('[data-home-page-action="next"]');
+    var pageLabelPrefix = getHomeSectionLang(section) === "en" ? "Page " : "페이지 ";
+    if (!(pagination instanceof HTMLElement) || !(pages instanceof HTMLElement)) return;
+
+    var totalPages = Math.max(1, Math.ceil(totalItems / HOME_PAGE_SIZE));
+    pagination.hidden = totalItems === 0 || totalPages <= 1;
+
+    if (prevBtn instanceof HTMLButtonElement) {
+      prevBtn.disabled = currentPage <= 1;
+    }
+
+    if (nextBtn instanceof HTMLButtonElement) {
+      nextBtn.disabled = currentPage >= totalPages;
+    }
+
+    pages.innerHTML = "";
+
+    if (pagination.hidden) return;
+
+    var half = Math.floor(HOME_MAX_PAGE_BUTTONS / 2);
+    var start = Math.max(1, currentPage - half);
+    var end = Math.min(totalPages, start + HOME_MAX_PAGE_BUTTONS - 1);
+
+    if (end - start < HOME_MAX_PAGE_BUTTONS - 1) {
+      start = Math.max(1, end - HOME_MAX_PAGE_BUTTONS + 1);
+    }
+
+    for (var page = start; page <= end; page += 1) {
+      var button = document.createElement("button");
+      button.type = "button";
+      button.className = "home-feed__pagination-page" + (page === currentPage ? " home-feed__pagination-page--current" : "");
+      button.textContent = String(page);
+      button.dataset.homePage = String(page);
+      button.disabled = page === currentPage;
+      button.setAttribute("aria-label", pageLabelPrefix + page);
+      if (page === currentPage) {
+        button.setAttribute("aria-current", "page");
+      }
+      pages.appendChild(button);
+    }
   }
 
   function captureHomeLayout(shell) {
@@ -360,26 +443,10 @@ const { categories, categoryCountsByLang, totalPostsByLang } = Astro.props;
     });
   }
 
-  function updateHomeFilterEmptyStates(shell, category) {
-    shell.querySelectorAll("[data-home-section]").forEach(function(section) {
-      if (!(section instanceof HTMLElement)) return;
-
-      var emptyState = section.querySelector("[data-home-empty-filter]");
-      if (!(emptyState instanceof HTMLElement)) return;
-
-      if (!category) {
-        setHomeEmptyStateVisible(emptyState, false);
-        return;
-      }
-
-      var visibleCards = getHomeVisibleCards(section);
-
-      setHomeEmptyStateVisible(emptyState, visibleCards.length === 0);
-    });
-  }
-
-  function applyHomeCategory(shell, category, options) {
-    var nextCategory = category || "";
+  function renderHomeFeed(shell, options) {
+    var nextCategory = options && typeof options.category === "string"
+      ? options.category
+      : (shell.dataset.activeCategory || readHomeSidebarStorage("home_active_category", ""));
     var shouldAnimate = shouldAnimateHomeFilter(options);
     var beforeLayout = shouldAnimate ? captureHomeLayout(shell) : null;
     shell.dataset.activeCategory = nextCategory;
@@ -392,12 +459,33 @@ const { categories, categoryCountsByLang, totalPostsByLang } = Astro.props;
       button.setAttribute("aria-pressed", String(isActive));
     });
 
-    shell.querySelectorAll("[data-home-post-stack] .post-card").forEach(function(card) {
-      if (!(card instanceof HTMLElement)) return;
-      setHomeCardVisible(card, !nextCategory || card.dataset.category === nextCategory);
+    shell.querySelectorAll("[data-home-section]").forEach(function(section) {
+      if (!(section instanceof HTMLElement)) return;
+
+      var lang = getHomeSectionLang(section);
+      var filteredCards = getHomeFilteredCards(section, nextCategory);
+      var requestedPage = options && options.resetPage
+        ? 1
+        : options && options.lang === lang && typeof options.page === "number"
+          ? options.page
+          : readHomeCurrentPage(lang);
+      var currentPage = clampHomePage(filteredCards.length, requestedPage);
+      var start = (currentPage - 1) * HOME_PAGE_SIZE;
+      var visibleCards = new Set(filteredCards.slice(start, start + HOME_PAGE_SIZE));
+      var emptyState = section.querySelector("[data-home-empty-filter]");
+
+      getHomeSectionCards(section).forEach(function(card) {
+        setHomeCardVisible(card, visibleCards.has(card));
+      });
+
+      if (emptyState instanceof HTMLElement) {
+        setHomeEmptyStateVisible(emptyState, Boolean(nextCategory) && filteredCards.length === 0);
+      }
+
+      renderHomePagination(section, currentPage, filteredCards.length);
+      writeHomeCurrentPage(lang, currentPage);
     });
 
-    updateHomeFilterEmptyStates(shell, nextCategory);
     writeHomeSidebarStorage("home_active_category", nextCategory);
 
     if (!beforeLayout) return;
@@ -405,6 +493,14 @@ const { categories, categoryCountsByLang, totalPostsByLang } = Astro.props;
     var afterLayout = captureHomeLayout(shell);
     animateHomeSectionHeights(beforeLayout, afterLayout);
     animateHomeCards(beforeLayout, afterLayout);
+  }
+
+  function applyHomeCategory(shell, category, options) {
+    renderHomeFeed(shell, {
+      animate: !options || options.animate !== false,
+      category: category || "",
+      resetPage: true
+    });
   }
 
   function getHomeSectionForLang(shell, lang) {
@@ -423,13 +519,13 @@ const { categories, categoryCountsByLang, totalPostsByLang } = Astro.props;
   function syncHomeCategoryForCurrentLang(shell) {
     var activeCategory = shell.dataset.activeCategory || readHomeSidebarStorage("home_active_category", "");
     if (!activeCategory) {
-      applyHomeCategory(shell, "", { animate: false });
+      renderHomeFeed(shell, { animate: false, category: "" });
       return;
     }
 
     var activeSection = getHomeSectionForLang(shell, getHomeUiLang());
     if (!activeSection) {
-      applyHomeCategory(shell, activeCategory, { animate: false });
+      renderHomeFeed(shell, { animate: false, category: activeCategory });
       return;
     }
 
@@ -439,7 +535,18 @@ const { categories, categoryCountsByLang, totalPostsByLang } = Astro.props;
       return card instanceof HTMLElement && card.dataset.category === activeCategory;
     });
 
-    applyHomeCategory(shell, hasMatchingCard ? activeCategory : "", { animate: false });
+    renderHomeFeed(shell, {
+      animate: false,
+      category: hasMatchingCard ? activeCategory : ""
+    });
+  }
+
+  function scrollHomeSectionIntoView(section) {
+    var top = section.getBoundingClientRect().top + window.scrollY - 96;
+    window.scrollTo({
+      top: Math.max(0, top),
+      behavior: "smooth"
+    });
   }
 
   function hydrateHomeSidebar() {
@@ -470,6 +577,43 @@ const { categories, categoryCountsByLang, totalPostsByLang } = Astro.props;
       var categoryBtn = target.closest(".home-category-btn");
       if (categoryBtn instanceof HTMLButtonElement && !categoryBtn.disabled) {
         applyHomeCategory(shell, categoryBtn.dataset.homeCategory || "", { animate: true });
+        return;
+      }
+
+      var pageBtn = target.closest("[data-home-page]");
+      if (pageBtn instanceof HTMLButtonElement) {
+        var pageSection = pageBtn.closest("[data-home-section]");
+        var page = parseInt(pageBtn.dataset.homePage || "", 10);
+        if (!(pageSection instanceof HTMLElement) || !Number.isFinite(page)) return;
+
+        renderHomeFeed(shell, {
+          animate: true,
+          category: shell.dataset.activeCategory || "",
+          lang: getHomeSectionLang(pageSection),
+          page: page
+        });
+        scrollHomeSectionIntoView(pageSection);
+        return;
+      }
+
+      var pageActionBtn = target.closest("[data-home-page-action]");
+      if (pageActionBtn instanceof HTMLButtonElement) {
+        var actionSection = pageActionBtn.closest("[data-home-section]");
+        if (!(actionSection instanceof HTMLElement)) return;
+
+        var actionLang = getHomeSectionLang(actionSection);
+        var currentPage = readHomeCurrentPage(actionLang);
+        var nextPage = pageActionBtn.dataset.homePageAction === "prev"
+          ? currentPage - 1
+          : currentPage + 1;
+
+        renderHomeFeed(shell, {
+          animate: true,
+          category: shell.dataset.activeCategory || "",
+          lang: actionLang,
+          page: nextPage
+        });
+        scrollHomeSectionIntoView(actionSection);
         return;
       }
 
