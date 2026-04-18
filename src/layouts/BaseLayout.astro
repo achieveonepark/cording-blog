@@ -155,13 +155,11 @@ const robotsContent = noindex ? "noindex, nofollow, noarchive" : "index, follow"
       let isOwner = false;
 
       function refreshStats(workerBase: string) {
-        const article = document.querySelector("article[data-post-slug]") as HTMLElement | null;
         const fabStats = document.getElementById("fab-stats");
         if (!fabStats) return;
-        if (!article || !workerBase) { fabStats.style.display = "none"; return; }
-        const postSlug = article.dataset.postSlug ?? "";
+        if (!workerBase) { fabStats.style.display = "none"; return; }
         fabStats.style.display = "flex";
-        fetch(`${workerBase}/stats?post=${encodeURIComponent(postSlug)}`)
+        fetch(`${workerBase}/stats`)
           .then((r) => r.json())
           .then((s) => {
             const elToday = document.getElementById("fab-stat-today");
@@ -169,7 +167,12 @@ const robotsContent = noindex ? "noindex, nofollow, noarchive" : "index, follow"
             if (elToday) elToday.textContent = String(s.today ?? 0);
             if (elTotal) elTotal.textContent = String(s.total ?? 0);
           })
-          .catch(() => {});
+          .catch(() => {
+            const elToday = document.getElementById("fab-stat-today");
+            const elTotal = document.getElementById("fab-stat-total");
+            if (elToday) elToday.textContent = "0";
+            if (elTotal) elTotal.textContent = "0";
+          });
       }
 
       function initFab() {
