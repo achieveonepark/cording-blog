@@ -7,8 +7,9 @@ tags:
   - Jenkins
   - Ruby
   - wsl
-category: R&D
 thumbnail: /images/1775357461068.png
+category: R&D
+subcategory: CI/CD
 ---
 
 1편을 쓰면서 
