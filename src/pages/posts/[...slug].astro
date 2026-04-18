@@ -11,7 +11,18 @@ import CodeCopy from "../../components/CodeCopy.astro";
 import PostNav from "../../components/PostNav.astro";
 import AdSlot from "../../components/AdSlot.astro";
 import MermaidRenderer from "../../components/MermaidRenderer.astro";
-import { formatDate, getPublishedPosts, getReadingTime, getPostLang, findTranslation } from "../../lib/blog";
+import categories from "../../data/categories.json";
+import subcategories from "../../data/subcategories.json";
+import {
+  findTranslation,
+  formatDate,
+  getPostCategoryTrail,
+  getPostSourceStem,
+  getPostSubcategory,
+  getPublishedPosts,
+  getReadingTime,
+  getPostLang
+} from "../../lib/blog";
 
 export async function getStaticPaths() {
   const posts = await getPublishedPosts();
@@ -31,7 +42,18 @@ const { post, allPosts } = Astro.props;
 const { Content, headings } = await render(post);
 const currentLang = getPostLang(post);
 const translation = await findTranslation(post);
-const articleEyebrow = post.data.category?.trim() || (currentLang === "en" ? "Post" : "글");
+const currentCategory = post.data.category?.trim() ?? "";
+const currentSubcategory = getPostSubcategory(post);
+const postSourceStem = getPostSourceStem(post);
+const translationSourceStem = translation ? getPostSourceStem(translation) : "";
+const adminCategories = [...new Set([...(categories as string[]), currentCategory].filter(Boolean))];
+const adminSubcategoryMap = subcategories as Record<string, string[]>;
+const adminSubcategories = currentCategory ? [...(adminSubcategoryMap[currentCategory] ?? [])] : [];
+if (currentSubcategory && !adminSubcategories.includes(currentSubcategory)) {
+  adminSubcategories.push(currentSubcategory);
+}
+const adminSubcategoryPayload = encodeURIComponent(JSON.stringify(adminSubcategoryMap));
+const articleEyebrow = getPostCategoryTrail(post) || (currentLang === "en" ? "Post" : "글");
 const postTopAdSlot = import.meta.env.PUBLIC_ADSENSE_SLOT_POST_TOP ?? "";
 const postBottomAdSlot = import.meta.env.PUBLIC_ADSENSE_SLOT_POST_BOTTOM ?? "";
 const hasMermaid = (post.body ?? "").includes("```mermaid");
@@ -67,7 +89,7 @@ const jsonLd = JSON.stringify({
   "url": postUrl,
   "inLanguage": currentLang === "en" ? "en" : "ko",
   ...(post.data.tags.length > 0 ? { "keywords": post.data.tags.join(", ") } : {}),
-  ...(post.data.category ? { "articleSection": post.data.category } : {})
+  ...(articleEyebrow ? { "articleSection": articleEyebrow } : {})
 });
 ---
 
@@ -183,7 +205,50 @@ const jsonLd = JSON.stringify({
         </div>
 
         <!-- 어드민 바 -->
-        <div id="post-admin-bar" style="display:none" data-pagefind-ignore>
+        <div
+          id="post-admin-bar"
+          style="display:none"
+          data-pagefind-ignore
+          data-subcategories={adminSubcategoryPayload}
+          data-current-category={currentCategory}
+          data-current-subcategory={currentSubcategory}
+          data-post-source-stem={postSourceStem}
+          data-translation-source-stem={translationSourceStem}
+        >
+          <div class="post-admin-taxonomy">
+            <label class="post-admin-field">
+              <span>{currentLang === "en" ? "Category" : "移댄뀒怨좊━"}</span>
+              <select id="post-admin-category" class="post-admin-select">
+                <option value="" selected={!currentCategory}>{currentLang === "en" ? "No category" : "移댄뀒怨좊━ ?놁쓬"}</option>
+                {adminCategories.map((category) => (
+                  <option value={category} selected={currentCategory === category}>{category}</option>
+                ))}
+              </select>
+            </label>
+
+            <label class="post-admin-field">
+              <span>{currentLang === "en" ? "Subcategory" : "?섏쐞 移댄뀒怨좊━"}</span>
+              <select id="post-admin-subcategory" class="post-admin-select" disabled={!currentCategory}>
+                {!currentCategory ? (
+                  <option value="" selected>{currentLang === "en" ? "Select category first" : "移댄뀒怨좊━瑜?癒쇱? ?좏깮"}</option>
+                ) : (
+                  <option value="" selected={!currentSubcategory}>
+                    {adminSubcategories.length > 0
+                      ? (currentLang === "en" ? "Use parent category only" : "?곸쐞 移댄뀒怨좊━留??ъ슜")
+                      : (currentLang === "en" ? "No subcategories" : "?섏쐞 移댄뀒怨좊━ ?놁쓬")}
+                  </option>
+                )}
+                {adminSubcategories.map((subcategory) => (
+                  <option value={subcategory} selected={currentSubcategory === subcategory}>{subcategory}</option>
+                ))}
+              </select>
+            </label>
+
+            <button id="post-taxonomy-save-btn" type="button" class="post-admin-btn">
+              {currentLang === "en" ? "Save taxonomy" : "移댄뀒怨좊━ ???"}
+            </button>
+            <span id="post-taxonomy-status" class="post-admin-status" aria-live="polite"></span>
+          </div>
           <a href={`/admin/new-post?edit=${post.id}`} class="post-admin-btn">{currentLang === "en" ? "Edit" : "수정"}</a>
           <button id="post-delete-btn" class="post-admin-btn post-admin-btn--danger">{currentLang === "en" ? "Delete" : "삭제"}</button>
         </div>
@@ -201,6 +266,144 @@ const jsonLd = JSON.stringify({
   const BRANCH = "main";
 
   let lastSlug = "";
+
+  function encodeRepoPath(path: string) {
+    return path
+      .split("/")
+      .map((segment) => encodeURIComponent(segment))
+      .join("/");
+  }
+
+  function decodeBase64Utf8(value: string) {
+    return decodeURIComponent(escape(atob(value.replace(/\n/g, ""))));
+  }
+
+  function encodeBase64Utf8(value: string) {
+    return btoa(unescape(encodeURIComponent(value)));
+  }
+
+  function parseSubcategoryMap(value: string | undefined) {
+    if (!value) return {} as Record<string, string[]>;
+
+    try {
+      const parsed = JSON.parse(decodeURIComponent(value)) as Record<string, unknown>;
+      return Object.entries(parsed).reduce<Record<string, string[]>>((acc, [category, subcategoryList]) => {
+        acc[category] = Array.isArray(subcategoryList)
+          ? subcategoryList.map((entry) => (typeof entry === "string" ? entry.trim() : "")).filter(Boolean)
+          : [];
+        return acc;
+      }, {});
+    } catch {
+      return {};
+    }
+  }
+
+  function renderAdminSubcategoryOptions(
+    select: HTMLSelectElement,
+    subcategoryMap: Record<string, string[]>,
+    category: string,
+    preferredSubcategory: string,
+    lang: "ko" | "en"
+  ) {
+    const availableSubcategories = category ? (subcategoryMap[category] ?? []) : [];
+
+    if (!category) {
+      select.innerHTML = `<option value="">${lang === "en" ? "Select category first" : "카테고리를 먼저 선택"}</option>`;
+      select.disabled = true;
+      return;
+    }
+
+    const defaultLabel = availableSubcategories.length > 0
+      ? (lang === "en" ? "Use parent category only" : "상위 카테고리만 사용")
+      : (lang === "en" ? "No subcategories" : "하위 카테고리 없음");
+
+    select.innerHTML = `<option value="">${defaultLabel}</option>`;
+
+    availableSubcategories.forEach((subcategory) => {
+      const option = document.createElement("option");
+      option.value = subcategory;
+      option.textContent = subcategory;
+      select.appendChild(option);
+    });
+
+    if (preferredSubcategory && !availableSubcategories.includes(preferredSubcategory)) {
+      const option = document.createElement("option");
+      option.value = preferredSubcategory;
+      option.textContent = preferredSubcategory;
+      select.appendChild(option);
+    }
+
+    select.disabled = availableSubcategories.length === 0 && !preferredSubcategory;
+    select.value = preferredSubcategory && [...select.options].some((option) => option.value === preferredSubcategory)
+      ? preferredSubcategory
+      : "";
+  }
+
+  async function fetchRepoFile(path: string, token: string) {
+    const response = await fetch(
+      `https://api.github.com/repos/${OWNER}/${REPO}/contents/${encodeRepoPath(path)}?ref=${BRANCH}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/vnd.github+json"
+        }
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Failed to load ${path}`);
+    }
+
+    const data = await response.json();
+    return {
+      sha: data.sha as string,
+      content: decodeBase64Utf8(data.content as string)
+    };
+  }
+
+  async function saveRepoFile(path: string, content: string, sha: string, token: string, message: string) {
+    const response = await fetch(
+      `https://api.github.com/repos/${OWNER}/${REPO}/contents/${encodeRepoPath(path)}`,
+      {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/vnd.github+json",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          message,
+          content: encodeBase64Utf8(content),
+          sha,
+          branch: BRANCH
+        })
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error((error as { message?: string }).message ?? `Failed to save ${path}`);
+    }
+  }
+
+  function updateFrontmatterTaxonomy(raw: string, category: string, subcategory: string) {
+    const lineEnding = raw.includes("\r\n") ? "\r\n" : "\n";
+    const match = raw.match(/^---\r?\n([\s\S]*?)\r?\n---([\s\S]*)$/);
+    if (!match) {
+      throw new Error("Frontmatter not found");
+    }
+
+    const frontmatterLines = match[1]
+      .split(/\r?\n/)
+      .filter((line) => !/^(category|subcategory):\s*/.test(line));
+
+    if (category) {
+      frontmatterLines.push(`category: ${category}`);
+      frontmatterLines.push(`subcategory: ${subcategory ? subcategory : '""'}`);
+    }
+
+    return `---${lineEnding}${frontmatterLines.join(lineEnding).trimEnd()}${lineEnding}---${match[2]}`;
+  }
 
   function initPost() {
     const article = document.querySelector("article[data-post-slug]") as HTMLElement | null;
@@ -235,8 +438,21 @@ const jsonLd = JSON.stringify({
     });
 
     // --- 어드민 바 ---
-    const adminBar  = document.getElementById("post-admin-bar");
-    const deleteBtn = document.getElementById("post-delete-btn");
+    const adminBar = document.getElementById("post-admin-bar") as HTMLElement | null;
+    const deleteBtn = document.getElementById("post-delete-btn") as HTMLButtonElement | null;
+    const taxonomyCategory = document.getElementById("post-admin-category") as HTMLSelectElement | null;
+    const taxonomySubcategory = document.getElementById("post-admin-subcategory") as HTMLSelectElement | null;
+    const taxonomySaveBtn = document.getElementById("post-taxonomy-save-btn") as HTMLButtonElement | null;
+    const taxonomyStatus = document.getElementById("post-taxonomy-status") as HTMLElement | null;
+    const taxonomyMap = parseSubcategoryMap(adminBar?.dataset.subcategories);
+    const postSourceStem = adminBar?.dataset.postSourceStem ?? "";
+    const translationSourceStem = adminBar?.dataset.translationSourceStem ?? "";
+
+    taxonomyCategory?.addEventListener("change", () => {
+      if (!taxonomySubcategory) return;
+      renderAdminSubcategoryOptions(taxonomySubcategory, taxonomyMap, taxonomyCategory.value, "", postLang);
+      if (taxonomyStatus) taxonomyStatus.textContent = "";
+    });
 
     if (token && adminBar) {
       fetch("https://api.github.com/user", {
@@ -250,18 +466,64 @@ const jsonLd = JSON.stringify({
         .catch(() => {});
     }
 
+    taxonomySaveBtn?.addEventListener("click", async () => {
+      if (!token || !adminBar || !taxonomyCategory || !taxonomySubcategory || !taxonomyStatus || !postSourceStem) return;
+
+      const nextCategory = taxonomyCategory.value.trim();
+      const nextSubcategory = nextCategory ? taxonomySubcategory.value.trim() : "";
+      const targetStems = [...new Set([postSourceStem, translationSourceStem].filter(Boolean))];
+
+      taxonomyCategory.disabled = true;
+      taxonomySubcategory.disabled = true;
+      taxonomySaveBtn.disabled = true;
+      taxonomyStatus.textContent = postLang === "en" ? "Saving..." : "저장 중...";
+
+      try {
+        for (const stem of targetStems) {
+          const path = `src/content/blog/${stem}.md`;
+          const file = await fetchRepoFile(path, token);
+          const updatedContent = updateFrontmatterTaxonomy(file.content, nextCategory, nextSubcategory);
+          await saveRepoFile(path, updatedContent, file.sha, token, `chore: update taxonomy - ${postSlug}`);
+        }
+
+        const eyebrow = article.querySelector(".article__eyebrow") as HTMLElement | null;
+        if (eyebrow) {
+          eyebrow.textContent = [nextCategory, nextSubcategory].filter(Boolean).join(" / ") || (postLang === "en" ? "Post" : "글");
+        }
+
+        adminBar.dataset.currentCategory = nextCategory;
+        adminBar.dataset.currentSubcategory = nextSubcategory;
+        renderAdminSubcategoryOptions(taxonomySubcategory, taxonomyMap, nextCategory, nextSubcategory, postLang);
+        taxonomyStatus.textContent = postLang === "en"
+          ? "Saved. Rebuild will publish the change."
+          : "저장했습니다. 빌드 후 반영됩니다.";
+      } catch (error) {
+        taxonomyStatus.textContent = error instanceof Error
+          ? error.message
+          : (postLang === "en" ? "Failed to update taxonomy." : "카테고리 변경에 실패했습니다.");
+      } finally {
+        taxonomyCategory.disabled = false;
+        renderAdminSubcategoryOptions(
+          taxonomySubcategory,
+          taxonomyMap,
+          taxonomyCategory.value.trim(),
+          taxonomySubcategory.value.trim(),
+          postLang
+        );
+        taxonomySaveBtn.disabled = false;
+      }
+    });
+
     deleteBtn?.addEventListener("click", async () => {
+      if (!token || !postSourceStem) return;
+
       const deleteMessage = postLang === "en"
         ? `Delete "${postSlug}"? This cannot be undone.`
         : `"${postSlug}" 포스트를 삭제할까요? 되돌릴 수 없어요.`;
       if (!confirm(deleteMessage)) return;
-      const path = `src/content/blog/${postSlug}.md`;
-      const fileRes = await fetch(
-        `https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}?ref=${BRANCH}`,
-        { headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json" } }
-      );
-      const file = await fileRes.json();
-      await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}`, {
+      const path = `src/content/blog/${postSourceStem}.md`;
+      const file = await fetchRepoFile(path, token);
+      await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${encodeRepoPath(path)}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -501,6 +763,74 @@ const jsonLd = JSON.stringify({
     color: #7cff7a;
   }
 
+  #post-admin-bar > .post-admin-btn {
+    order: 1;
+  }
+
+  .post-admin-taxonomy {
+    order: 2;
+    display: flex;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+    padding: 0.75rem 0.95rem;
+    border-radius: 18px;
+    border: 1px solid rgba(124, 255, 122, 0.14);
+    background:
+      linear-gradient(180deg, rgba(124, 255, 122, 0.06), rgba(124, 255, 122, 0.02)),
+      rgba(7, 12, 11, 0.82);
+  }
+
+  .post-admin-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    min-width: 180px;
+  }
+
+  .post-admin-field span {
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(124, 255, 122, 0.54);
+  }
+
+  .post-admin-select {
+    min-width: 0;
+    padding: 0.52rem 0.8rem;
+    border-radius: 12px;
+    border: 1px solid rgba(124, 255, 122, 0.18);
+    background: rgba(2, 8, 6, 0.94);
+    color: #d6ffd6;
+    font: inherit;
+    cursor: pointer;
+    transition: border-color 180ms ease, box-shadow 180ms ease, color 180ms ease;
+  }
+
+  .post-admin-select:focus {
+    outline: none;
+    border-color: rgba(124, 255, 122, 0.45);
+    box-shadow: 0 0 0 3px rgba(124, 255, 122, 0.08);
+  }
+
+  .post-admin-select:disabled {
+    cursor: not-allowed;
+    color: rgba(198, 230, 198, 0.45);
+    border-color: rgba(124, 255, 122, 0.1);
+  }
+
+  .post-admin-select option {
+    background: #08100c;
+    color: #d6ffd6;
+  }
+
+  .post-admin-status {
+    min-height: 1.2rem;
+    font-size: 0.76rem;
+    color: rgba(124, 255, 122, 0.72);
+    align-self: center;
+  }
+
   .article__eyebrow {
     text-transform: none;
     letter-spacing: 0.08em;
@@ -532,6 +862,27 @@ const jsonLd = JSON.stringify({
     border-color: rgba(255, 80, 80, 0.5);
     background: rgba(255, 80, 80, 0.08);
     color: #ff7070;
+  }
+
+  @media (max-width: 720px) {
+    .post-admin-taxonomy {
+      width: 100%;
+      padding: 0.85rem;
+    }
+
+    .post-admin-field {
+      min-width: 0;
+      width: 100%;
+    }
+
+    .post-admin-select,
+    #post-taxonomy-save-btn {
+      width: 100%;
+    }
+
+    .post-admin-status {
+      width: 100%;
+    }
   }
 
   .lang-switch-link {

@@ -25,6 +25,14 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
           </div>
 
           <div class="form-row">
+            <label for="post-subcategory">하위 카테고리</label>
+            <select id="post-subcategory" name="subcategory" disabled>
+              <option value="">카테고리를 먼저 선택</option>
+            </select>
+            <p class="field-hint" id="post-subcategory-hint">상위 카테고리만 쓰려면 비워두면 됩니다.</p>
+          </div>
+
+          <div class="form-row">
             <label for="post-tags">태그</label>
             <input type="text" id="post-tags" name="tags" placeholder="쉼표로 구분 (예: iOS, Swift, Tips)" />
           </div>
@@ -79,12 +87,16 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
   const OWNER = "achieveonepark";
   const REPO = "cording-blog";
   const BRANCH = "main";
+  const CATEGORY_FILE_PATH = "src/data/categories.json";
+  const SUBCATEGORY_FILE_PATH = "src/data/subcategories.json";
 
   const editorShell = document.getElementById("editor-shell") as HTMLElement;
   const authGuard = document.getElementById("auth-guard") as HTMLElement;
   const form = document.getElementById("post-form") as HTMLFormElement;
   const submitBtn = document.getElementById("submit-btn") as HTMLButtonElement;
   const submitStatus = document.getElementById("submit-status") as HTMLElement;
+
+  let taxonomySubcategories: Record<string, string[]> = {};
 
   // --- GitHub API ---
   async function getExistingSha(path: string, token: string): Promise<string | null> {
@@ -226,32 +238,121 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       .replace(/-+/g, "-");
   }
 
-  function buildFrontmatter(title: string, description: string, tags: string[], category: string, thumbnail: string, pubDate?: string): string {
+  function normalizeSubcategories(raw: unknown): Record<string, string[]> {
+    if (!raw || typeof raw !== "object") return {};
+
+    return Object.entries(raw as Record<string, unknown>).reduce<Record<string, string[]>>((acc, [category, value]) => {
+      acc[category] = Array.isArray(value)
+        ? value.map((item) => (typeof item === "string" ? item.trim() : "")).filter(Boolean)
+        : [];
+      return acc;
+    }, {});
+  }
+
+  function normalizeFrontmatterValue(value?: string | null) {
+    const trimmed = value?.trim() ?? "";
+    if (!trimmed || trimmed === '""' || trimmed === "''") return "";
+
+    const doubleQuotedMatch = trimmed.match(/^"(.*)"$/);
+    if (doubleQuotedMatch) return doubleQuotedMatch[1];
+
+    const singleQuotedMatch = trimmed.match(/^'(.*)'$/);
+    if (singleQuotedMatch) return singleQuotedMatch[1];
+
+    return trimmed;
+  }
+
+  function renderSubcategoryOptions(category: string, preferredSubcategory = "") {
+    const select = document.getElementById("post-subcategory") as HTMLSelectElement;
+    const hint = document.getElementById("post-subcategory-hint") as HTMLElement | null;
+    const availableSubcategories = category ? (taxonomySubcategories[category] ?? []) : [];
+
+    if (!category) {
+      select.innerHTML = '<option value="">카테고리를 먼저 선택</option>';
+      select.disabled = true;
+      if (hint) hint.textContent = "상위 카테고리만 쓰려면 카테고리만 고르고 그대로 두면 됩니다.";
+      return;
+    }
+
+    select.innerHTML = availableSubcategories.length === 0
+      ? '<option value="">하위 카테고리 없음 - 상위 카테고리만 사용</option>'
+      : '<option value="">상위 카테고리만 사용</option>';
+    select.disabled = availableSubcategories.length === 0 && !preferredSubcategory;
+    if (hint) {
+      hint.textContent = availableSubcategories.length === 0
+        ? "이 카테고리는 상위 카테고리만 사용됩니다."
+        : "하위 카테고리가 필요할 때만 골라주세요. 비워두면 상위 카테고리만 저장됩니다.";
+    }
+
+    availableSubcategories.forEach((subcategory) => {
+      const option = document.createElement("option");
+      option.value = subcategory;
+      option.textContent = subcategory;
+      select.appendChild(option);
+    });
+
+    if (preferredSubcategory && !availableSubcategories.includes(preferredSubcategory)) {
+      const option = document.createElement("option");
+      option.value = preferredSubcategory;
+      option.textContent = preferredSubcategory;
+      select.appendChild(option);
+    }
+
+    select.value = preferredSubcategory && [...select.options].some((option) => option.value === preferredSubcategory)
+      ? preferredSubcategory
+      : "";
+  }
+
+  function buildFrontmatter(
+    title: string,
+    description: string,
+    tags: string[],
+    category: string,
+    subcategory: string,
+    thumbnail: string,
+    pubDate?: string
+  ): string {
     const date = pubDate ?? new Date().toISOString().split("T")[0];
     const tagLines = tags.length > 0
       ? "tags:\n" + tags.map((t) => `  - ${t.trim()}`).join("\n")
       : "tags: []";
     const catLine = category ? `\ncategory: ${category}` : "";
+    const subcategoryLine = category ? `\nsubcategory: ${subcategory ? subcategory : '""'}` : "";
     const thumbLine = thumbnail ? `\nthumbnail: ${thumbnail}` : "";
-    return `---\ntitle: "${title}"\ndescription: "${description}"\npubDate: ${date}\n${tagLines}${catLine}${thumbLine}\n---\n\n`;
+    return `---\ntitle: "${title}"\ndescription: "${description}"\npubDate: ${date}\n${tagLines}${catLine}${subcategoryLine}${thumbLine}\n---\n\n`;
   }
 
   async function loadCategories(token: string) {
     const select = document.getElementById("post-category") as HTMLSelectElement;
     try {
-      const res = await fetch(
-        `https://api.github.com/repos/${OWNER}/${REPO}/contents/src/data/categories.json?ref=${BRANCH}`,
-        { headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json" } }
-      );
-      if (!res.ok) return;
-      const data = await res.json();
-      const cats: string[] = JSON.parse(atob(data.content.replace(/\n/g, "")));
+      const [categoryResponse, subcategoryResponse] = await Promise.all([
+        fetch(
+          `https://api.github.com/repos/${OWNER}/${REPO}/contents/${CATEGORY_FILE_PATH}?ref=${BRANCH}`,
+          { headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json" } }
+        ),
+        fetch(
+          `https://api.github.com/repos/${OWNER}/${REPO}/contents/${SUBCATEGORY_FILE_PATH}?ref=${BRANCH}`,
+          { headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json" } }
+        ),
+      ]);
+
+      if (!categoryResponse.ok) return;
+
+      const categoryData = await categoryResponse.json();
+      const cats: string[] = JSON.parse(atob(categoryData.content.replace(/\n/g, "")));
       cats.forEach((cat) => {
         const opt = document.createElement("option");
         opt.value = cat; opt.textContent = cat;
         select.appendChild(opt);
       });
+
+      if (subcategoryResponse.ok) {
+        const subcategoryData = await subcategoryResponse.json();
+        taxonomySubcategories = normalizeSubcategories(JSON.parse(atob(subcategoryData.content.replace(/\n/g, ""))));
+      }
     } catch {}
+
+    renderSubcategoryOptions(select.value);
   }
 
   async function loadEditContent(slug: string, token: string, editor: Editor) {
@@ -272,6 +373,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     const titleMatch = fm.match(/^title:\s*"?(.+?)"?\s*$/m);
     const descMatch = fm.match(/^description:\s*"?(.+?)"?\s*$/m);
     const categoryMatch = fm.match(/^category:\s*(.+)\s*$/m);
+    const subcategoryMatch = fm.match(/^subcategory:\s*(.+)\s*$/m);
     const thumbMatch = fm.match(/^thumbnail:\s*(.+)\s*$/m);
     const pubDateMatch = fm.match(/^pubDate:\s*(.+)\s*$/m);
     const tagsMatch = [...fm.matchAll(/^\s*-\s*(.+)\s*$/gm)].map((m) => m[1]);
@@ -282,7 +384,8 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     (document.getElementById("post-thumbnail") as HTMLInputElement).value = thumbMatch?.[1]?.trim() ?? "";
     editor.setMarkdown(body);
 
-    const catVal = categoryMatch?.[1]?.trim() ?? "";
+    const catVal = normalizeFrontmatterValue(categoryMatch?.[1]);
+    const subcategoryVal = normalizeFrontmatterValue(subcategoryMatch?.[1]);
     const select = document.getElementById("post-category") as HTMLSelectElement;
     if (catVal) {
       if (![...select.options].some((o) => o.value === catVal)) {
@@ -292,6 +395,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       }
       select.value = catVal;
     }
+    renderSubcategoryOptions(catVal, subcategoryVal);
     (document.getElementById("edit-slug") as HTMLInputElement).value = slug;
     (document.getElementById("edit-pubdate") as HTMLInputElement).value = pubDateMatch?.[1]?.trim() ?? "";
     (document.getElementById("submit-btn") as HTMLButtonElement).textContent = "수정 & 발행";
@@ -349,6 +453,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
         description: (document.getElementById("post-description") as HTMLInputElement).value,
         tags:        (document.getElementById("post-tags") as HTMLInputElement).value,
         category:    (document.getElementById("post-category") as HTMLSelectElement).value,
+        subcategory: (document.getElementById("post-subcategory") as HTMLSelectElement).value,
         thumbnail:   (document.getElementById("post-thumbnail") as HTMLInputElement).value,
         markdown:    editor.getMarkdown(),
         savedAt:     new Date().toISOString(),
@@ -363,6 +468,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       editor.setMarkdown(data.markdown ?? "");
       const catSel = document.getElementById("post-category") as HTMLSelectElement;
       if (data.category) catSel.value = data.category;
+      renderSubcategoryOptions(catSel.value, data.subcategory ?? "");
     }
 
     // 저장된 초안 복원 제안 (새 글 작성 시에만)
@@ -398,7 +504,12 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     ["post-title","post-description","post-tags","post-thumbnail"].forEach(id => {
       document.getElementById(id)?.addEventListener("input", scheduleSave);
     });
-    document.getElementById("post-category")?.addEventListener("change", scheduleSave);
+    document.getElementById("post-category")?.addEventListener("change", () => {
+      const category = (document.getElementById("post-category") as HTMLSelectElement).value;
+      renderSubcategoryOptions(category);
+      scheduleSave();
+    });
+    document.getElementById("post-subcategory")?.addEventListener("change", scheduleSave);
     editor.on("change", scheduleSave);
 
     // 발행 성공 시 초안 제거
@@ -461,12 +572,23 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       const tagsRaw = (document.getElementById("post-tags") as HTMLInputElement).value;
       const tags = tagsRaw ? tagsRaw.split(",").map((t) => t.trim()).filter(Boolean) : [];
       const category = (document.getElementById("post-category") as HTMLSelectElement).value;
+      const subcategory = category
+        ? (document.getElementById("post-subcategory") as HTMLSelectElement).value
+        : "";
       const thumbnail = (document.getElementById("post-thumbnail") as HTMLInputElement).value.trim();
       const editSlug = (document.getElementById("edit-slug") as HTMLInputElement).value;
       const editPubDate = (document.getElementById("edit-pubdate") as HTMLInputElement).value;
       const slug = editSlug || toSlug(title);
       const markdown = editor.getMarkdown();
-      const fileContent = buildFrontmatter(title, description, tags, category, thumbnail, editPubDate || undefined) + markdown;
+      const fileContent = buildFrontmatter(
+        title,
+        description,
+        tags,
+        category,
+        subcategory,
+        thumbnail,
+        editPubDate || undefined
+      ) + markdown;
 
       submitBtn.disabled = true;
       submitStatus.textContent = "커밋 중...";
@@ -597,7 +719,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 
   .meta-cols {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 0.75rem;
   }
 
@@ -605,6 +727,13 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     display: flex;
     flex-direction: column;
     gap: 0.3rem;
+  }
+
+  .field-hint {
+    margin: 0;
+    font-size: 0.72rem;
+    color: rgba(124, 255, 122, 0.48);
+    line-height: 1.5;
   }
 
   label {

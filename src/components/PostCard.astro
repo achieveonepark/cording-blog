@@ -1,6 +1,6 @@
 ---
 import type { CollectionEntry } from "astro:content";
-import { getPostLang } from "../lib/blog";
+import { getPostCategoryTrail, getPostLang, getPostSubcategory } from "../lib/blog";
 
 interface Props {
   post: CollectionEntry<"blog">;
@@ -8,9 +8,16 @@ interface Props {
 
 const { post } = Astro.props;
 const lang = getPostLang(post);
+const categoryTrail = getPostCategoryTrail(post);
+const subcategory = getPostSubcategory(post);
 ---
 
-<article class="post-card" data-category={post.data.category ?? ""} data-lang={lang}>
+<article
+  class="post-card"
+  data-category={post.data.category ?? ""}
+  data-subcategory={subcategory}
+  data-lang={lang}
+>
   <div class="post-card__media">
     {post.data.thumbnail ? (
       <a href={`/posts/${post.id}/`} class="post-card__thumb-link" aria-hidden="true" tabindex="-1">
@@ -22,6 +29,8 @@ const lang = getPostLang(post);
   </div>
 
   <div class="post-card__body">
+    {categoryTrail && <p class="post-card__taxonomy">{categoryTrail}</p>}
+
     <h2>
       <a href={`/posts/${post.id}/`}>{post.data.title}</a>
     </h2>
@@ -84,6 +93,15 @@ const lang = getPostLang(post);
 
   .post-card__body h2 {
     margin: 0;
+  }
+
+  .post-card__taxonomy {
+    margin: 0;
+    color: rgba(124, 255, 122, 0.58);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
   }
 
   .post-card__description {

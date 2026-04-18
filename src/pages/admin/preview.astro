@@ -48,8 +48,8 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     const body  = m[2].trimStart();
     const fm: Record<string, string | string[]> = {};
 
-    // title / description / pubDate / category / thumbnail
-    for (const key of ["title","description","pubDate","category","thumbnail","series"]) {
+    // title / description / pubDate / category / subcategory / thumbnail
+    for (const key of ["title","description","pubDate","category","subcategory","thumbnail","series"]) {
       const match = fmStr.match(new RegExp(`^${key}:\\s*"?(.+?)"?\\s*$`, "m"));
       if (match) fm[key] = match[1];
     }
@@ -131,9 +131,10 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       const dateEl = document.getElementById("preview-date") as HTMLElement;
       dateEl.textContent = fm.pubDate ? new Intl.DateTimeFormat("ko-KR", {year:"numeric",month:"short",day:"numeric"}).format(new Date(String(fm.pubDate))) : "";
 
-      if (fm.category) {
+      const taxonomy = [fm.category, fm.subcategory].filter(Boolean).join(" / ");
+      if (taxonomy) {
         const catEl = document.getElementById("preview-cat") as HTMLElement;
-        catEl.textContent = String(fm.category);
+        catEl.textContent = taxonomy;
         catEl.style.display = "";
       }
 

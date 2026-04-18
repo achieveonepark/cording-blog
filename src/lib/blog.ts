@@ -4,6 +4,41 @@ import { site } from "../config/site";
 export const BLOG_LANGS = ["ko", "en"] as const;
 export type BlogLang = (typeof BLOG_LANGS)[number];
 
+const TAXONOMY_SEGMENT_LABELS: Record<string, string> = {
+  ai: "AI",
+  "ci/cd": "CI/CD",
+  cd: "CD",
+  ci: "CI",
+  gpt: "GPT",
+  ios: "iOS",
+  "go-f": "GoF",
+  "r&d": "R&D"
+};
+
+const DERIVED_SUBCATEGORY_LABELS: Record<string, string> = {
+  "designpattern/game-programming": "Game Programming",
+  "designpattern/go-f/behavioral": "Behavioral",
+  "designpattern/go-f/creational": "Creational",
+  "designpattern/go-f/structural": "Structural"
+};
+
+function formatTaxonomySegment(segment: string) {
+  const normalized = segment.trim().toLowerCase();
+  if (!normalized) return "";
+
+  const directLabel = TAXONOMY_SEGMENT_LABELS[normalized];
+  if (directLabel) return directLabel;
+
+  return normalized
+    .split("-")
+    .map((part) => {
+      const knownLabel = TAXONOMY_SEGMENT_LABELS[part];
+      if (knownLabel) return knownLabel;
+      return part.charAt(0).toUpperCase() + part.slice(1);
+    })
+    .join(" ");
+}
+
 /** frontmatter lang 필드에서 언어 감지 (기본값: "ko") */
 export function getPostLang(post: CollectionEntry<"blog">): BlogLang {
   return post.data.lang ?? "ko";
@@ -12,6 +47,42 @@ export function getPostLang(post: CollectionEntry<"blog">): BlogLang {
 /** 언어 접미사를 제거한 기본 slug (Astro glob loader가 dot을 제거하므로 "en" suffix) */
 export function getBaseSlug(post: CollectionEntry<"blog">): string {
   return getPostLang(post) === "en" ? post.id.replace(/en$/, "") : post.id;
+}
+
+export function getPostSourceStem(post: CollectionEntry<"blog">) {
+  const baseSlug = getBaseSlug(post);
+  return getPostLang(post) === "en" ? `${baseSlug}.en` : baseSlug;
+}
+
+export function getPostSubcategory(post: CollectionEntry<"blog">) {
+  if (typeof post.data.subcategory === "string") {
+    return post.data.subcategory.trim();
+  }
+
+  const segments = post.id.split("/").filter(Boolean);
+  if (segments.length < 3) return "";
+
+  const derivedPath = segments.slice(0, -1).join("/").toLowerCase();
+  const mappedLabel = DERIVED_SUBCATEGORY_LABELS[derivedPath];
+  if (mappedLabel) return mappedLabel;
+
+  const taxonomySegments = segments.slice(1, -1);
+  const normalizedSegments = taxonomySegments[0]?.toLowerCase() === "go-f"
+    ? taxonomySegments.slice(1)
+    : taxonomySegments;
+
+  return normalizedSegments
+    .map(formatTaxonomySegment)
+    .filter(Boolean)
+    .join(" / ");
+}
+
+export function getPostCategoryTrail(post: CollectionEntry<"blog">) {
+  const category = post.data.category?.trim() ?? "";
+  const subcategory = getPostSubcategory(post);
+
+  if (category && subcategory) return `${category} / ${subcategory}`;
+  return category || subcategory;
 }
 
 export async function getPublishedPosts() {

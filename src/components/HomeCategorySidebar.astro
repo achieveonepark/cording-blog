@@ -3,11 +3,13 @@ import { BLOG_LANGS, type BlogLang } from "../lib/blog";
 
 interface Props {
   categories: string[];
+  subcategories: Record<string, string[]>;
   categoryCountsByLang: Record<BlogLang, Record<string, number>>;
+  subcategoryCountsByLang: Record<BlogLang, Record<string, Record<string, number>>>;
   totalPostsByLang: Record<BlogLang, number>;
 }
 
-const { categories, categoryCountsByLang, totalPostsByLang } = Astro.props;
+const { categories, subcategories, categoryCountsByLang, subcategoryCountsByLang, totalPostsByLang } = Astro.props;
 ---
 
 <div class="home-shell" data-home-shell data-sidebar-collapsed="false">
@@ -71,34 +73,84 @@ const { categories, categoryCountsByLang, totalPostsByLang } = Astro.props;
                 role="group"
                 aria-label={lang === "en" ? "Home category filter" : "홈 카테고리 필터"}
               >
-                <button
-                  class="home-category-btn home-category-btn--active"
-                  type="button"
-                  data-home-category=""
-                  aria-pressed="true"
-                >
-                  <span class="home-category-btn__text">
-                    <span class="home-category-btn__label">{lang === "en" ? "All posts" : "전체 글"}</span>
-                  </span>
-                  <span class="home-category-btn__count">{totalPostsByLang[lang]}</span>
-                </button>
+                <div class="home-category-item home-category-item--all">
+                  <button
+                    class="home-category-btn home-category-btn--active"
+                    type="button"
+                    data-home-category=""
+                    aria-pressed="true"
+                  >
+                    <span class="home-category-btn__text">
+                      <span class="home-category-btn__label">{lang === "en" ? "All posts" : "전체 글"}</span>
+                    </span>
+                    <span class="home-category-btn__count">{totalPostsByLang[lang]}</span>
+                  </button>
+                </div>
 
                 {categories.map((category) => {
                   const count = categoryCountsByLang[lang][category] ?? 0;
+                  const items = subcategories[category] ?? [];
 
                   return (
-                    <button
-                      class="home-category-btn"
-                      type="button"
-                      data-home-category={category}
-                      aria-pressed="false"
-                      disabled={count === 0}
-                    >
-                      <span class="home-category-btn__text">
-                        <span class="home-category-btn__label">{category}</span>
-                      </span>
-                      <span class="home-category-btn__count">{count}</span>
-                    </button>
+                    <div class="home-category-item" data-home-category-item={category} data-expanded="false">
+                      <button
+                        class="home-category-btn"
+                        type="button"
+                        data-home-category={category}
+                        aria-pressed="false"
+                        disabled={count === 0}
+                      >
+                        <span class="home-category-btn__text">
+                          <span class="home-category-btn__label">{category}</span>
+                        </span>
+                        <span class="home-category-btn__count">{count}</span>
+                      </button>
+
+                      {items.length > 0 && (
+                        <div
+                          class="home-subcategory-panel"
+                          data-home-subcategory-group={category}
+                          aria-hidden="true"
+                        >
+                          <div
+                            class="home-subcategory-list"
+                            role="group"
+                            aria-label={lang === "en" ? `${category} subcategories` : `${category} 하위 카테고리`}
+                          >
+                            <button
+                              class="home-subcategory-btn home-subcategory-btn--active"
+                              type="button"
+                              data-home-category={category}
+                              data-home-subcategory=""
+                              aria-pressed="true"
+                            >
+                              <span class="home-subcategory-btn__label">
+                                {lang === "en" ? `All ${category}` : `${category} 전체`}
+                              </span>
+                              <span class="home-subcategory-btn__count">{categoryCountsByLang[lang][category] ?? 0}</span>
+                            </button>
+
+                            {items.map((subcategory) => {
+                              const subcategoryCount = subcategoryCountsByLang[lang][category]?.[subcategory] ?? 0;
+
+                              return (
+                                <button
+                                  class="home-subcategory-btn"
+                                  type="button"
+                                  data-home-category={category}
+                                  data-home-subcategory={subcategory}
+                                  aria-pressed="false"
+                                  disabled={subcategoryCount === 0}
+                                >
+                                  <span class="home-subcategory-btn__label">{subcategory}</span>
+                                  <span class="home-subcategory-btn__count">{subcategoryCount}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   );
                 })}
               </div>
@@ -232,9 +284,11 @@ const { categories, categoryCountsByLang, totalPostsByLang } = Astro.props;
     return section.dataset.uiLang === "en" ? "en" : "ko";
   }
 
-  function getHomeFilteredCards(section, category) {
+  function getHomeFilteredCards(section, category, subcategory) {
     return getHomeSectionCards(section).filter(function(card) {
-      return !category || card.dataset.category === category;
+      var categoryMatches = !category || card.dataset.category === category;
+      var subcategoryMatches = !subcategory || card.dataset.subcategory === subcategory;
+      return categoryMatches && subcategoryMatches;
     });
   }
 
@@ -301,6 +355,31 @@ const { categories, categoryCountsByLang, totalPostsByLang } = Astro.props;
       }
       pages.appendChild(button);
     }
+  }
+
+  function updateHomeSubcategoryGroups(shell, category, subcategory) {
+    shell.querySelectorAll("[data-home-category-item]").forEach(function(item) {
+      if (!(item instanceof HTMLElement)) return;
+
+      var panel = item.querySelector("[data-home-subcategory-group]");
+      var isExpanded = Boolean(category)
+        && item.dataset.homeCategoryItem === category
+        && panel instanceof HTMLElement;
+      item.dataset.expanded = isExpanded ? "true" : "false";
+
+      if (panel instanceof HTMLElement) {
+        panel.setAttribute("aria-hidden", String(!isExpanded));
+      }
+    });
+
+    shell.querySelectorAll(".home-subcategory-btn").forEach(function(button) {
+      if (!(button instanceof HTMLButtonElement)) return;
+
+      var isActive = (button.dataset.homeCategory || "") === category
+        && (button.dataset.homeSubcategory || "") === subcategory;
+      button.classList.toggle("home-subcategory-btn--active", isActive);
+      button.setAttribute("aria-pressed", String(isActive));
+    });
   }
 
   function captureHomeLayout(shell) {
@@ -447,9 +526,14 @@ const { categories, categoryCountsByLang, totalPostsByLang } = Astro.props;
     var nextCategory = options && typeof options.category === "string"
       ? options.category
       : (shell.dataset.activeCategory || readHomeSidebarStorage("home_active_category", ""));
+    var nextSubcategory = options && typeof options.subcategory === "string"
+      ? options.subcategory
+      : (shell.dataset.activeSubcategory || readHomeSidebarStorage("home_active_subcategory", ""));
     var shouldAnimate = shouldAnimateHomeFilter(options);
     var beforeLayout = shouldAnimate ? captureHomeLayout(shell) : null;
+    if (!nextCategory) nextSubcategory = "";
     shell.dataset.activeCategory = nextCategory;
+    shell.dataset.activeSubcategory = nextSubcategory;
 
     shell.querySelectorAll(".home-category-btn").forEach(function(button) {
       if (!(button instanceof HTMLButtonElement)) return;
@@ -458,12 +542,13 @@ const { categories, categoryCountsByLang, totalPostsByLang } = Astro.props;
       button.classList.toggle("home-category-btn--active", isActive);
       button.setAttribute("aria-pressed", String(isActive));
     });
+    updateHomeSubcategoryGroups(shell, nextCategory, nextSubcategory);
 
     shell.querySelectorAll("[data-home-section]").forEach(function(section) {
       if (!(section instanceof HTMLElement)) return;
 
       var lang = getHomeSectionLang(section);
-      var filteredCards = getHomeFilteredCards(section, nextCategory);
+      var filteredCards = getHomeFilteredCards(section, nextCategory, nextSubcategory);
       var requestedPage = options && options.resetPage
         ? 1
         : options && options.lang === lang && typeof options.page === "number"
@@ -487,6 +572,7 @@ const { categories, categoryCountsByLang, totalPostsByLang } = Astro.props;
     });
 
     writeHomeSidebarStorage("home_active_category", nextCategory);
+    writeHomeSidebarStorage("home_active_subcategory", nextSubcategory);
 
     if (!beforeLayout) return;
 
@@ -499,6 +585,7 @@ const { categories, categoryCountsByLang, totalPostsByLang } = Astro.props;
     renderHomeFeed(shell, {
       animate: !options || options.animate !== false,
       category: category || "",
+      subcategory: "",
       resetPage: true
     });
   }
@@ -518,26 +605,37 @@ const { categories, categoryCountsByLang, totalPostsByLang } = Astro.props;
 
   function syncHomeCategoryForCurrentLang(shell) {
     var activeCategory = shell.dataset.activeCategory || readHomeSidebarStorage("home_active_category", "");
+    var activeSubcategory = shell.dataset.activeSubcategory || readHomeSidebarStorage("home_active_subcategory", "");
     if (!activeCategory) {
-      renderHomeFeed(shell, { animate: false, category: "" });
+      renderHomeFeed(shell, { animate: false, category: "", subcategory: "" });
       return;
     }
 
     var activeSection = getHomeSectionForLang(shell, getHomeUiLang());
     if (!activeSection) {
-      renderHomeFeed(shell, { animate: false, category: activeCategory });
+      renderHomeFeed(shell, { animate: false, category: activeCategory, subcategory: activeSubcategory });
       return;
     }
 
-    var hasMatchingCard = Array.from(
+    var matchingCards = Array.from(
       activeSection.querySelectorAll("[data-home-post-stack] .post-card")
-    ).some(function(card) {
+    ).filter(function(card) {
       return card instanceof HTMLElement && card.dataset.category === activeCategory;
+    });
+
+    if (matchingCards.length === 0) {
+      renderHomeFeed(shell, { animate: false, category: "", subcategory: "" });
+      return;
+    }
+
+    var hasMatchingSubcategory = !activeSubcategory || matchingCards.some(function(card) {
+      return card instanceof HTMLElement && card.dataset.subcategory === activeSubcategory;
     });
 
     renderHomeFeed(shell, {
       animate: false,
-      category: hasMatchingCard ? activeCategory : ""
+      category: activeCategory,
+      subcategory: hasMatchingSubcategory ? activeSubcategory : ""
     });
   }
 
@@ -574,6 +672,17 @@ const { categories, categoryCountsByLang, totalPostsByLang } = Astro.props;
       var shell = getHomeShell();
       if (!(shell instanceof HTMLElement)) return;
 
+      var subcategoryBtn = target.closest(".home-subcategory-btn");
+      if (subcategoryBtn instanceof HTMLButtonElement && !subcategoryBtn.disabled) {
+        renderHomeFeed(shell, {
+          animate: true,
+          category: subcategoryBtn.dataset.homeCategory || "",
+          subcategory: subcategoryBtn.dataset.homeSubcategory || "",
+          resetPage: true
+        });
+        return;
+      }
+
       var categoryBtn = target.closest(".home-category-btn");
       if (categoryBtn instanceof HTMLButtonElement && !categoryBtn.disabled) {
         applyHomeCategory(shell, categoryBtn.dataset.homeCategory || "", { animate: true });
@@ -589,6 +698,7 @@ const { categories, categoryCountsByLang, totalPostsByLang } = Astro.props;
         renderHomeFeed(shell, {
           animate: true,
           category: shell.dataset.activeCategory || "",
+          subcategory: shell.dataset.activeSubcategory || "",
           lang: getHomeSectionLang(pageSection),
           page: page
         });
@@ -610,6 +720,7 @@ const { categories, categoryCountsByLang, totalPostsByLang } = Astro.props;
         renderHomeFeed(shell, {
           animate: true,
           category: shell.dataset.activeCategory || "",
+          subcategory: shell.dataset.activeSubcategory || "",
           lang: actionLang,
           page: nextPage
         });
@@ -745,6 +856,105 @@ const { categories, categoryCountsByLang, totalPostsByLang } = Astro.props;
   .home-category-list {
     display: grid;
     gap: 0.55rem;
+  }
+
+  .home-category-item {
+    display: grid;
+    gap: 0.42rem;
+  }
+
+  .home-subcategory-panel {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(-0.3rem);
+    pointer-events: none;
+    margin-left: 0.4rem;
+    transition:
+      max-height 260ms ease,
+      opacity 180ms ease,
+      transform 180ms ease;
+  }
+
+  .home-category-item[data-expanded="true"] .home-subcategory-panel {
+    max-height: 24rem;
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .home-subcategory-list {
+    display: grid;
+    gap: 0.45rem;
+    padding: 0.55rem 0 0 0.9rem;
+    border-left: 1px solid rgba(124, 255, 122, 0.14);
+  }
+
+  .home-subcategory-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.7rem;
+    width: 100%;
+    padding: 0.55rem 0.78rem 0.55rem 0.9rem;
+    border-radius: 1rem;
+    border: 1px solid rgba(124, 255, 122, 0.12);
+    background:
+      linear-gradient(180deg, rgba(16, 22, 26, 0.92), rgba(8, 12, 16, 0.9));
+    color: rgba(214, 255, 214, 0.76);
+    font-size: 0.74rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: left;
+    transition:
+      border-color 180ms ease,
+      background 180ms ease,
+      color 180ms ease,
+      transform 180ms ease;
+  }
+
+  .home-subcategory-btn:hover:not(:disabled) {
+    border-color: rgba(124, 255, 122, 0.28);
+    background:
+      linear-gradient(180deg, rgba(21, 29, 35, 0.94), rgba(10, 15, 19, 0.92));
+    color: var(--accent);
+    transform: translateY(-1px);
+  }
+
+  .home-subcategory-btn:disabled {
+    opacity: 0.34;
+    cursor: not-allowed;
+  }
+
+  .home-subcategory-btn--active {
+    border-color: rgba(124, 255, 122, 0.34);
+    background:
+      linear-gradient(135deg, rgba(124, 255, 122, 0.18), rgba(124, 255, 122, 0.05)),
+      rgba(13, 19, 25, 0.96);
+    color: var(--accent-strong);
+    box-shadow: 0 0 0 1px rgba(124, 255, 122, 0.06);
+  }
+
+  .home-subcategory-btn__label {
+    flex: 1;
+    min-width: 0;
+    white-space: normal;
+    line-height: 1.32;
+  }
+
+  .home-subcategory-btn__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.3rem;
+    height: 1.3rem;
+    padding: 0 0.35rem;
+    border-radius: 999px;
+    background: rgba(124, 255, 122, 0.08);
+    color: rgba(124, 255, 122, 0.6);
+    font-size: 0.68rem;
+    font-weight: 700;
+    flex-shrink: 0;
   }
 
   .home-category-btn {
