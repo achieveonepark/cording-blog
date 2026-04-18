@@ -217,9 +217,9 @@ const jsonLd = JSON.stringify({
         >
           <div class="post-admin-taxonomy">
             <label class="post-admin-field">
-              <span>{currentLang === "en" ? "Category" : "移댄뀒怨좊━"}</span>
+              <span>{currentLang === "en" ? "Category" : "\uce74\ud14c\uace0\ub9ac"}</span>
               <select id="post-admin-category" class="post-admin-select">
-                <option value="" selected={!currentCategory}>{currentLang === "en" ? "No category" : "移댄뀒怨좊━ ?놁쓬"}</option>
+                <option value="" selected={!currentCategory}>{currentLang === "en" ? "No category" : "\uce74\ud14c\uace0\ub9ac \uc5c6\uc74c"}</option>
                 {adminCategories.map((category) => (
                   <option value={category} selected={currentCategory === category}>{category}</option>
                 ))}
@@ -227,15 +227,15 @@ const jsonLd = JSON.stringify({
             </label>
 
             <label class="post-admin-field">
-              <span>{currentLang === "en" ? "Subcategory" : "?섏쐞 移댄뀒怨좊━"}</span>
+              <span>{currentLang === "en" ? "Subcategory" : "\ud558\uc704 \uce74\ud14c\uace0\ub9ac"}</span>
               <select id="post-admin-subcategory" class="post-admin-select" disabled={!currentCategory}>
                 {!currentCategory ? (
-                  <option value="" selected>{currentLang === "en" ? "Select category first" : "移댄뀒怨좊━瑜?癒쇱? ?좏깮"}</option>
+                  <option value="" selected>{currentLang === "en" ? "Select category first" : "\uce74\ud14c\uace0\ub9ac\ub97c \uba3c\uc800 \uc120\ud0dd"}</option>
                 ) : (
                   <option value="" selected={!currentSubcategory}>
                     {adminSubcategories.length > 0
-                      ? (currentLang === "en" ? "Use parent category only" : "?곸쐞 移댄뀒怨좊━留??ъ슜")
-                      : (currentLang === "en" ? "No subcategories" : "?섏쐞 移댄뀒怨좊━ ?놁쓬")}
+                      ? (currentLang === "en" ? "Use parent category only" : "\uc0c1\uc704 \uce74\ud14c\uace0\ub9ac\ub9cc \uc0ac\uc6a9")
+                      : (currentLang === "en" ? "No subcategories" : "\ud558\uc704 \uce74\ud14c\uace0\ub9ac \uc5c6\uc74c")}
                   </option>
                 )}
                 {adminSubcategories.map((subcategory) => (
@@ -245,7 +245,7 @@ const jsonLd = JSON.stringify({
             </label>
 
             <button id="post-taxonomy-save-btn" type="button" class="post-admin-btn">
-              {currentLang === "en" ? "Save taxonomy" : "移댄뀒怨좊━ ???"}
+              {currentLang === "en" ? "Save taxonomy" : "\uce74\ud14c\uace0\ub9ac \uc800\uc7a5"}
             </button>
             <span id="post-taxonomy-status" class="post-admin-status" aria-live="polite"></span>
           </div>
