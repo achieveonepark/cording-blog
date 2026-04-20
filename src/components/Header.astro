@@ -120,6 +120,7 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
           <div class="lang-dropdown__menu" id="lang-menu" hidden>
             <button class="lang-dropdown__item" data-lang="ko">한국어</button>
             <button class="lang-dropdown__item" data-lang="en">English</button>
+            <button class="lang-dropdown__item" data-lang="ja">日本語</button>
           </div>
         </div>
       </div>
@@ -184,6 +185,7 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
         <a href={item.href} aria-current={isActive ? "page" : undefined}>
           <span data-ui-lang="ko">{item.label.ko}</span>
           <span data-ui-lang="en">{item.label.en}</span>
+          <span data-ui-lang="ja">{item.label.ja}</span>
         </a>
       );
     })}
@@ -224,6 +226,7 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
   <div class="mobile-nav__lang">
     <button class="lang-select-btn" data-lang="ko">한국어</button>
     <button class="lang-select-btn" data-lang="en">English</button>
+    <button class="lang-select-btn" data-lang="ja">日本語</button>
   </div>
 </div>
 <!-- 오버레이 -->
@@ -243,7 +246,8 @@ const clientId = import.meta.env.PUBLIC_GITHUB_CLIENT_ID ?? "";
 <!-- 햄버거 + 언어 드롭다운 JS -->
 <script is:inline>
   function getUiLang() {
-    return localStorage.getItem('blog_lang') === 'en' ? 'en' : 'ko';
+    var lang = localStorage.getItem('blog_lang');
+    return lang === 'en' ? 'en' : lang === 'ja' ? 'ja' : 'ko';
   }
 
   function syncHeaderUi(lang) {
