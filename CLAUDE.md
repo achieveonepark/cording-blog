@@ -47,11 +47,34 @@ category: CategoryName
 - `pubDate`, `tags`, `category`는 한국어 원본과 동일하게 유지
 - `title`, `description`, 본문만 영어로 번역
 
+### 3. 일본어 번역 추가
+파일: `src/content/blog/{slug}.ja.md`
+
+```yaml
+---
+title: "日本語タイトル"
+description: "簡潔な説明（日本語）"
+lang: ja          # ← 반드시 명시!
+pubDate: 2026-01-01
+tags:
+  - タグ1
+  - タグ2
+category: CategoryName
+---
+```
+
+**필수 규칙:**
+- 파일명: 한국어 파일명 + `.ja.md` (예: `my-post.md` → `my-post.ja.md`)
+- frontmatter에 `lang: ja` 반드시 추가
+- `pubDate`, `tags`, `category`는 한국어 원본과 동일하게 유지
+- `title`, `description`, 본문만 일본어로 번역
+
 ## 언어 필터 동작 원리
 
 ### CSS 기반 필터링
-- `html[data-blog-lang="ko"]` → `.post-card[data-lang="en"]` 숨김
-- `html[data-blog-lang="en"]` → `.post-card[data-lang="ko"]` 숨김
+- `html[data-blog-lang="ko"]` → `en`, `ja` 포스트 카드/UI 숨김
+- `html[data-blog-lang="en"]` → `ko`, `ja` 포스트 카드/UI 숨김
+- `html[data-blog-lang="ja"]` → `ko`, `en` 포스트 카드/UI 숨김
 - 관련 CSS: `src/styles/global.css` 상단
 
 ### 언어 감지
@@ -71,7 +94,7 @@ category: CategoryName
 ## 스키마 (content.config.ts)
 ```
 title, description, pubDate        → 필수
-lang                               → "ko" | "en" (기본값 "ko")
+lang                               → "ko" | "en" | "ja" (기본값 "ko")
 tags                               → string[] (기본값 [])
 category, thumbnail, series        → 선택
 seriesOrder                        → 선택 (number)

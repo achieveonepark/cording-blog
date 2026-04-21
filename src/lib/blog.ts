@@ -1,7 +1,7 @@
 import { getCollection, type CollectionEntry } from "astro:content";
 import { site } from "../config/site";
 
-export const BLOG_LANGS = ["ko", "en"] as const;
+export const BLOG_LANGS = ["ko", "en", "ja"] as const;
 export type BlogLang = (typeof BLOG_LANGS)[number];
 
 const TAXONOMY_SEGMENT_LABELS: Record<string, string> = {
@@ -44,14 +44,20 @@ export function getPostLang(post: CollectionEntry<"blog">): BlogLang {
   return post.data.lang ?? "ko";
 }
 
-/** 언어 접미사를 제거한 기본 slug (Astro glob loader가 dot을 제거하므로 "en" suffix) */
+/** 언어 접미사를 제거한 기본 slug (Astro glob loader가 dot을 제거하므로 "en"/"ja" suffix) */
 export function getBaseSlug(post: CollectionEntry<"blog">): string {
-  return getPostLang(post) === "en" ? post.id.replace(/en$/, "") : post.id;
+  const lang = getPostLang(post);
+  if (lang === "en") return post.id.replace(/en$/, "");
+  if (lang === "ja") return post.id.replace(/ja$/, "");
+  return post.id;
 }
 
 export function getPostSourceStem(post: CollectionEntry<"blog">) {
   const baseSlug = getBaseSlug(post);
-  return getPostLang(post) === "en" ? `${baseSlug}.en` : baseSlug;
+  const lang = getPostLang(post);
+  if (lang === "en") return `${baseSlug}.en`;
+  if (lang === "ja") return `${baseSlug}.ja`;
+  return baseSlug;
 }
 
 export function getPostSubcategory(post: CollectionEntry<"blog">) {
@@ -106,7 +112,8 @@ export function filterPostsByLang<T extends CollectionEntry<"blog">>(posts: T[],
 export function groupPostsByLang<T extends CollectionEntry<"blog">>(posts: T[]) {
   return {
     ko: filterPostsByLang(posts, "ko"),
-    en: filterPostsByLang(posts, "en")
+    en: filterPostsByLang(posts, "en"),
+    ja: filterPostsByLang(posts, "ja")
   } satisfies Record<BlogLang, T[]>;
 }
 
@@ -147,19 +154,32 @@ export function buildPostsPageData<T>(
   };
 }
 
-/** 번역본이 있는지 확인하고 반환 */
-export async function findTranslation(post: CollectionEntry<"blog">) {
+/** 번역본이 있는지 확인하고 반환 (ko ↔ en ↔ ja) */
+export async function findTranslation(
+  post: CollectionEntry<"blog">,
+  preferLang?: BlogLang
+) {
   const posts = await getPublishedPosts();
   const baseSlug = getBaseSlug(post);
   const currentLang = getPostLang(post);
-  const targetLang = currentLang === "ko" ? "en" : "ko";
-  // Astro glob loader가 dot을 제거: slug.en.md → id "slugen"
-  const targetId = targetLang === "en" ? `${baseSlug}en` : baseSlug;
-  return posts.find((p) => p.id === targetId && getPostLang(p) === targetLang) ?? null;
+
+  // 선호 언어가 지정된 경우 그 언어로만 시도
+  const targetLangs: BlogLang[] = preferLang
+    ? [preferLang]
+    : BLOG_LANGS.filter((l) => l !== currentLang);
+
+  for (const targetLang of targetLangs) {
+    // Astro glob loader가 dot을 제거: slug.en.md → id "slugen", slug.ja.md → id "slugja"
+    const targetId = targetLang === "ko" ? baseSlug : `${baseSlug}${targetLang}`;
+    const found = posts.find((p) => p.id === targetId && getPostLang(p) === targetLang);
+    if (found) return found;
+  }
+  return null;
 }
 
 export function formatDate(date: Date, lang: BlogLang = "ko") {
-  return new Intl.DateTimeFormat(lang === "en" ? "en-US" : site.locale, {
+  const locale = lang === "en" ? "en-US" : lang === "ja" ? "ja-JP" : site.locale;
+  return new Intl.DateTimeFormat(locale, {
     year: "numeric",
     month: "short",
     day: "numeric"
@@ -176,5 +196,7 @@ export function getReadingTime(entry: CollectionEntry<"blog">, lang: BlogLang = 
   const words = body.split(/\s+/).length;
   const minutes = Math.max(1, Math.round(words / 220));
 
-  return lang === "en" ? `${minutes} min read` : `${minutes}분 읽기`;
+  if (lang === "en") return `${minutes} min read`;
+  if (lang === "ja") return `${minutes}分で読める`;
+  return `${minutes}분 읽기`;
 }

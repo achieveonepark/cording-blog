@@ -31,7 +31,7 @@ const related = allPosts
 
 {related.length > 0 && (
   <section class="related">
-    <p class="related__label">{currentLang === "en" ? "Related Posts" : "관련 글"}</p>
+    <p class="related__label">{currentLang === "en" ? "Related Posts" : currentLang === "ja" ? "関連記事" : "관련 글"}</p>
     <ul class="related__list">
       {related.map((post) => (
         <li>

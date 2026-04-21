@@ -42,6 +42,7 @@ const { post, allPosts } = Astro.props;
 const { Content, headings } = await render(post);
 const currentLang = getPostLang(post);
 const translation = await findTranslation(post);
+const translationLang = translation ? getPostLang(translation) : null;
 const currentCategory = post.data.category?.trim() ?? "";
 const currentSubcategory = getPostSubcategory(post);
 const postSourceStem = getPostSourceStem(post);
@@ -53,7 +54,73 @@ if (currentSubcategory && !adminSubcategories.includes(currentSubcategory)) {
   adminSubcategories.push(currentSubcategory);
 }
 const adminSubcategoryPayload = encodeURIComponent(JSON.stringify(adminSubcategoryMap));
-const articleEyebrow = getPostCategoryTrail(post) || (currentLang === "en" ? "Post" : "글");
+const currentPostUi = currentLang === "en"
+  ? {
+      fallbackArticleEyebrow: "Post",
+      backToAllPosts: "Back to all posts",
+      toggleToc: "Toggle table of contents",
+      updated: "Updated",
+      postTags: "Post tags",
+      contents: "Contents",
+      category: "Category",
+      noCategory: "No category",
+      subcategory: "Subcategory",
+      selectCategoryFirst: "Select category first",
+      useParentCategoryOnly: "Use parent category only",
+      noSubcategories: "No subcategories",
+      saveTaxonomy: "Save taxonomy",
+      edit: "Edit",
+      delete: "Delete"
+    }
+  : currentLang === "ja"
+    ? {
+        fallbackArticleEyebrow: "投稿",
+        backToAllPosts: "すべての投稿に戻る",
+        toggleToc: "目次を開閉",
+        updated: "更新",
+        postTags: "投稿タグ",
+        contents: "目次",
+        category: "カテゴリー",
+        noCategory: "カテゴリーなし",
+        subcategory: "サブカテゴリ",
+        selectCategoryFirst: "先にカテゴリーを選択",
+        useParentCategoryOnly: "親カテゴリーのみ使用",
+        noSubcategories: "サブカテゴリなし",
+        saveTaxonomy: "カテゴリーを保存",
+        edit: "編集",
+        delete: "削除"
+      }
+    : {
+        fallbackArticleEyebrow: "글",
+        backToAllPosts: "모든 글로 돌아가기",
+        toggleToc: "목차 접기/펼치기",
+        updated: "수정",
+        postTags: "글 태그",
+        contents: "목차",
+        category: "카테고리",
+        noCategory: "카테고리 없음",
+        subcategory: "하위 카테고리",
+        selectCategoryFirst: "카테고리를 먼저 선택",
+        useParentCategoryOnly: "상위 카테고리만 사용",
+        noSubcategories: "하위 카테고리 없음",
+        saveTaxonomy: "카테고리 저장",
+        edit: "수정",
+        delete: "삭제"
+      };
+const translationLinkLabel = translationLang
+  ? currentLang === "ko"
+    ? translationLang === "en"
+      ? "영어로 읽기"
+      : "일본어로 읽기"
+    : currentLang === "en"
+      ? translationLang === "ja"
+        ? "Read in Japanese"
+        : "Read in Korean"
+      : translationLang === "en"
+        ? "英語で読む"
+        : "韓国語で読む"
+  : "";
+const articleEyebrow = getPostCategoryTrail(post) || currentPostUi.fallbackArticleEyebrow;
 const postTopAdSlot = import.meta.env.PUBLIC_ADSENSE_SLOT_POST_TOP ?? "";
 const postBottomAdSlot = import.meta.env.PUBLIC_ADSENSE_SLOT_POST_BOTTOM ?? "";
 const hasMermaid = (post.body ?? "").includes("```mermaid");
@@ -87,7 +154,7 @@ const jsonLd = JSON.stringify({
     "@id": postUrl
   },
   "url": postUrl,
-  "inLanguage": currentLang === "en" ? "en" : "ko",
+  "inLanguage": currentLang === "en" ? "en" : currentLang === "ja" ? "ja" : "ko",
   ...(post.data.tags.length > 0 ? { "keywords": post.data.tags.join(", ") } : {}),
   ...(articleEyebrow ? { "articleSection": articleEyebrow } : {})
 });
@@ -106,7 +173,7 @@ const jsonLd = JSON.stringify({
       <!-- 왼쪽: 뒤로가기 버튼 -->
       <aside class="back-col">
         <div class="back-sticky">
-          <a href="/" class="back-btn" aria-label={currentLang === "en" ? "Back to all posts" : "모든 글로 돌아가기"} data-pagefind-ignore>
+          <a href="/" class="back-btn" aria-label={currentPostUi.backToAllPosts} data-pagefind-ignore>
             <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
               <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
@@ -120,7 +187,7 @@ const jsonLd = JSON.stringify({
           <div class="toc-sticky">
             <div class="toc-header">
               <p class="toc-post-title">{post.data.title}</p>
-              <button class="toc-toggle" aria-label={currentLang === "en" ? "Toggle table of contents" : "목차 접기/펼치기"}>
+              <button class="toc-toggle" aria-label={currentPostUi.toggleToc}>
                 <svg class="toc-toggle__icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <path d="M15 18l-6-6 6-6"/>
                 </svg>
@@ -147,7 +214,7 @@ const jsonLd = JSON.stringify({
             <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate, currentLang)}</time>
             {post.data.updatedDate && (
               <span class="updated-date">
-                {currentLang === "en" ? "Updated" : "수정"} {formatDate(post.data.updatedDate, currentLang)}
+                {currentPostUi.updated} {formatDate(post.data.updatedDate, currentLang)}
               </span>
             )}
             <span>{getReadingTime(post, currentLang)}</span>
@@ -155,15 +222,15 @@ const jsonLd = JSON.stringify({
               <a
                 href={`/posts/${translation.id}/`}
                 class="lang-switch-link"
-                data-target-lang={currentLang === "ko" ? "en" : "ko"}
+                data-target-lang={translationLang ?? ""}
               >
-                {currentLang === "ko" ? "영어로 읽기" : "Read in Korean"}
+                {translationLinkLabel}
               </a>
             )}
           </div>
 
           {post.data.tags.length > 0 && (
-            <ul class="tag-list" aria-label={currentLang === "en" ? "Post tags" : "글 태그"} data-pagefind-ignore>
+            <ul class="tag-list" aria-label={currentPostUi.postTags} data-pagefind-ignore>
               {post.data.tags.map((tag: string) => <li>{tag}</li>)}
             </ul>
           )}
@@ -178,7 +245,7 @@ const jsonLd = JSON.stringify({
         <!-- 모바일용 목차 (인라인) -->
         {headings.length > 0 && (
           <details class="toc-mobile" data-pagefind-ignore>
-            <summary>{currentLang === "en" ? "Contents" : "목차"}</summary>
+            <summary>{currentPostUi.contents}</summary>
             <TOC headings={headings} lang={currentLang} />
           </details>
         )}
@@ -217,9 +284,9 @@ const jsonLd = JSON.stringify({
         >
           <div class="post-admin-taxonomy">
             <label class="post-admin-field">
-              <span>{currentLang === "en" ? "Category" : "\uce74\ud14c\uace0\ub9ac"}</span>
+              <span>{currentPostUi.category}</span>
               <select id="post-admin-category" class="post-admin-select">
-                <option value="" selected={!currentCategory}>{currentLang === "en" ? "No category" : "\uce74\ud14c\uace0\ub9ac \uc5c6\uc74c"}</option>
+                <option value="" selected={!currentCategory}>{currentPostUi.noCategory}</option>
                 {adminCategories.map((category) => (
                   <option value={category} selected={currentCategory === category}>{category}</option>
                 ))}
@@ -227,15 +294,15 @@ const jsonLd = JSON.stringify({
             </label>
 
             <label class="post-admin-field">
-              <span>{currentLang === "en" ? "Subcategory" : "\ud558\uc704 \uce74\ud14c\uace0\ub9ac"}</span>
+              <span>{currentPostUi.subcategory}</span>
               <select id="post-admin-subcategory" class="post-admin-select" disabled={!currentCategory}>
                 {!currentCategory ? (
-                  <option value="" selected>{currentLang === "en" ? "Select category first" : "\uce74\ud14c\uace0\ub9ac\ub97c \uba3c\uc800 \uc120\ud0dd"}</option>
+                  <option value="" selected>{currentPostUi.selectCategoryFirst}</option>
                 ) : (
                   <option value="" selected={!currentSubcategory}>
                     {adminSubcategories.length > 0
-                      ? (currentLang === "en" ? "Use parent category only" : "\uc0c1\uc704 \uce74\ud14c\uace0\ub9ac\ub9cc \uc0ac\uc6a9")
-                      : (currentLang === "en" ? "No subcategories" : "\ud558\uc704 \uce74\ud14c\uace0\ub9ac \uc5c6\uc74c")}
+                      ? currentPostUi.useParentCategoryOnly
+                      : currentPostUi.noSubcategories}
                   </option>
                 )}
                 {adminSubcategories.map((subcategory) => (
@@ -245,12 +312,12 @@ const jsonLd = JSON.stringify({
             </label>
 
             <button id="post-taxonomy-save-btn" type="button" class="post-admin-btn">
-              {currentLang === "en" ? "Save taxonomy" : "\uce74\ud14c\uace0\ub9ac \uc800\uc7a5"}
+              {currentPostUi.saveTaxonomy}
             </button>
             <span id="post-taxonomy-status" class="post-admin-status" aria-live="polite"></span>
           </div>
-          <a href={`/admin/new-post?edit=${post.id}`} class="post-admin-btn">{currentLang === "en" ? "Edit" : "수정"}</a>
-          <button id="post-delete-btn" class="post-admin-btn post-admin-btn--danger">{currentLang === "en" ? "Delete" : "삭제"}</button>
+          <a href={`/admin/new-post?edit=${post.id}`} class="post-admin-btn">{currentPostUi.edit}</a>
+          <button id="post-delete-btn" class="post-admin-btn post-admin-btn--danger">{currentPostUi.delete}</button>
         </div>
       </article>
 
@@ -303,19 +370,20 @@ const jsonLd = JSON.stringify({
     subcategoryMap: Record<string, string[]>,
     category: string,
     preferredSubcategory: string,
-    lang: "ko" | "en"
+    lang: "ko" | "en" | "ja"
   ) {
+    const ui = getPostAdminUi(lang);
     const availableSubcategories = category ? (subcategoryMap[category] ?? []) : [];
 
     if (!category) {
-      select.innerHTML = `<option value="">${lang === "en" ? "Select category first" : "카테고리를 먼저 선택"}</option>`;
+      select.innerHTML = `<option value="">${ui.selectCategoryFirst}</option>`;
       select.disabled = true;
       return;
     }
 
     const defaultLabel = availableSubcategories.length > 0
-      ? (lang === "en" ? "Use parent category only" : "상위 카테고리만 사용")
-      : (lang === "en" ? "No subcategories" : "하위 카테고리 없음");
+      ? ui.useParentCategoryOnly
+      : ui.noSubcategories;
 
     select.innerHTML = `<option value="">${defaultLabel}</option>`;
 
@@ -410,7 +478,11 @@ const jsonLd = JSON.stringify({
     if (!article) { lastSlug = ""; return; }
 
     const postSlug   = article.dataset.postSlug   ?? "";
-    const postLang   = article.dataset.postLang === "en" ? "en" : "ko";
+    const postLang = article.dataset.postLang === "en"
+      ? "en"
+      : article.dataset.postLang === "ja"
+        ? "ja"
+        : "ko";
     const workerBase = (article.dataset.workerBase ?? "").replace(/\/$/, "");
 
     // 같은 페이지 중복 실행 방지
@@ -428,10 +500,11 @@ const jsonLd = JSON.stringify({
 
     const token = localStorage.getItem("gh_token");
     const translationLink = document.querySelector(".lang-switch-link") as HTMLAnchorElement | null;
+    const postUi = getPostAdminUi(postLang);
 
     translationLink?.addEventListener("click", () => {
       const targetLang = translationLink.dataset.targetLang;
-      if (targetLang === "ko" || targetLang === "en") {
+      if (targetLang === "ko" || targetLang === "en" || targetLang === "ja") {
         localStorage.setItem("blog_lang", targetLang);
         document.documentElement.dataset.blogLang = targetLang;
       }
@@ -476,7 +549,7 @@ const jsonLd = JSON.stringify({
       taxonomyCategory.disabled = true;
       taxonomySubcategory.disabled = true;
       taxonomySaveBtn.disabled = true;
-      taxonomyStatus.textContent = postLang === "en" ? "Saving..." : "저장 중...";
+      taxonomyStatus.textContent = postUi.saving;
 
       try {
         for (const stem of targetStems) {
@@ -488,19 +561,17 @@ const jsonLd = JSON.stringify({
 
         const eyebrow = article.querySelector(".article__eyebrow") as HTMLElement | null;
         if (eyebrow) {
-          eyebrow.textContent = [nextCategory, nextSubcategory].filter(Boolean).join(" / ") || (postLang === "en" ? "Post" : "글");
+          eyebrow.textContent = [nextCategory, nextSubcategory].filter(Boolean).join(" / ") || postUi.fallbackArticleEyebrow;
         }
 
         adminBar.dataset.currentCategory = nextCategory;
         adminBar.dataset.currentSubcategory = nextSubcategory;
         renderAdminSubcategoryOptions(taxonomySubcategory, taxonomyMap, nextCategory, nextSubcategory, postLang);
-        taxonomyStatus.textContent = postLang === "en"
-          ? "Saved. Rebuild will publish the change."
-          : "저장했습니다. 빌드 후 반영됩니다.";
+        taxonomyStatus.textContent = postUi.saved;
       } catch (error) {
         taxonomyStatus.textContent = error instanceof Error
           ? error.message
-          : (postLang === "en" ? "Failed to update taxonomy." : "카테고리 변경에 실패했습니다.");
+          : postUi.saveFailed;
       } finally {
         taxonomyCategory.disabled = false;
         renderAdminSubcategoryOptions(
@@ -517,9 +588,7 @@ const jsonLd = JSON.stringify({
     deleteBtn?.addEventListener("click", async () => {
       if (!token || !postSourceStem) return;
 
-      const deleteMessage = postLang === "en"
-        ? `Delete "${postSlug}"? This cannot be undone.`
-        : `"${postSlug}" 포스트를 삭제할까요? 되돌릴 수 없어요.`;
+      const deleteMessage = postUi.deleteConfirm(postSlug);
       if (!confirm(deleteMessage)) return;
       const path = `src/content/blog/${postSourceStem}.md`;
       const file = await fetchRepoFile(path, token);
@@ -550,6 +619,45 @@ const jsonLd = JSON.stringify({
       tocCol.classList.toggle("collapsed");
       localStorage.setItem("toc-collapsed", tocCol.classList.contains("collapsed").toString());
     });
+  }
+
+  function getPostAdminUi(lang: "ko" | "en" | "ja") {
+    if (lang === "en") {
+      return {
+        fallbackArticleEyebrow: "Post",
+        selectCategoryFirst: "Select category first",
+        useParentCategoryOnly: "Use parent category only",
+        noSubcategories: "No subcategories",
+        saving: "Saving...",
+        saved: "Saved. Rebuild will publish the change.",
+        saveFailed: "Failed to update taxonomy.",
+        deleteConfirm: (slug: string) => `Delete "${slug}"? This cannot be undone.`
+      };
+    }
+
+    if (lang === "ja") {
+      return {
+        fallbackArticleEyebrow: "投稿",
+        selectCategoryFirst: "先にカテゴリーを選択",
+        useParentCategoryOnly: "親カテゴリーのみ使用",
+        noSubcategories: "サブカテゴリなし",
+        saving: "保存中...",
+        saved: "保存しました。ビルド後に反映されます。",
+        saveFailed: "カテゴリーの更新に失敗しました。",
+        deleteConfirm: (slug: string) => `"${slug}" の投稿を削除しますか？ 元に戻せません。`
+      };
+    }
+
+    return {
+      fallbackArticleEyebrow: "글",
+      selectCategoryFirst: "카테고리를 먼저 선택",
+      useParentCategoryOnly: "상위 카테고리만 사용",
+      noSubcategories: "하위 카테고리 없음",
+      saving: "저장 중...",
+      saved: "저장했습니다. 빌드 후 반영됩니다.",
+      saveFailed: "카테고리 변경에 실패했습니다.",
+      deleteConfirm: (slug: string) => `"${slug}" 포스트를 삭제할까요? 되돌릴 수 없어요.`
+    };
   }
 
   document.addEventListener("astro:after-swap", initPost);

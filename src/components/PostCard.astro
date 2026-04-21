@@ -38,7 +38,7 @@ const subcategory = getPostSubcategory(post);
     {post.data.description && <p class="post-card__description">{post.data.description}</p>}
 
     {post.data.tags.length > 0 && (
-      <ul class="tag-list" aria-label={lang === "en" ? "Post tags" : "글 태그"}>
+      <ul class="tag-list" aria-label={lang === "en" ? "Post tags" : lang === "ja" ? "投稿タグ" : "글 태그"}>
         {post.data.tags.map((tag) => <li>{tag}</li>)}
       </ul>
     )}

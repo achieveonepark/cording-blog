@@ -55,9 +55,24 @@
 
 /* ── 언어별 포스트 카드 필터 (CSS 기반 — JS 타이밍 문제 없음) ─ */
 [data-blog-lang="ko"] .post-card[data-lang="en"] { display: none !important; }
+[data-blog-lang="ko"] .post-card[data-lang="ja"] { display: none !important; }
 [data-blog-lang="en"] .post-card[data-lang="ko"] { display: none !important; }
-[data-blog-lang="ko"] [data-ui-lang="en"] { display: none !important; }
-[data-blog-lang="en"] [data-ui-lang="ko"] { display: none !important; }
+[data-blog-lang="en"] .post-card[data-lang="ja"] { display: none !important; }
+[data-blog-lang="ja"] .post-card[data-lang="ko"] { display: none !important; }
+[data-blog-lang="ja"] .post-card[data-lang="en"] { display: none !important; }
+
+/* ── UI 텍스트 필터 ─ */
+/* ko 활성: en/ja 항상 숨김 */
+[data-blog-lang="ko"] [data-ui-lang="en"],
+[data-blog-lang="ko"] [data-ui-lang="ja"] { display: none !important; }
+
+/* en 활성: ko/ja 항상 숨김 */
+[data-blog-lang="en"] [data-ui-lang="ko"],
+[data-blog-lang="en"] [data-ui-lang="ja"] { display: none !important; }
+
+/* ja 활성: ko 항상 숨김. en은 같은 부모에 ja 형제가 있을 때만 숨김 (없으면 en이 fallback) */
+[data-blog-lang="ja"] [data-ui-lang="ko"] { display: none !important; }
+[data-blog-lang="ja"] :has(> [data-ui-lang="ja"]) > [data-ui-lang="en"] { display: none !important; }
 
 :root,
 [data-theme="dark"] {

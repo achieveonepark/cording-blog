@@ -6,7 +6,9 @@
   function getCopyUi(lang) {
     return lang === "en"
       ? { copy: "Copy code", copied: "Copied!", failed: "Failed" }
-      : { copy: "코드 복사", copied: "복사됨!", failed: "실패" };
+      : lang === "ja"
+        ? { copy: "コードをコピー", copied: "コピーしました", failed: "失敗" }
+        : { copy: "코드 복사", copied: "복사됨!", failed: "실패" };
   }
 
   function syncCopyButtonPosition(pre, btn) {
@@ -23,7 +25,11 @@
 
   function initCodeCopy() {
     const blocks = document.querySelectorAll<HTMLElement>(".prose pre");
-    const lang = document.documentElement.dataset.blogLang === "en" ? "en" : "ko";
+    const lang = document.documentElement.dataset.blogLang === "en"
+      ? "en"
+      : document.documentElement.dataset.blogLang === "ja"
+        ? "ja"
+        : "ko";
     const ui = getCopyUi(lang);
 
     blocks.forEach((pre) => {

@@ -6,7 +6,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import {
   BLOG_LANGS,
   type BlogLang,
-  filterPostsByLang,
+  groupPostsByLang,
   getPostCategoryTrail,
   getPublishedPosts
 } from "../lib/blog";
@@ -33,10 +33,7 @@ function buildArchive(postsByLang: Awaited<ReturnType<typeof getPublishedPosts>>
   };
 }
 
-const postsByLang = {
-  ko: filterPostsByLang(posts, "ko"),
-  en: filterPostsByLang(posts, "en")
-};
+const postsByLang = groupPostsByLang(posts);
 
 const archiveByLang = BLOG_LANGS.reduce((acc, lang) => {
   acc[lang] = buildArchive(postsByLang[lang]);
@@ -45,7 +42,8 @@ const archiveByLang = BLOG_LANGS.reduce((acc, lang) => {
 
 const monthNames = {
   ko: ["", "1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"],
-  en: ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+  en: ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+  ja: ["", "1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"]
 } satisfies Record<BlogLang, string[]>;
 
 // Build game data
@@ -91,13 +89,16 @@ const gameDataByLang = BLOG_LANGS.reduce((acc, lang) => {
               <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>
               <span data-ui-lang="ko">이동</span>
               <span data-ui-lang="en">Move</span>
+              <span data-ui-lang="ja">移動</span>
             </span>
             <span class="archive-hint-mobile">
               <span data-ui-lang="ko">드래그하여 이동</span>
               <span data-ui-lang="en">Drag to move</span>
+              <span data-ui-lang="ja">ドラッグで移動</span>
             </span>
             <span data-ui-lang="ko"> / 건물에 다가가면 포스팅이 보입니다</span>
             <span data-ui-lang="en"> / Approach buildings to see posts</span>
+            <span data-ui-lang="ja"> / 建物に近づくと投稿が表示されます</span>
           </div>
         </div>
 
@@ -107,6 +108,7 @@ const gameDataByLang = BLOG_LANGS.reduce((acc, lang) => {
               <div class="archive-sidebar__icon">🏢</div>
               <p data-ui-lang="ko">건물에 다가가면<br/>포스팅 정보가 여기에 표시됩니다</p>
               <p data-ui-lang="en">Approach a building<br/>to see post info here</p>
+              <p data-ui-lang="ja">建物に近づくと<br/>投稿情報がここに表示されます</p>
             </div>
             <div class="archive-sidebar__content" id="archive-sidebar-content" style="display:none">
               <span class="archive-sidebar__cat" id="archive-popup-cat"></span>
@@ -114,6 +116,7 @@ const gameDataByLang = BLOG_LANGS.reduce((acc, lang) => {
               <a id="archive-popup-link" href="/" class="archive-sidebar__link">
                 <span data-ui-lang="ko">읽으러 가기 →</span>
                 <span data-ui-lang="en">Read post →</span>
+                <span data-ui-lang="ja">読みに行く →</span>
               </a>
             </div>
           </div>
@@ -140,7 +143,11 @@ const gameDataByLang = BLOG_LANGS.reduce((acc, lang) => {
     var game = null;
 
     function getLang() {
-      return document.documentElement.dataset.blogLang === "en" ? "en" : "ko";
+      return document.documentElement.dataset.blogLang === "en"
+        ? "en"
+        : document.documentElement.dataset.blogLang === "ja"
+          ? "ja"
+          : "ko";
     }
 
     function initGame() {

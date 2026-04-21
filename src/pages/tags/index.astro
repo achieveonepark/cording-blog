@@ -6,16 +6,12 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 import {
   BLOG_LANGS,
   type BlogLang,
-  filterPostsByLang,
+  groupPostsByLang,
   getPublishedPosts
 } from "../../lib/blog";
 
 const posts = await getPublishedPosts();
-
-const postsByLang = {
-  ko: filterPostsByLang(posts, "ko"),
-  en: filterPostsByLang(posts, "en")
-};
+const postsByLang = groupPostsByLang(posts);
 
 const tagsByLang = BLOG_LANGS.reduce((acc, lang) => {
   const tagMap = new Map<string, number>();
@@ -41,14 +37,17 @@ const tagsByLang = BLOG_LANGS.reduce((acc, lang) => {
         <p class="eyebrow">
           <span data-ui-lang="ko">태그</span>
           <span data-ui-lang="en">Tags</span>
+          <span data-ui-lang="ja">タグ</span>
         </p>
         <h1>
           <span data-ui-lang="ko">태그 목록</span>
           <span data-ui-lang="en">Tags</span>
+          <span data-ui-lang="ja">タグ一覧</span>
         </h1>
         <p>
           <span data-ui-lang="ko">공을 클릭하면 해당 태그의 글로 이동합니다.</span>
           <span data-ui-lang="en">Click a ball to browse posts by tag.</span>
+          <span data-ui-lang="ja">ボールをクリックすると、そのタグの投稿一覧へ移動します。</span>
         </p>
       </div>
 
@@ -58,6 +57,7 @@ const tagsByLang = BLOG_LANGS.reduce((acc, lang) => {
         <kbd>Ctrl</kbd>
         <span data-ui-lang="ko">키를 누르면 바람이 붑니다</span>
         <span data-ui-lang="en">Press to blow wind</span>
+        <span data-ui-lang="ja">押すと風が吹きます</span>
       </p>
     </section>
   </main>
@@ -67,7 +67,7 @@ const tagsByLang = BLOG_LANGS.reduce((acc, lang) => {
   <script
     id="tag-data"
     type="application/json"
-    set:html={JSON.stringify({ ko: tagsByLang.ko, en: tagsByLang.en })}
+    set:html={JSON.stringify(tagsByLang)}
   />
 
   <script is:inline src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
@@ -82,7 +82,11 @@ const tagsByLang = BLOG_LANGS.reduce((acc, lang) => {
     var sceneRef = null;
 
     function getCurrentLang() {
-      return document.documentElement.dataset.blogLang === "en" ? "en" : "ko";
+      return document.documentElement.dataset.blogLang === "en"
+        ? "en"
+        : document.documentElement.dataset.blogLang === "ja"
+          ? "ja"
+          : "ko";
     }
 
     function getTagData() {

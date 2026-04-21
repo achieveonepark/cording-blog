@@ -21,6 +21,7 @@ const { categories, subcategories, categoryCountsByLang, subcategoryCountsByLang
     title="카테고리 열기"
     data-label-ko="카테고리 열기"
     data-label-en="Show categories"
+    data-label-ja="カテゴリーを開く"
   >
     <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
       <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
@@ -38,6 +39,7 @@ const { categories, subcategories, categoryCountsByLang, subcategoryCountsByLang
           title="카테고리 숨기기"
           data-label-ko="카테고리 숨기기"
           data-label-en="Hide categories"
+          data-label-ja="カテゴリーを隠す"
         >
           <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
             <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
@@ -47,6 +49,7 @@ const { categories, subcategories, categoryCountsByLang, subcategoryCountsByLang
         <div class="home-sidebar__header">
           <p class="eyebrow" data-ui-lang="ko">Category</p>
           <p class="eyebrow" data-ui-lang="en">Category</p>
+          <p class="eyebrow" data-ui-lang="ja">カテゴリー</p>
         </div>
 
         {BLOG_LANGS.map((lang) => {
@@ -59,19 +62,21 @@ const { categories, subcategories, categoryCountsByLang, subcategoryCountsByLang
               <div class="home-sidebar__summary">
                 <strong>
                   {totalPostsByLang[lang]}
-                  <span>{lang === "en" ? " posts" : "개 글"}</span>
+                  <span>{lang === "en" ? " posts" : lang === "ja" ? "件の投稿" : "개 글"}</span>
                 </strong>
                 <span>
                   {lang === "en"
                     ? `${availableCategories} categories`
-                    : `${availableCategories}개 카테고리`}
+                    : lang === "ja"
+                      ? `${availableCategories}カテゴリ`
+                      : `${availableCategories}개 카테고리`}
                 </span>
               </div>
 
               <div
                 class="home-category-list"
                 role="group"
-                aria-label={lang === "en" ? "Home category filter" : "홈 카테고리 필터"}
+                aria-label={lang === "en" ? "Home category filter" : lang === "ja" ? "ホームカテゴリーフィルター" : "홈 카테고리 필터"}
               >
                 <div class="home-category-item home-category-item--all">
                   <button
@@ -81,7 +86,7 @@ const { categories, subcategories, categoryCountsByLang, subcategoryCountsByLang
                     aria-pressed="true"
                   >
                     <span class="home-category-btn__text">
-                      <span class="home-category-btn__label">{lang === "en" ? "All posts" : "전체 글"}</span>
+                      <span class="home-category-btn__label">{lang === "en" ? "All posts" : lang === "ja" ? "すべての投稿" : "전체 글"}</span>
                     </span>
                     <span class="home-category-btn__count">{totalPostsByLang[lang]}</span>
                   </button>
@@ -115,7 +120,7 @@ const { categories, subcategories, categoryCountsByLang, subcategoryCountsByLang
                           <div
                             class="home-subcategory-list"
                             role="group"
-                            aria-label={lang === "en" ? `${category} subcategories` : `${category} 하위 카테고리`}
+                            aria-label={lang === "en" ? `${category} subcategories` : lang === "ja" ? `${category} のサブカテゴリ` : `${category} 하위 카테고리`}
                           >
                             <button
                               class="home-subcategory-btn home-subcategory-btn--active"
@@ -125,7 +130,7 @@ const { categories, subcategories, categoryCountsByLang, subcategoryCountsByLang
                               aria-pressed="true"
                             >
                               <span class="home-subcategory-btn__label">
-                                {lang === "en" ? `All ${category}` : `${category} 전체`}
+                                {lang === "en" ? `All ${category}` : lang === "ja" ? `すべての ${category}` : `${category} 전체`}
                               </span>
                               <span class="home-subcategory-btn__count">{categoryCountsByLang[lang][category] ?? 0}</span>
                             </button>
@@ -172,7 +177,11 @@ const { categories, subcategories, categoryCountsByLang, subcategoryCountsByLang
   }
 
   function getHomeUiLang() {
-    return document.documentElement.dataset.blogLang === "en" ? "en" : "ko";
+    return document.documentElement.dataset.blogLang === "en"
+      ? "en"
+      : document.documentElement.dataset.blogLang === "ja"
+        ? "ja"
+        : "ko";
   }
 
   function readHomeSidebarStorage(key, fallback) {
@@ -281,7 +290,11 @@ const { categories, subcategories, categoryCountsByLang, subcategoryCountsByLang
   }
 
   function getHomeSectionLang(section) {
-    return section.dataset.uiLang === "en" ? "en" : "ko";
+    return section.dataset.uiLang === "en"
+      ? "en"
+      : section.dataset.uiLang === "ja"
+        ? "ja"
+        : "ko";
   }
 
   function getHomeFilteredCards(section, category, subcategory) {
@@ -316,7 +329,8 @@ const { categories, subcategories, categoryCountsByLang, subcategoryCountsByLang
     var pages = section.querySelector("[data-home-pagination-pages]");
     var prevBtn = section.querySelector('[data-home-page-action="prev"]');
     var nextBtn = section.querySelector('[data-home-page-action="next"]');
-    var pageLabelPrefix = getHomeSectionLang(section) === "en" ? "Page " : "페이지 ";
+    var sectionLang = getHomeSectionLang(section);
+    var pageLabelPrefix = sectionLang === "en" ? "Page " : sectionLang === "ja" ? "ページ " : "페이지 ";
     if (!(pagination instanceof HTMLElement) || !(pages instanceof HTMLElement)) return;
 
     var totalPages = Math.max(1, Math.ceil(totalItems / HOME_PAGE_SIZE));
