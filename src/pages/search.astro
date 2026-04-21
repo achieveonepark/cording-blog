@@ -13,14 +13,17 @@ import Footer from "../components/Footer.astro";
         <p class="eyebrow">
           <span data-ui-lang="ko">검색</span>
           <span data-ui-lang="en">Search</span>
+          <span data-ui-lang="ja">検索</span>
         </p>
         <h1>
           <span data-ui-lang="ko">검색</span>
           <span data-ui-lang="en">Search</span>
+          <span data-ui-lang="ja">検索</span>
         </h1>
         <p>
           <span data-ui-lang="ko">제목, 내용, 태그로 글을 검색할 수 있어요.</span>
           <span data-ui-lang="en">Search posts by title, content, and tags.</span>
+          <span data-ui-lang="ja">タイトル、本文、タグから投稿を検索できます。</span>
         </p>
       </div>
 
@@ -44,6 +47,11 @@ import Footer from "../components/Footer.astro";
       buildRequired: 'Search is available after running a build. (<code>npm run build</code>)',
       placeholder: 'Type a search term...',
       zeroResults: 'No search results found.'
+    },
+    ja: {
+      buildRequired: '検索はビルド後に利用できます。 (<code>npm run build</code>)',
+      placeholder: '検索語を入力してください...',
+      zeroResults: '検索結果がありません。'
     }
   };
 
@@ -51,7 +59,11 @@ import Footer from "../components/Footer.astro";
     var mount = document.getElementById("search");
     if (!mount) return;
 
-    var lang = document.documentElement.dataset.blogLang === "en" ? "en" : "ko";
+    var lang = document.documentElement.dataset.blogLang === "en"
+      ? "en"
+      : document.documentElement.dataset.blogLang === "ja"
+        ? "ja"
+        : "ko";
     var copy = searchPageCopy[lang];
 
     if (typeof PagefindUI === "undefined") {

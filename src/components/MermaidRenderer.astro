@@ -52,7 +52,11 @@
   }
 
   function getZoomUiLabel() {
-    return document.documentElement.dataset.blogLang === "en" ? "Click to enlarge diagram" : "클릭해서 크게 보기";
+    return document.documentElement.dataset.blogLang === "en"
+      ? "Click to enlarge diagram"
+      : document.documentElement.dataset.blogLang === "ja"
+        ? "クリックして拡大表示"
+        : "클릭해서 크게 보기";
   }
 
   function ensureMermaidZoomDialog() {

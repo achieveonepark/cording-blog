@@ -49,17 +49,17 @@ const currentSlug = Astro.url.pathname.split("/posts/")[1]?.replace(/\/$/, "");
         return (
           <div data-ui-lang={lang}>
             <div class="section-heading">
-              <p class="eyebrow">{lang === "en" ? "Series" : "시리즈"}</p>
+              <p class="eyebrow">{lang === "en" ? "Series" : lang === "ja" ? "シリーズ" : "시리즈"}</p>
               <h1>{series}</h1>
-              <p>{lang === "en" ? `${posts.length} posts` : `총 ${posts.length}편`}</p>
+              <p>{lang === "en" ? `${posts.length} posts` : lang === "ja" ? `全${posts.length}件` : `총 ${posts.length}편`}</p>
             </div>
 
             <a href="/series/" class="back-link">
-              {lang === "en" ? "← All series" : "← 모든 시리즈"}
+              {lang === "en" ? "← All series" : lang === "ja" ? "← すべてのシリーズ" : "← 모든 시리즈"}
             </a>
 
             {posts.length === 0 ? (
-              <p class="empty">{lang === "en" ? "No posts in this series yet." : "이 시리즈에 해당하는 글이 아직 없습니다."}</p>
+              <p class="empty">{lang === "en" ? "No posts in this series yet." : lang === "ja" ? "このシリーズの投稿はまだありません。" : "이 시리즈에 해당하는 글이 아직 없습니다."}</p>
             ) : (
               <ol class="series-posts">
                 {posts.map((post, index) => (

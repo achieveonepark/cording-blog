@@ -48,17 +48,17 @@ const tagPostsByLang = groupPostsByLang(tagPosts);
         return (
           <div data-ui-lang={lang}>
             <div class="section-heading">
-              <p class="eyebrow">{lang === "en" ? "Tag" : "태그"}</p>
+              <p class="eyebrow">{lang === "en" ? "Tag" : lang === "ja" ? "タグ" : "태그"}</p>
               <h1>#{tag}</h1>
-              <p>{lang === "en" ? `${posts.length} posts` : `${posts.length}개의 글`}</p>
+              <p>{lang === "en" ? `${posts.length} posts` : lang === "ja" ? `${posts.length}件の投稿` : `${posts.length}개의 글`}</p>
             </div>
 
             <a href="/tags/" class="back-link">
-              {lang === "en" ? "← All tags" : "← 모든 태그"}
+              {lang === "en" ? "← All tags" : lang === "ja" ? "← すべてのタグ" : "← 모든 태그"}
             </a>
 
             {posts.length === 0 ? (
-              <p class="empty">{lang === "en" ? "No posts for this tag yet." : "이 태그에 해당하는 글이 아직 없습니다."}</p>
+              <p class="empty">{lang === "en" ? "No posts for this tag yet." : lang === "ja" ? "このタグの投稿はまだありません。" : "이 태그에 해당하는 글이 아직 없습니다."}</p>
             ) : (
               <div class="post-stack">
                 {posts.map((post) => <PostCard post={post} />)}

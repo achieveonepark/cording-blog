@@ -69,21 +69,23 @@ const totalPostsByLang = BLOG_LANGS.reduce((acc, lang) => {
             >
               {lang === "en"
                 ? "No posts match this category in the current language."
-                : "현재 언어에서 이 카테고리에 해당하는 글이 없어요."}
+                : lang === "ja"
+                  ? "現在の言語では、このカテゴリに該当する投稿がありません。"
+                  : "현재 언어에서 이 카테고리에 해당하는 글이 없어요."}
             </p>
             <nav
               class="home-feed__pagination"
               data-home-pagination
               data-ui-lang={lang}
-              aria-label={lang === "en" ? "Post pages" : "포스트 페이지"}
+              aria-label={lang === "en" ? "Post pages" : lang === "ja" ? "投稿ページ" : "포스트 페이지"}
               hidden
             >
               <button type="button" class="home-feed__pagination-btn" data-home-page-action="prev">
-                {lang === "en" ? "Prev" : "이전"}
+                {lang === "en" ? "Prev" : lang === "ja" ? "前へ" : "이전"}
               </button>
               <div class="home-feed__pagination-pages" data-home-pagination-pages></div>
               <button type="button" class="home-feed__pagination-btn" data-home-page-action="next">
-                {lang === "en" ? "Next" : "다음"}
+                {lang === "en" ? "Next" : lang === "ja" ? "次へ" : "다음"}
               </button>
             </nav>
           </section>

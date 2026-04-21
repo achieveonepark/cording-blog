@@ -5,7 +5,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 import {
   BLOG_LANGS,
   type BlogLang,
-  filterPostsByLang,
+  groupPostsByLang,
   getPublishedPosts
 } from "../../lib/blog";
 
@@ -32,10 +32,7 @@ function buildSeriesList(seriesPosts: Awaited<ReturnType<typeof getPublishedPost
     .sort((a, b) => b.latestDate.getTime() - a.latestDate.getTime());
 }
 
-const postsByLang = {
-  ko: filterPostsByLang(posts, "ko"),
-  en: filterPostsByLang(posts, "en")
-};
+const postsByLang = groupPostsByLang(posts);
 
 const seriesByLang = BLOG_LANGS.reduce((acc, lang) => {
   acc[lang] = buildSeriesList(postsByLang[lang]);
@@ -54,15 +51,17 @@ const seriesByLang = BLOG_LANGS.reduce((acc, lang) => {
         return (
           <div data-ui-lang={lang}>
             <div class="section-heading">
-              <p class="eyebrow">{lang === "en" ? "Series" : "시리즈"}</p>
-              <h1>{lang === "en" ? "Series" : "연재 시리즈"}</h1>
-              <p>{lang === "en" ? "Collections of posts that continue across multiple entries." : "여러 편으로 이어지는 글 모음입니다."}</p>
+              <p class="eyebrow">{lang === "en" ? "Series" : lang === "ja" ? "シリーズ" : "시리즈"}</p>
+              <h1>{lang === "en" ? "Series" : lang === "ja" ? "連載シリーズ" : "연재 시리즈"}</h1>
+              <p>{lang === "en" ? "Collections of posts that continue across multiple entries." : lang === "ja" ? "複数回にわたって続く投稿をまとめた一覧です。" : "여러 편으로 이어지는 글 모음입니다."}</p>
             </div>
 
             {seriesList.length === 0 ? (
               <p class="empty">
                 {lang === "en" ? (
                   <>No series yet.<br />Add a <code>series</code> field to post frontmatter to group them automatically.</>
+                ) : lang === "ja" ? (
+                  <>まだシリーズはありません。<br />投稿の frontmatter に <code>series</code> フィールドを追加すると自動でまとまります。</>
                 ) : (
                   <>아직 시리즈가 없습니다.<br />포스트 frontmatter에 <code>series</code> 필드를 추가하면 자동으로 묶입니다.</>
                 )}
@@ -75,7 +74,7 @@ const seriesByLang = BLOG_LANGS.reduce((acc, lang) => {
                       <div class="series-card__head">
                         <span class="series-card__name">{name}</span>
                         <span class="series-card__count">
-                          {lang === "en" ? `${posts.length} posts` : `${posts.length}편`}
+                          {lang === "en" ? `${posts.length} posts` : lang === "ja" ? `${posts.length}件` : `${posts.length}편`}
                         </span>
                       </div>
                       <ol class="series-card__posts">
@@ -84,7 +83,7 @@ const seriesByLang = BLOG_LANGS.reduce((acc, lang) => {
                         ))}
                         {posts.length > 3 && (
                           <li class="more">
-                            {lang === "en" ? `+ ${posts.length - 3} more` : `+ ${posts.length - 3}편 더보기`}
+                            {lang === "en" ? `+ ${posts.length - 3} more` : lang === "ja" ? `+ ${posts.length - 3}件もっと見る` : `+ ${posts.length - 3}편 더보기`}
                           </li>
                         )}
                       </ol>

@@ -3,7 +3,7 @@ interface Props {
   title: string;
   url: string;
   image?: string;
-  lang?: "ko" | "en";
+  lang?: "ko" | "en" | "ja";
 }
 
 const { title, url, image = "", lang = "ko" } = Astro.props;
@@ -14,18 +14,18 @@ const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encod
 ---
 
 <div class="share">
-  <p class="share__label">{lang === "en" ? "Share" : "공유하기"}</p>
+  <p class="share__label">{lang === "en" ? "Share" : lang === "ja" ? "共有する" : "공유하기"}</p>
   <div class="share__btns">
     {kakaoKey && (
       <button
         class="share-btn share-btn--kakao"
         id="kakao-share-btn"
-        aria-label={lang === "en" ? "Share on KakaoTalk" : "카카오톡으로 공유"}
+        aria-label={lang === "en" ? "Share on KakaoTalk" : lang === "ja" ? "KakaoTalk で共有" : "카카오톡으로 공유"}
       >
         <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
           <path d="M12 3C6.477 3 2 6.477 2 10.5c0 2.617 1.586 4.916 4 6.285V21l3.714-2.214C10.447 18.927 11.21 19 12 19c5.523 0 10-3.477 10-7.5S17.523 3 12 3z"/>
         </svg>
-        {lang === "en" ? "KakaoTalk" : "카카오톡"}
+        {lang === "en" ? "KakaoTalk" : lang === "ja" ? "KakaoTalk" : "카카오톡"}
       </button>
     )}
 
@@ -34,7 +34,7 @@ const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encod
       href={twitterUrl}
       target="_blank"
       rel="noopener noreferrer"
-      aria-label={lang === "en" ? "Share on X" : "X로 공유"}
+      aria-label={lang === "en" ? "Share on X" : lang === "ja" ? "X で共有" : "X로 공유"}
     >
       <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
         <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
@@ -45,7 +45,7 @@ const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encod
     <button
       class="share-btn share-btn--instagram"
       id="instagram-share-btn"
-      aria-label={lang === "en" ? "Share on Instagram" : "인스타그램으로 공유"}
+      aria-label={lang === "en" ? "Share on Instagram" : lang === "ja" ? "Instagram で共有" : "인스타그램으로 공유"}
     >
       <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
         <path d="M7.75 2h8.5A5.75 5.75 0 0 1 22 7.75v8.5A5.75 5.75 0 0 1 16.25 22h-8.5A5.75 5.75 0 0 1 2 16.25v-8.5A5.75 5.75 0 0 1 7.75 2zm0 1.8A3.95 3.95 0 0 0 3.8 7.75v8.5a3.95 3.95 0 0 0 3.95 3.95h8.5a3.95 3.95 0 0 0 3.95-3.95v-8.5a3.95 3.95 0 0 0-3.95-3.95h-8.5zm8.95 1.35a1.1 1.1 0 1 1 0 2.2 1.1 1.1 0 0 1 0-2.2zM12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm0 1.8A3.2 3.2 0 1 0 12 15.2 3.2 3.2 0 0 0 12 8.8z"/>
@@ -58,7 +58,7 @@ const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encod
       href={linkedinUrl}
       target="_blank"
       rel="noopener noreferrer"
-      aria-label={lang === "en" ? "Share on LinkedIn" : "링크드인으로 공유"}
+      aria-label={lang === "en" ? "Share on LinkedIn" : lang === "ja" ? "LinkedIn で共有" : "링크드인으로 공유"}
     >
       <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
         <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
@@ -105,7 +105,9 @@ const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encod
     alert(
       lang === "en"
         ? "Instagram sharing is available through the native share sheet on supported mobile browsers."
-        : "인스타그램 공유는 지원되는 모바일 브라우저의 기본 공유 시트에서 사용할 수 있어요."
+        : lang === "ja"
+          ? "Instagram での共有は、対応しているモバイルブラウザの標準共有シートから利用できます。"
+          : "인스타그램 공유는 지원되는 모바일 브라우저의 기본 공유 시트에서 사용할 수 있어요."
     );
   });
 </script>

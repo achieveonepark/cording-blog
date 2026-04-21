@@ -23,18 +23,27 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         <p>The requested path does not exist or has moved.</p>
       </div>
 
+      <div class="section-heading" data-ui-lang="ja">
+        <p class="eyebrow">エラー</p>
+        <h1>ページが見つかりません</h1>
+        <p>指定されたパスは存在しないか、移動された可能性があります。</p>
+      </div>
+
       <nav class="not-found__nav" aria-label="Recommended links">
         <a href="/">
           <span data-ui-lang="ko">홈으로</span>
           <span data-ui-lang="en">Home</span>
+          <span data-ui-lang="ja">ホーム</span>
         </a>
         <a href="/tags/">
           <span data-ui-lang="ko">태그</span>
           <span data-ui-lang="en">Tags</span>
+          <span data-ui-lang="ja">タグ</span>
         </a>
         <a href="/about/">
           <span data-ui-lang="ko">소개</span>
           <span data-ui-lang="en">About</span>
+          <span data-ui-lang="ja">紹介</span>
         </a>
       </nav>
     </section>

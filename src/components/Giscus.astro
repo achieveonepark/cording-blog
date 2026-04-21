@@ -6,15 +6,15 @@ const categoryId = import.meta.env.PUBLIC_GISCUS_CATEGORY_ID  ?? "";
 const configured = repoId && categoryId;
 
 interface Props {
-  lang?: "ko" | "en";
+  lang?: "ko" | "en" | "ja";
 }
 
 const { lang = "ko" } = Astro.props as Props;
-const uiLang = lang === "en" ? "en" : "ko";
+const uiLang = lang === "en" ? "en" : lang === "ja" ? "ja" : "ko";
 ---
 
 <section class="comments">
-  <p class="comments__label">{uiLang === "en" ? "Comments" : "댓글"}</p>
+  <p class="comments__label">{uiLang === "en" ? "Comments" : uiLang === "ja" ? "コメント" : "댓글"}</p>
   {configured ? (
     <div
       class="giscus-wrap"
@@ -30,6 +30,11 @@ const uiLang = lang === "en" ? "en" : "ko";
         <>
           To enable comments, add Giscus settings to <code>.env</code>.<br />
           Get your repo-id and category-id from <a href="https://giscus.app" target="_blank" rel="noopener">giscus.app</a>.
+        </>
+      ) : uiLang === "ja" ? (
+        <>
+          コメントを有効にするには、<code>.env</code> に Giscus の設定を追加してください。<br />
+          <a href="https://giscus.app" target="_blank" rel="noopener">giscus.app</a> で repo-id と category-id を取得できます。
         </>
       ) : (
         <>
@@ -48,7 +53,7 @@ const uiLang = lang === "en" ? "en" : "ko";
 
   function getGiscusLang(wrap: HTMLElement) {
     const explicitLang = wrap.dataset.lang;
-    if (explicitLang === "en" || explicitLang === "ko") {
+    if (explicitLang === "en" || explicitLang === "ko" || explicitLang === "ja") {
       return explicitLang;
     }
 
@@ -57,7 +62,7 @@ const uiLang = lang === "en" ? "en" : "ko";
       localStorage.getItem("blog_lang") ||
       "ko";
 
-    return savedLang === "en" ? "en" : "ko";
+    return savedLang === "en" ? "en" : savedLang === "ja" ? "ja" : "ko";
   }
 
   function loadGiscus() {

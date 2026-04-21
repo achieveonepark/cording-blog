@@ -20,17 +20,17 @@ const next = currentIndex > 0 ? sameLangPosts[currentIndex - 1] : null;
 if (!prev && !next) return;
 ---
 
-<nav class="post-nav" aria-label={currentLang === "en" ? "Post navigation" : "글 네비게이션"}>
+<nav class="post-nav" aria-label={currentLang === "en" ? "Post navigation" : currentLang === "ja" ? "投稿ナビゲーション" : "글 네비게이션"}>
   <div class="post-nav__links">
     {prev && (
       <a href={`/posts/${prev.id}/`} class="post-nav__item post-nav__item--prev">
-        <span class="post-nav__dir">{currentLang === "en" ? "← Older" : "← 이전 글"}</span>
+        <span class="post-nav__dir">{currentLang === "en" ? "← Older" : currentLang === "ja" ? "← 古い投稿" : "← 이전 글"}</span>
         <span class="post-nav__title">{prev.data.title}</span>
       </a>
     )}
     {next && (
       <a href={`/posts/${next.id}/`} class="post-nav__item post-nav__item--next">
-        <span class="post-nav__dir">{currentLang === "en" ? "Newer →" : "다음 글 →"}</span>
+        <span class="post-nav__dir">{currentLang === "en" ? "Newer →" : currentLang === "ja" ? "新しい投稿 →" : "다음 글 →"}</span>
         <span class="post-nav__title">{next.data.title}</span>
       </a>
     )}

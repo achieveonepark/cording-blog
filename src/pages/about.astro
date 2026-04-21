@@ -6,20 +6,16 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import { contact, site } from "../config/site";
 import {
   BLOG_LANGS,
-  filterPostsByLang,
+  groupPostsByLang,
   getPublishedPosts
 } from "../lib/blog";
 
 const posts = await getPublishedPosts();
-const postsByLang = {
-  ko: filterPostsByLang(posts, "ko"),
-  en: filterPostsByLang(posts, "en")
-};
-
-const tagCountsByLang = {
-  ko: new Set(postsByLang.ko.flatMap((post) => post.data.tags)).size,
-  en: new Set(postsByLang.en.flatMap((post) => post.data.tags)).size
-};
+const postsByLang = groupPostsByLang(posts);
+const tagCountsByLang = BLOG_LANGS.reduce((acc, lang) => {
+  acc[lang] = new Set(postsByLang[lang].flatMap((post) => post.data.tags)).size;
+  return acc;
+}, {} as Record<(typeof BLOG_LANGS)[number], number>);
 ---
 
 <BaseLayout title="About" description="About the author and this blog.">
@@ -33,6 +29,7 @@ const tagCountsByLang = {
           <p class="eyebrow">
             <span data-ui-lang="ko">소개</span>
             <span data-ui-lang="en">About</span>
+            <span data-ui-lang="ja">紹介</span>
           </p>
           <div class="about-name-row">
             <div class="about-avatar">
@@ -49,6 +46,7 @@ const tagCountsByLang = {
           <p class="about-tagline">
             <span data-ui-lang="ko">Unity, Android, iOS, CI/CD, ASP.NET. 그리고 그 외 신기능이 궁금해서 경험을 기록하기 위한 블로그!</span>
             <span data-ui-lang="en">A blog for recording experiences with Unity, Android, iOS, CI/CD, ASP.NET, and other exciting new technologies!</span>
+            <span data-ui-lang="ja">Unity、Android、iOS、CI/CD、ASP.NET。その他の新機能が気になって、経験を記録するためのブログです！</span>
           </p>
         </div>
       </div>
@@ -57,11 +55,11 @@ const tagCountsByLang = {
         <div class="about-stats" data-ui-lang={lang}>
           <div class="stat">
             <span class="stat__num">{postsByLang[lang].length}</span>
-            <span class="stat__label">{lang === "en" ? "Posts" : "글"}</span>
+            <span class="stat__label">{lang === "en" ? "Posts" : lang === "ja" ? "投稿" : "글"}</span>
           </div>
           <div class="stat">
             <span class="stat__num">{tagCountsByLang[lang]}</span>
-            <span class="stat__label">{lang === "en" ? "Tags" : "태그"}</span>
+            <span class="stat__label">{lang === "en" ? "Tags" : lang === "ja" ? "タグ" : "태그"}</span>
           </div>
         </div>
       ))}
@@ -70,6 +68,7 @@ const tagCountsByLang = {
         <h2>
           <span data-ui-lang="ko">소개</span>
           <span data-ui-lang="en">Overview</span>
+          <span data-ui-lang="ja">概要</span>
         </h2>
         <p data-ui-lang="ko">
           8년 차 Unity 개발자로서 <strong>PC와 모바일 게임의 개발부터 런칭</strong>까지 전 과정을 경험했습니다.<br /><br />
@@ -78,6 +77,7 @@ const tagCountsByLang = {
           어린 시절 RPG를 좋아했던 순수한 열정을 바탕으로 게임 개발자가 되었으며, 항상 많은 게임을 즐깁니다.<br /><br />
           <strong>긴밀한 소통과 목표 공유가 최고의 결과를 만든다는 믿음을 갖고 동료들과 함께 성장하고 있습니다.</strong>
         </p>
+
         <p data-ui-lang="en">
           As a Unity developer with eight years of experience, I have worked through the full cycle of <strong>building and launching both PC and mobile games</strong>.<br /><br />
           More recently, I have been focused on <strong>improving team productivity</strong> through shared systems and better development workflows within a <strong>technical support organization</strong>.<br /><br />
@@ -85,12 +85,20 @@ const tagCountsByLang = {
           I became a game developer out of the same pure enthusiasm I had as a child when I loved RPGs, and I still spend a lot of time enjoying games myself.<br /><br />
           <strong>I believe the best results come from close communication and shared goals, and I keep growing together with the people around me.</strong>
         </p>
+        <p data-ui-lang="ja">
+          8年目のUnityエンジニアとして、<strong>PCおよびモバイルゲームの開発からローンチ</strong>まで全工程を経験してきました。<br /><br />
+          最近は<strong>技術支援組織</strong>で共通システムの構築や開発環境の改善を通じて、<strong>チームの生産性向上</strong>に注力しています。<br /><br />
+          <code>C#</code>を用いる<code>Unity</code>と<code>.NET</code>環境に習熟しており、特に<strong>同僚の不便を解消</strong>し効率を最大化する<strong>ツール開発</strong>に大きなやりがいを感じています。<br /><br />
+          幼い頃からRPGが大好きだった純粋な情熱からゲーム開発者になり、今も多くのゲームを楽しんでいます。<br /><br />
+          <strong>緊密なコミュニケーションと目標の共有が最高の成果を生むと信じ、仲間とともに成長し続けています。</strong>
+        </p>
       </div>
 
       <div class="about-section">
         <h2>
           <span data-ui-lang="ko">기술 스택</span>
           <span data-ui-lang="en">Tech Stack</span>
+          <span data-ui-lang="ja">技術スタック</span>
         </h2>
         <ul class="tech-list">
           <li>Unity</li>
@@ -107,12 +115,14 @@ const tagCountsByLang = {
         <h2>
           <span data-ui-lang="ko">연락처</span>
           <span data-ui-lang="en">Contact</span>
+          <span data-ui-lang="ja">連絡先</span>
         </h2>
         <ul class="contact-list">
           <li>
             <a href="/contact">
               <span data-ui-lang="ko">문의 페이지</span>
               <span data-ui-lang="en">Contact page</span>
+              <span data-ui-lang="ja">お問い合わせページ</span>
             </a>
           </li>
           {contact.email && (
