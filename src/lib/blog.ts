@@ -187,14 +187,27 @@ export function formatDate(date: Date, lang: BlogLang = "ko") {
 }
 
 export function getReadingTime(entry: CollectionEntry<"blog">, lang: BlogLang = getPostLang(entry)) {
-  const body = entry.body?.trim() ?? "";
+  const body = (entry.body ?? "")
+    .replace(/```[\s\S]*?```/g, " ")
+    .replace(/`[^`]*`/g, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/!\[[^\]]*]\([^)]*\)/g, " ")
+    .replace(/\[[^\]]*]\([^)]*\)/g, " ")
+    .replace(/[#>*_\-|~=[\]{}()]/g, " ")
+    .trim();
 
   if (!body) {
-    return lang === "en" ? "1 min read" : "1분 읽기";
+    if (lang === "en") return "1 min read";
+    if (lang === "ja") return "1分で読める";
+    return "1분 읽기";
   }
 
-  const words = body.split(/\s+/).length;
-  const minutes = Math.max(1, Math.round(words / 220));
+  const cjkChars = body.match(/[\u3040-\u30ff\u3400-\u9fff\uac00-\ud7af]/g)?.length ?? 0;
+  const latinWords = body
+    .replace(/[\u3040-\u30ff\u3400-\u9fff\uac00-\ud7af]/g, " ")
+    .split(/\s+/)
+    .filter(Boolean).length;
+  const minutes = Math.max(1, Math.round(latinWords / 220 + cjkChars / 500));
 
   if (lang === "en") return `${minutes} min read`;
   if (lang === "ja") return `${minutes}分で読める`;

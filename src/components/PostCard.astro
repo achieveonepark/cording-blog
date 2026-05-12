@@ -1,6 +1,6 @@
 ---
 import type { CollectionEntry } from "astro:content";
-import { getPostCategoryTrail, getPostLang, getPostSubcategory } from "../lib/blog";
+import { formatDate, getPostCategoryTrail, getPostLang, getPostSubcategory, getReadingTime } from "../lib/blog";
 
 interface Props {
   post: CollectionEntry<"blog">;
@@ -10,6 +10,7 @@ const { post } = Astro.props;
 const lang = getPostLang(post);
 const categoryTrail = getPostCategoryTrail(post);
 const subcategory = getPostSubcategory(post);
+const readingTime = getReadingTime(post, lang);
 ---
 
 <article
@@ -34,6 +35,12 @@ const subcategory = getPostSubcategory(post);
     <h2>
       <a href={`/posts/${post.id}/`}>{post.data.title}</a>
     </h2>
+
+    <p class="post-card__meta" aria-label={lang === "en" ? "Published date and reading time" : lang === "ja" ? "公開日と読了時間" : "게시일과 읽기 시간"}>
+      <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate, lang)}</time>
+      <span aria-hidden="true">·</span>
+      <span>{readingTime}</span>
+    </p>
 
     {post.data.description && <p class="post-card__description">{post.data.description}</p>}
 
@@ -111,6 +118,21 @@ const subcategory = getPostSubcategory(post);
     -webkit-line-clamp: 1;
     -webkit-box-orient: vertical;
     line-height: 1.6;
+  }
+
+  .post-card__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.38rem;
+    margin: -0.2rem 0 0;
+    color: rgba(151, 162, 173, 0.86);
+    font-size: 0.72rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .post-card__meta span[aria-hidden="true"] {
+    color: rgba(124, 255, 122, 0.34);
   }
 
   .post-card__body .tag-list {
