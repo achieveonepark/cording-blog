@@ -415,7 +415,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 <style>
   .settings-shell,
   .auth-guard {
-    max-width: 760px;
+    max-width: 880px;
     margin: 2.5rem auto;
     padding: 0 1rem;
   }
@@ -423,15 +423,20 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
   .settings-title {
     font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem);
     font-weight: 800;
-    letter-spacing: -0.03em;
+    letter-spacing: 0;
     margin: 0 0 2rem;
   }
 
   .settings-section {
-    border: 1px solid rgba(124, 255, 122, 0.1);
-    border-radius: 16px;
-    background: rgba(18, 23, 29, 0.88);
-    padding: 1.5rem;
+    border: 1px solid rgba(124, 255, 122, 0.16);
+    border-radius: 8px;
+    background:
+      linear-gradient(180deg, rgba(15, 23, 28, 0.94), rgba(7, 10, 14, 0.92)),
+      rgba(10, 15, 19, 0.92);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.04),
+      0 16px 60px rgba(0, 0, 0, 0.38);
+    padding: 1.4rem;
   }
 
   .settings-section__title {
@@ -439,7 +444,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     font-weight: 700;
     letter-spacing: 0.04em;
     margin: 0 0 0.35rem;
-    color: rgba(124, 255, 122, 0.85);
+    color: #7cff7a;
   }
 
   .settings-section__desc {
@@ -449,62 +454,81 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     line-height: 1.6;
   }
 
-  .cat-list {
+  :global(.cat-list) {
     list-style: none;
     margin: 0 0 1rem;
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.85rem;
+    gap: 0.7rem;
   }
 
-  .cat-item {
+  :global(.cat-item) {
     display: grid;
-    gap: 0.55rem;
-    padding: 0.9rem 1rem;
-    border-radius: 12px;
-    border: 1px solid rgba(124, 255, 122, 0.1);
-    background: rgba(10, 14, 18, 0.68);
+    gap: 0.7rem;
+    padding: 0.8rem;
+    border-radius: 8px;
+    border: 1px solid rgba(124, 255, 122, 0.12);
+    background: rgba(3, 8, 11, 0.62);
+    transition: border-color 160ms ease, background 160ms ease;
   }
 
-  .cat-item__header {
+  :global(.cat-item:hover),
+  :global(.cat-item[data-expanded="true"]) {
+    border-color: rgba(124, 255, 122, 0.28);
+    background: rgba(8, 17, 18, 0.78);
+  }
+
+  :global(.cat-item__header) {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
-    gap: 0.75rem;
-    align-items: start;
+    gap: 0.6rem;
+    align-items: center;
   }
 
-  .cat-item__toggle {
+  :global(.cat-item__toggle) {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 0.75rem;
     width: 100%;
-    padding: 0;
-    border: none;
-    background: transparent;
+    min-height: 2.6rem;
+    padding: 0.35rem 0.55rem 0.35rem 0.75rem;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    background: rgba(124, 255, 122, 0.035);
     color: inherit;
     text-align: left;
     cursor: pointer;
+    transition: border-color 160ms ease, background 160ms ease;
   }
 
-  .cat-item__heading {
+  :global(.cat-item__toggle:hover) {
+    border-color: rgba(124, 255, 122, 0.16);
+    background: rgba(124, 255, 122, 0.07);
+  }
+
+  :global(.cat-item__heading) {
     display: grid;
     gap: 0.18rem;
     min-width: 0;
   }
 
-  .cat-item__heading strong {
-    font-size: 1rem;
-    color: rgba(214, 255, 214, 0.88);
+  :global(.cat-item__heading strong) {
+    overflow: hidden;
+    color: rgba(230, 255, 230, 0.94);
+    font-size: 0.98rem;
+    font-weight: 750;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
-  .cat-item__heading span {
+  :global(.cat-item__heading span) {
     font-size: 0.74rem;
-    color: rgba(124, 255, 122, 0.48);
+    color: rgba(124, 255, 122, 0.58);
   }
 
-  .cat-item__body {
+  :global(.cat-item__body) {
     display: grid;
     gap: 0.75rem;
     max-height: 0;
@@ -518,110 +542,129 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       transform 180ms ease;
   }
 
-  .cat-item[data-expanded="true"] .cat-item__body {
+  :global(.cat-item[data-expanded="true"] .cat-item__body) {
     max-height: 20rem;
     opacity: 1;
     transform: translateY(0);
     pointer-events: auto;
   }
 
-  .cat-item__toggle-icon {
+  :global(.cat-item__toggle-icon) {
     flex: none;
     color: rgba(124, 255, 122, 0.45);
     transition: transform 180ms ease, color 180ms ease;
   }
 
-  .cat-item[data-expanded="true"] .cat-item__toggle-icon {
+  :global(.cat-item[data-expanded="true"] .cat-item__toggle-icon) {
     transform: rotate(180deg);
     color: #7cff7a;
   }
 
-  .cat-item__sub-list {
+  :global(.cat-item__sub-list) {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
+    padding: 0 0.25rem;
   }
 
-  .cat-item__sub-empty {
-    margin: 0;
+  :global(.cat-item__sub-empty) {
+    margin: 0 0.25rem;
     font-size: 0.8rem;
     color: var(--muted);
   }
 
-  .subcat-chip {
+  :global(.subcat-chip) {
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
-    padding: 0.38rem 0.68rem;
-    border-radius: 999px;
-    border: 1px solid rgba(124, 255, 122, 0.14);
-    background: rgba(12, 18, 24, 0.86);
-    color: rgba(214, 255, 214, 0.76);
+    min-height: 2rem;
+    padding: 0.25rem 0.35rem 0.25rem 0.65rem;
+    border-radius: 6px;
+    border: 1px solid rgba(124, 255, 122, 0.18);
+    background: rgba(14, 23, 25, 0.9);
+    color: rgba(224, 255, 224, 0.84);
     font-size: 0.78rem;
   }
 
-  .subcat-chip__delete,
-  .cat-del-btn {
-    background: transparent;
-    border: 1px solid rgba(255, 80, 80, 0.2);
-    color: rgba(255, 120, 120, 0.6);
-    border-radius: 999px;
-    padding: 0.2rem 0.7rem;
-    font-size: 0.72rem;
+  :global(.subcat-chip__delete),
+  :global(.cat-del-btn) {
+    min-height: 2.2rem;
+    border: 1px solid rgba(255, 92, 92, 0.22);
+    border-radius: 6px;
+    background: rgba(255, 92, 92, 0.045);
+    color: rgba(255, 150, 150, 0.72);
     cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 650;
+    line-height: 1;
+    white-space: nowrap;
     transition: border-color 150ms, background 150ms, color 150ms;
   }
 
-  .subcat-chip__delete:hover,
-  .cat-del-btn:hover {
+  :global(.subcat-chip__delete) {
+    min-height: 1.45rem;
+    padding: 0 0.48rem;
+    font-size: 0.68rem;
+  }
+
+  :global(.cat-del-btn) {
+    padding: 0 0.8rem;
+  }
+
+  :global(.subcat-chip__delete:hover),
+  :global(.cat-del-btn:hover) {
     border-color: rgba(255, 80, 80, 0.5);
-    background: rgba(255, 80, 80, 0.08);
+    background: rgba(255, 80, 80, 0.12);
     color: #ff7070;
   }
 
-  .subcat-add-form,
+  :global(.subcat-add-form),
   .cat-add-form {
     display: flex;
     gap: 0.6rem;
   }
 
-  .subcat-add-form input,
+  :global(.subcat-add-form input),
   .cat-add-form input {
     flex: 1;
-    background: rgba(0, 0, 0, 0.5);
+    min-width: 0;
+    min-height: 2.45rem;
+    background: rgba(0, 0, 0, 0.42);
     color: #d6ffd6;
     border: 1px solid rgba(124, 255, 122, 0.2);
-    border-radius: 8px;
-    padding: 0.58rem 0.8rem;
-    font-size: 0.9rem;
+    border-radius: 6px;
+    padding: 0 0.8rem;
+    font-size: 0.86rem;
   }
 
-  .subcat-add-form input:focus,
+  :global(.subcat-add-form input:focus),
   .cat-add-form input:focus {
     outline: none;
     border-color: rgba(124, 255, 122, 0.5);
+    box-shadow: 0 0 0 3px rgba(124, 255, 122, 0.08);
   }
 
-  .subcat-add-form button,
+  :global(.subcat-add-form button),
   .cat-add-form button {
-    background: rgba(124, 255, 122, 0.12);
-    color: #7cff7a;
+    min-height: 2.45rem;
+    background: rgba(124, 255, 122, 0.14);
+    color: rgba(214, 255, 214, 0.95);
     border: 1px solid rgba(124, 255, 122, 0.3);
-    border-radius: 8px;
-    padding: 0.5rem 1.1rem;
+    border-radius: 6px;
+    padding: 0 1rem;
     font-size: 0.88rem;
-    font-weight: 600;
+    font-weight: 750;
     cursor: pointer;
     transition: background 150ms;
     white-space: nowrap;
   }
 
-  .subcat-add-form button:hover,
+  :global(.subcat-add-form button:hover),
   .cat-add-form button:hover {
     background: rgba(124, 255, 122, 0.22);
   }
 
-  .cat-empty {
+  :global(.cat-empty) {
     font-size: 0.85rem;
     color: var(--muted);
     padding: 0.5rem 0;
@@ -641,14 +684,15 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
   }
 
   @media (max-width: 640px) {
-    .cat-item__header,
-    .subcat-add-form,
+    :global(.cat-item__header),
+    :global(.subcat-add-form),
     .cat-add-form {
-      flex-direction: column;
+      display: grid;
+      grid-template-columns: 1fr;
       align-items: stretch;
     }
 
-    .cat-del-btn {
+    :global(.cat-del-btn) {
       align-self: flex-start;
     }
   }

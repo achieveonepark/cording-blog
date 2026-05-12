@@ -34,8 +34,13 @@ function json(data, status = 200) {
   });
 }
 
-function todayUTC() {
-  return new Date().toISOString().split("T")[0]; // "YYYY-MM-DD"
+function todayKST() {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date()); // "YYYY-MM-DD"
 }
 
 async function sumKvValues(kv, prefix, predicate = () => true) {
@@ -74,7 +79,7 @@ export default {
 
       if (!env.BLOG_KV) return json({ today: 0, total: 0 });
 
-      const date = todayUTC();
+      const date = todayKST();
 
       if (post) {
         const [total, today] = await Promise.all([
@@ -109,7 +114,7 @@ export default {
       if (!env.BLOG_KV) return json({ ok: true, today: 0, total: 0 });
 
       const ip = request.headers.get("CF-Connecting-IP") || "unknown";
-      const date = todayUTC();
+      const date = todayKST();
       const ipKey = `visit-ip:${post}:${ip}:${date}`;
 
       // 같은 IP는 하루에 한 번만 카운트
