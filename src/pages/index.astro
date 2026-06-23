@@ -43,7 +43,7 @@ const totalPostsByLang = BLOG_LANGS.reduce((acc, lang) => {
 <BaseLayout title="Somblog" description="Unity, Android, iOS, CI/CD, ASP.NET. 그리고 그 외 신기능이 궁금해서 경험을 기록하기 위한 블로그!">
   <Header />
 
-  <main class="shell app-shell">
+  <main class="shell app-shell home-app-shell">
     <HomeCategorySidebar
       categories={categories}
       subcategories={subcategories}
@@ -98,6 +98,11 @@ const totalPostsByLang = BLOG_LANGS.reduce((acc, lang) => {
 </BaseLayout>
 
 <style>
+  /* 홈에서는 오른쪽 그래프 레일을 위해 콘텐츠 폭을 넓힘 */
+  .home-app-shell {
+    --content-width: min(1360px, calc(100vw - 1.5rem));
+  }
+
   .home-feed__empty {
     margin: 0;
     padding: 0 1rem;
