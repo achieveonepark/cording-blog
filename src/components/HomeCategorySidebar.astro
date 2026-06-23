@@ -1,5 +1,6 @@
 ---
 import { BLOG_LANGS, type BlogLang } from "../lib/blog";
+import PostGraph from "./PostGraph.astro";
 
 interface Props {
   categories: string[];
@@ -162,6 +163,8 @@ const { categories, subcategories, categoryCountsByLang, subcategoryCountsByLang
             </section>
           );
         })}
+
+        <PostGraph />
       </div>
     </aside>
 
