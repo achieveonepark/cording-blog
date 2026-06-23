@@ -1,0 +1,556 @@
+---
+import { BLOG_LANGS, getPublishedPosts, getPostLang, type BlogLang } from "../lib/blog";
+
+const posts = await getPublishedPosts();
+
+type GraphNode = { id: string; label: string; url: string; deg: number };
+type GraphLink = { s: number; t: number };
+type GraphData = { nodes: GraphNode[]; links: GraphLink[] };
+
+function buildGraph(lang: BlogLang): GraphData {
+  const langPosts = posts.filter((post) => getPostLang(post) === lang);
+
+  const nodes: GraphNode[] = langPosts.map((post) => ({
+    id: post.id,
+    label: post.data.title,
+    url: `/posts/${post.id}/`,
+    deg: 0
+  }));
+
+  const tagSets = langPosts.map((post) => new Set((post.data.tags ?? []).map((t) => t.toLowerCase())));
+  const links: GraphLink[] = [];
+
+  for (let i = 0; i < langPosts.length; i += 1) {
+    for (let j = i + 1; j < langPosts.length; j += 1) {
+      let shared = false;
+      for (const tag of tagSets[i]) {
+        if (tagSets[j].has(tag)) {
+          shared = true;
+          break;
+        }
+      }
+      if (shared) {
+        links.push({ s: i, t: j });
+        nodes[i].deg += 1;
+        nodes[j].deg += 1;
+      }
+    }
+  }
+
+  return { nodes, links };
+}
+
+const graphData = BLOG_LANGS.reduce((acc, lang) => {
+  acc[lang] = buildGraph(lang);
+  return acc;
+}, {} as Record<BlogLang, GraphData>);
+---
+
+<section class="post-graph app-panel" data-post-graph>
+  <div class="post-graph__header">
+    <p class="eyebrow" data-ui-lang="ko">Interactive Graph</p>
+    <p class="eyebrow" data-ui-lang="en">Interactive Graph</p>
+    <p class="eyebrow" data-ui-lang="ja">Interactive Graph</p>
+    <button
+      class="post-graph__reset"
+      type="button"
+      data-post-graph-reset
+      aria-label="그래프 재배치"
+      title="그래프 재배치"
+      data-label-ko="그래프 재배치"
+      data-label-en="Reshuffle graph"
+      data-label-ja="グラフを再配置"
+    >
+      <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
+        <path d="M4 4v5h5M20 20v-5h-5M19 9a7 7 0 0 0-12.9-2M5 15a7 7 0 0 0 12.9 2" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="post-graph__stage" data-post-graph-stage>
+    <canvas data-post-graph-canvas></canvas>
+    <p class="post-graph__empty" data-post-graph-empty hidden>아직 연결된 글이 없어요.</p>
+  </div>
+</section>
+
+<script type="application/json" data-post-graph-data set:html={JSON.stringify(graphData).replace(/</g, "\\u003c")}></script>
+
+<script is:inline>
+  (function() {
+    function getBlogLang() {
+      var lang = document.documentElement.dataset.blogLang;
+      return lang === "en" ? "en" : lang === "ja" ? "ja" : "ko";
+    }
+
+    function readGraphData() {
+      var holder = document.querySelector("[data-post-graph-data]");
+      if (!holder) return null;
+      try {
+        return JSON.parse(holder.textContent || "{}");
+      } catch (_error) {
+        return null;
+      }
+    }
+
+    function syncGraphLabels(panel, lang) {
+      panel.querySelectorAll("[data-label-" + lang + "]").forEach(function(element) {
+        var label = element.getAttribute("data-label-" + lang);
+        if (!label) return;
+        element.setAttribute("aria-label", label);
+        element.setAttribute("title", label);
+      });
+    }
+
+    // 활성 시뮬레이션을 패널별로 저장해 중복 루프 방지
+    function stopGraph(panel) {
+      if (panel.__graphStop) {
+        panel.__graphStop();
+        panel.__graphStop = null;
+      }
+    }
+
+    function startGraph(panel) {
+      stopGraph(panel);
+
+      var lang = getBlogLang();
+      syncGraphLabels(panel, lang);
+
+      var allData = readGraphData();
+      var data = allData && allData[lang] ? allData[lang] : { nodes: [], links: [] };
+
+      var canvas = panel.querySelector("[data-post-graph-canvas]");
+      var stage = panel.querySelector("[data-post-graph-stage]");
+      var empty = panel.querySelector("[data-post-graph-empty]");
+      if (!canvas || !stage) return;
+
+      if (!data.nodes.length) {
+        if (empty) empty.hidden = false;
+        return;
+      }
+      if (empty) empty.hidden = true;
+
+      var ctx = canvas.getContext("2d");
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+      // 노드/링크 상태 복제 (원본 JSON 불변)
+      var nodes = data.nodes.map(function(node) {
+        return { id: node.id, label: node.label, url: node.url, deg: node.deg, x: 0, y: 0, vx: 0, vy: 0 };
+      });
+      var links = data.links.map(function(link) {
+        return { source: nodes[link.s], target: nodes[link.t] };
+      });
+
+      var width = 0;
+      var height = 0;
+      var alpha = 1;
+      var dragNode = null;
+      var hoverNode = null;
+      var pointer = { x: 0, y: 0, active: false };
+      var rafId = 0;
+
+      function nodeRadius(node) {
+        return 3.5 + Math.min(node.deg, 8) * 1.0;
+      }
+
+      function seedPositions() {
+        var cx = width / 2;
+        var cy = height / 2;
+        var radius = Math.min(width, height) * 0.32;
+        nodes.forEach(function(node, index) {
+          var angle = (index / nodes.length) * Math.PI * 2;
+          node.x = cx + Math.cos(angle) * radius * (0.6 + Math.random() * 0.4);
+          node.y = cy + Math.sin(angle) * radius * (0.6 + Math.random() * 0.4);
+          node.vx = 0;
+          node.vy = 0;
+        });
+      }
+
+      function resize() {
+        var rect = stage.getBoundingClientRect();
+        width = Math.max(rect.width, 80);
+        height = Math.max(rect.height, 80);
+        canvas.width = Math.round(width * dpr);
+        canvas.height = Math.round(height * dpr);
+        canvas.style.width = width + "px";
+        canvas.style.height = height + "px";
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+
+      function reheat() {
+        alpha = Math.max(alpha, 0.6);
+      }
+
+      function tick() {
+        var k = alpha;
+
+        // 반발력 (모든 노드 쌍)
+        for (var i = 0; i < nodes.length; i += 1) {
+          var a = nodes[i];
+          for (var j = i + 1; j < nodes.length; j += 1) {
+            var b = nodes[j];
+            var dx = a.x - b.x;
+            var dy = a.y - b.y;
+            var distSq = dx * dx + dy * dy || 0.01;
+            var dist = Math.sqrt(distSq);
+            var force = (1400 / distSq) * k;
+            var fx = (dx / dist) * force;
+            var fy = (dy / dist) * force;
+            a.vx += fx;
+            a.vy += fy;
+            b.vx -= fx;
+            b.vy -= fy;
+          }
+        }
+
+        // 링크 스프링
+        var desired = 58;
+        links.forEach(function(link) {
+          var dx = link.target.x - link.source.x;
+          var dy = link.target.y - link.source.y;
+          var dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
+          var force = (dist - desired) * 0.045 * k;
+          var fx = (dx / dist) * force;
+          var fy = (dy / dist) * force;
+          link.source.vx += fx;
+          link.source.vy += fy;
+          link.target.vx -= fx;
+          link.target.vy -= fy;
+        });
+
+        // 중앙 인력 + 적용
+        var cx = width / 2;
+        var cy = height / 2;
+        nodes.forEach(function(node) {
+          node.vx += (cx - node.x) * 0.012 * k;
+          node.vy += (cy - node.y) * 0.012 * k;
+
+          if (node === dragNode) {
+            node.x = pointer.x;
+            node.y = pointer.y;
+            node.vx = 0;
+            node.vy = 0;
+            return;
+          }
+
+          node.vx *= 0.82;
+          node.vy *= 0.82;
+          node.x += node.vx;
+          node.y += node.vy;
+
+          var pad = 10;
+          node.x = Math.max(pad, Math.min(width - pad, node.x));
+          node.y = Math.max(pad, Math.min(height - pad, node.y));
+        });
+
+        alpha *= 0.97;
+        if (alpha < 0.02) alpha = 0.02;
+      }
+
+      function truncate(label) {
+        return label.length > 14 ? label.slice(0, 13) + "…" : label;
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, width, height);
+
+        var highlight = dragNode || hoverNode;
+        var connected = null;
+        if (highlight) {
+          connected = new Set();
+          connected.add(highlight);
+          links.forEach(function(link) {
+            if (link.source === highlight) connected.add(link.target);
+            if (link.target === highlight) connected.add(link.source);
+          });
+        }
+
+        // 링크
+        links.forEach(function(link) {
+          var active = highlight && (link.source === highlight || link.target === highlight);
+          ctx.beginPath();
+          ctx.moveTo(link.source.x, link.source.y);
+          ctx.lineTo(link.target.x, link.target.y);
+          ctx.strokeStyle = active
+            ? "rgba(124, 255, 122, 0.55)"
+            : highlight
+              ? "rgba(124, 255, 122, 0.05)"
+              : "rgba(124, 255, 122, 0.16)";
+          ctx.lineWidth = active ? 1.4 : 0.8;
+          ctx.stroke();
+        });
+
+        // 노드
+        nodes.forEach(function(node) {
+          var r = nodeRadius(node);
+          var dimmed = highlight && connected && !connected.has(node);
+          var isFocus = node === highlight;
+
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, isFocus ? r + 1.5 : r, 0, Math.PI * 2);
+          ctx.fillStyle = dimmed
+            ? "rgba(124, 255, 122, 0.22)"
+            : isFocus
+              ? "rgba(170, 255, 168, 1)"
+              : "rgba(124, 255, 122, 0.85)";
+          ctx.fill();
+
+          if (isFocus) {
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, r + 5, 0, Math.PI * 2);
+            ctx.strokeStyle = "rgba(124, 255, 122, 0.35)";
+            ctx.lineWidth = 1;
+            ctx.stroke();
+          }
+        });
+
+        // 라벨 (호버 노드 + 그 이웃, 또는 큰 노드)
+        ctx.font = "11px var(--font-ui, sans-serif)";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "top";
+        nodes.forEach(function(node) {
+          var showLabel = isFocusLabel(node, highlight, connected);
+          if (!showLabel) return;
+          var r = nodeRadius(node);
+          var text = truncate(node.label);
+          var textWidth = ctx.measureText(text).width;
+          var lx = node.x;
+          var ly = node.y + r + 3;
+          ctx.fillStyle = "rgba(5, 8, 12, 0.78)";
+          ctx.fillRect(lx - textWidth / 2 - 3, ly - 1, textWidth + 6, 14);
+          ctx.fillStyle = node === highlight ? "rgba(190, 255, 188, 1)" : "rgba(124, 255, 122, 0.78)";
+          ctx.fillText(text, lx, ly);
+        });
+      }
+
+      function isFocusLabel(node, highlight, connected) {
+        if (highlight) return connected.has(node);
+        return node.deg >= 3;
+      }
+
+      function frame() {
+        tick();
+        draw();
+        rafId = window.requestAnimationFrame(frame);
+      }
+
+      function pickNode(px, py) {
+        var hit = null;
+        var best = Infinity;
+        nodes.forEach(function(node) {
+          var dx = node.x - px;
+          var dy = node.y - py;
+          var distSq = dx * dx + dy * dy;
+          var r = nodeRadius(node) + 6;
+          if (distSq <= r * r && distSq < best) {
+            best = distSq;
+            hit = node;
+          }
+        });
+        return hit;
+      }
+
+      function localPoint(event) {
+        var rect = canvas.getBoundingClientRect();
+        return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+      }
+
+      function onPointerMove(event) {
+        var pt = localPoint(event);
+        pointer.x = pt.x;
+        pointer.y = pt.y;
+        if (dragNode) {
+          reheat();
+          return;
+        }
+        var prev = hoverNode;
+        hoverNode = pickNode(pt.x, pt.y);
+        canvas.style.cursor = hoverNode ? "pointer" : "grab";
+        if (prev !== hoverNode) reheat();
+      }
+
+      function onPointerDown(event) {
+        var pt = localPoint(event);
+        pointer.x = pt.x;
+        pointer.y = pt.y;
+        var node = pickNode(pt.x, pt.y);
+        if (node) {
+          dragNode = node;
+          pointer.active = true;
+          panel.__graphMoved = false;
+          canvas.style.cursor = "grabbing";
+          canvas.setPointerCapture(event.pointerId);
+          reheat();
+        }
+      }
+
+      function onPointerDrag(event) {
+        if (!dragNode) return;
+        var pt = localPoint(event);
+        if (Math.abs(pt.x - pointer.x) > 3 || Math.abs(pt.y - pointer.y) > 3) {
+          panel.__graphMoved = true;
+        }
+        pointer.x = pt.x;
+        pointer.y = pt.y;
+        reheat();
+      }
+
+      function onPointerUp(event) {
+        if (dragNode) {
+          var node = dragNode;
+          dragNode = null;
+          canvas.style.cursor = hoverNode ? "pointer" : "grab";
+          if (!panel.__graphMoved && node.url) {
+            window.location.href = node.url;
+          }
+        }
+        pointer.active = false;
+        try { canvas.releasePointerCapture(event.pointerId); } catch (_e) {}
+      }
+
+      function onLeave() {
+        hoverNode = null;
+        reheat();
+      }
+
+      var resizeObserver = new ResizeObserver(function() {
+        resize();
+        reheat();
+      });
+
+      resize();
+      seedPositions();
+      resizeObserver.observe(stage);
+
+      canvas.addEventListener("pointermove", onPointerMove);
+      canvas.addEventListener("pointermove", onPointerDrag);
+      canvas.addEventListener("pointerdown", onPointerDown);
+      canvas.addEventListener("pointerup", onPointerUp);
+      canvas.addEventListener("pointerleave", onLeave);
+
+      frame();
+
+      panel.__graphStop = function() {
+        window.cancelAnimationFrame(rafId);
+        resizeObserver.disconnect();
+        canvas.removeEventListener("pointermove", onPointerMove);
+        canvas.removeEventListener("pointermove", onPointerDrag);
+        canvas.removeEventListener("pointerdown", onPointerDown);
+        canvas.removeEventListener("pointerup", onPointerUp);
+        canvas.removeEventListener("pointerleave", onLeave);
+      };
+
+      panel.__graphReheat = reheat;
+      panel.__graphReseed = function() {
+        seedPositions();
+        alpha = 1;
+      };
+    }
+
+    function hydrate() {
+      var panel = document.querySelector("[data-post-graph]");
+      if (!panel) return;
+      startGraph(panel);
+    }
+
+    if (!window.__postGraphInit) {
+      window.__postGraphInit = true;
+
+      document.addEventListener("click", function(event) {
+        var target = event.target;
+        if (!(target instanceof Element)) return;
+        var resetBtn = target.closest("[data-post-graph-reset]");
+        if (!resetBtn) return;
+        var panel = document.querySelector("[data-post-graph]");
+        if (panel && panel.__graphReseed) panel.__graphReseed();
+      });
+
+      document.addEventListener("astro:page-load", hydrate);
+      document.addEventListener("blog-language-sync", hydrate);
+    }
+
+    hydrate();
+  })();
+</script>
+
+<style>
+  .post-graph {
+    margin-top: 1rem;
+    padding: 1rem;
+  }
+
+  .post-graph__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding-bottom: 0.7rem;
+    margin-bottom: 0.6rem;
+    border-bottom: 1px solid rgba(124, 255, 122, 0.08);
+  }
+
+  .post-graph__header .eyebrow {
+    margin: 0;
+  }
+
+  .post-graph__reset {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid rgba(124, 255, 122, 0.2);
+    background: rgba(10, 15, 19, 0.8);
+    color: rgba(124, 255, 122, 0.6);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition:
+      color 150ms ease,
+      background 150ms ease,
+      border-color 150ms ease;
+  }
+
+  .post-graph__reset:hover {
+    color: #7cff7a;
+    background: rgba(124, 255, 122, 0.1);
+    border-color: rgba(124, 255, 122, 0.45);
+  }
+
+  .post-graph__stage {
+    position: relative;
+    width: 100%;
+    height: 240px;
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(124, 255, 122, 0.08);
+    background:
+      radial-gradient(circle at 50% 40%, rgba(124, 255, 122, 0.05), transparent 70%),
+      rgba(6, 10, 14, 0.6);
+    overflow: hidden;
+  }
+
+  .post-graph__stage canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+  }
+
+  .post-graph__empty {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 1rem;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.8rem;
+  }
+
+  @media (max-width: 960px) {
+    .post-graph__stage {
+      height: 220px;
+    }
+  }
+</style>
